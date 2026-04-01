@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AuthorizedForGuestOnly
 {
-    public function handle(Request $request, Closure $next, string $guard = 'sanctum'): JsonResponse
+    public function handle(Request $request, Closure $next, string $guard = 'sanctum'): JsonResponse|Response
     {
         if (auth($guard)->check()) {
             return response()->json([
