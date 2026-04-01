@@ -1,8 +1,7 @@
 <?php
 
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Middleware\AuthorizedForGuestOnly;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::controller(AuthController::class)->middleware([AuthorizedForGuestOnly::class])->group(function () {
