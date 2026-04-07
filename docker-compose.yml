@@ -1,0 +1,17 @@
+services:
+    photo-validator:
+        build:
+            context: ./photo-validator
+            dockerfile: Dockerfile
+        container_name: photo-validator
+        volumes:
+            - ./photo-validator/models:/app/models
+        restart: unless-stopped
+        networks:
+            - match-flow
+        ports:
+            - "9000:9000"
+networks:
+    match-flow:
+        driver: bridge
+
