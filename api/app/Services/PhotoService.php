@@ -23,7 +23,7 @@ class PhotoService
     {
         $request = Http::asMultipart()->timeout(30);
         foreach ($userPhotos as $photo) {
-            $request = $request->attach(
+            $request->attach(
                 'user_photos',
                 Storage::disk('public')->get($photo['path']),
                 $photo['path']
