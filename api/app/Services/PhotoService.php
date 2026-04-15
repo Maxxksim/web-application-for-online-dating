@@ -4,38 +4,43 @@ namespace App\Services;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Mockery\Exception;
-use PHPUnit\Event\Code\Throwable;
+use Intervention\Image\Drivers\Gd\Encoders\WebpEncoder;
+use Intervention\Image\ImageManager;
+
 
 class PhotoService
 {
-    public function __construct(
-        private string $validatorUrl
-    )
+    private const int IMAGE_QUALITY = 60;
+
+    public function __construct(private readonly ImageManager $imageManager)
     {
-        $this->validatorUrl = config('services.face_validator.url');
+
     }
 
-    public
-    function validateUserPhotos(array $userPhotos): JsonResponse
+    public function validateUserPhotos($userPhotos): array
     {
         $request = Http::asMultipart()->timeout(30);
-
         foreach ($userPhotos as $photo) {
             $request = $request->attach(
                 'user_photos',
-                file_get_contents($photo->getRealPath()),
-                $photo->getClientOriginalName()
+                Storage::disk('public')->get($photo['path']),
+                $photo['path']
             );
         }
 
-        return $request->post($this->validatorUrl)->json();
+        return $request->post(config('services.face_validator.url'))->json();
     }
 
-    public function buildFileName(string $extension): string
+    public function buildFileName(): string
     {
-        return Str::uuid7() . $extension;
+        return Str::uuid7() . '.webp';
+    }
+
+    public function compressImage($photo): string
+    {
+        return (string)$this->imageManager->decodeSplFileInfo($photo)->encode(new WebpEncoder(self::IMAGE_QUALITY));
     }
 
 }
