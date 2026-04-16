@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,8 +15,15 @@ class AuthController extends Controller
 {
     public function register(RegisterRequest $request): JsonResponse
     {
+        $user = Db::transaction(function () use ($request) {
+            $user = User::create($request->validated());
+            $user->profile()->create();
+
+            return $user;
+        });
+
         return response()->json(
-            ['token' => User::create($request->validated())->createToken('auth', expiresAt: now()->addMonth())->plainTextToken],
+            ['token' => $user->createToken('auth', expiresAt: now()->addMonth())->plainTextToken],
             Response::HTTP_CREATED
         );
     }
