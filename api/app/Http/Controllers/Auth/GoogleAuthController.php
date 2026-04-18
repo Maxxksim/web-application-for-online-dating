@@ -17,23 +17,25 @@ class GoogleAuthController extends Controller
         return Socialite::driver('google')->stateless()->redirect();
     }
 
-    public function handleGoogleCallback(): JsonResponse
+    public function handleGoogleCallback(): Response
     {
+        $frontendUrl = config('app.frontend_url');
+
         try {
             $user = Socialite::driver('google')->stateless()->user();
         } catch (\Throwable $e) {
-            return response()->json(['error' => 'Google authentication failed.'], Response::HTTP_UNAUTHORIZED);
+            return response("<script>window.opener.postMessage({error: 'auth_failed'}, '{$frontendUrl}'); window.close();</script>");
         }
 
         if ($existingUser = User::where('email', $user->email)->first()) {
             return response()->json(['token' => $existingUser->createToken('auth', expiresAt: now()->addMonth())->plainTextToken]);
         }
 
-        $newUser = User::create([
+        $token = User::create([
             'email' => $user->email,
             'password' => bcrypt(Str::random(16)),
-        ]);
+        ])->createToken('auth', expiresAt: now()->addMonth())->plainTextToken;
 
-        return response()->json(['token' => $newUser->createToken('auth', expiresAt: now()->addMonth())->plainTextToken]);
+        return response("<script>window.opener.postMessage({ token: '{$token}' }, '{$frontendUrl}');window.close();</script>");
     }
 }
