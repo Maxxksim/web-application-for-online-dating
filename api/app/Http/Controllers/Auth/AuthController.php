@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
@@ -37,7 +38,14 @@ class AuthController extends Controller
             return response()->json(['error' => 'Wrong login credentials'], Response::HTTP_BAD_REQUEST);
         }
 
-        return response()->json(['token' => $user->createToken('auth', expiresAt: now()->addMonth())->plainTextToken]);
+        return response()->json(['token' => $user->createToken('auth', expiresAt: now()->addMonth())->plainTextToken], Response::HTTP_OK);
+    }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Logged out successfully'], Response::HTTP_OK);
     }
 
 
