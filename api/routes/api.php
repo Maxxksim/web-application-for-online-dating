@@ -26,7 +26,7 @@ Route::prefix('auth')->group(function () {
 Route::prefix('profile')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::controller(ProfileController::class)->group(function () {
-            Route::put('/update', 'updateProfile');
+            Route::put('', 'updateProfile');
             Route::get('', 'getOwnProfile');
             Route::get('/{profile}', 'getProfile');
         });

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'name', 'age', 'gender', 'location', 'description', 'relevance_score'])]
+#[Fillable(['user_id', 'name', 'date_of_birthday', 'gender', 'location', 'description', 'relevance_score'])]
 class Profile extends Model
 {
     public function user(): BelongsTo
