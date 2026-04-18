@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProfileController extends Controller
 {
-    public function update(UpdateProfileRequest $request): ProfileResource
+    public function updateProfile(UpdateProfileRequest $request): ProfileResource
     {
         $profile = $request->user()->profile->update($request->validated());
 
@@ -29,6 +29,4 @@ class ProfileController extends Controller
     {
         return new ProfileResource($profile->with('photos')->first());
     }
-
-
 }
