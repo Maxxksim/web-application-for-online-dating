@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Middleware\AuthorizedForGuestOnly;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Sanctum;
 
 Route::prefix('auth')->group(function () {
     Route::middleware([AuthorizedForGuestOnly::class])->group(function () {
@@ -16,6 +19,20 @@ Route::prefix('auth')->group(function () {
             Route::get('google/callback', 'handleGoogleCallback');
         });
     });
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
 
+
+Route::prefix('profile')->group(function () {
+    Route::middleware([Sanctum::class])->group(function () {
+        Route::controller(ProfileController::class)->group(function () {
+            Route::put('/update', 'updateProfile');
+            Route::get('/{profile}', 'getProfile');
+        });
+        Route::controller(ProfilePhotoController::class)->group(function () {
+            Route::post('/photo', 'addPhoto');
+            Route::delete('/photo/{photo}', 'deletePhoto');
+        });
+    });
+});
 
