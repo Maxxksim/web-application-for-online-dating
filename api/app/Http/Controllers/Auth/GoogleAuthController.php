@@ -28,7 +28,9 @@ class GoogleAuthController extends Controller
         }
 
         if ($existingUser = User::where('email', $user->email)->first()) {
-            return response()->json(['token' => $existingUser->createToken('auth', expiresAt: now()->addMonth())->plainTextToken]);
+            $token = $existingUser->createToken('auth', expiresAt: now()->addMonth())->plainTextToken;
+            
+            return response("<script>window.opener.postMessage({ token: '{$token}' }, '{$frontendUrl}');window.close();</script>");
         }
 
         $token = User::create([
