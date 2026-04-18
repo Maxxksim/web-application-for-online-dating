@@ -8,6 +8,7 @@ use App\Models\ProfilePhoto;
 use App\Services\PhotoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -31,6 +32,7 @@ class ProfilePhotoController extends Controller
 
         return response()->json(['message' => 'Photos are being validated'], Response::HTTP_ACCEPTED);
     }
+    #[Authorize('delete')]
     public function deletePhoto(ProfilePhoto $photo): JsonResponse
     {
         $photo->delete();
