@@ -6,7 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Middleware\AuthorizedForGuestOnly;
 use Illuminate\Support\Facades\Route;
-use Laravel\Sanctum\Sanctum;
+
 
 Route::prefix('auth')->group(function () {
     Route::middleware([AuthorizedForGuestOnly::class])->group(function () {
@@ -24,9 +24,10 @@ Route::prefix('auth')->group(function () {
 
 
 Route::prefix('profile')->group(function () {
-    Route::middleware([Sanctum::class])->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         Route::controller(ProfileController::class)->group(function () {
             Route::put('/update', 'updateProfile');
+            Route::get('', 'getOwnProfile');
             Route::get('/{profile}', 'getProfile');
         });
         Route::controller(ProfilePhotoController::class)->group(function () {

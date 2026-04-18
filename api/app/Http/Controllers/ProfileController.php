@@ -27,6 +27,11 @@ class ProfileController extends Controller
 
     public function getProfile(Profile $profile): ProfileResource
     {
-        return new ProfileResource($profile->with('photos')->first());
+        return new ProfileResource($profile->load('photos'));
+    }
+
+    public function getOwnProfile(Request $request): ProfileResource
+    {
+        return new ProfileResource($request->user()->load('profile.photos')->profile);
     }
 }
