@@ -32,7 +32,8 @@ class ProfilePhotoController extends Controller
 
         return response()->json(['message' => 'Photos are being validated'], Response::HTTP_ACCEPTED);
     }
-    #[Authorize('delete')]
+
+    #[Authorize('delete', 'photo')]
     public function deletePhoto(ProfilePhoto $photo): JsonResponse
     {
         $photo->delete();
