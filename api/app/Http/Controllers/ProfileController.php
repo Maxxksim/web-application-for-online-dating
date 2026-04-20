@@ -15,6 +15,7 @@ class ProfileController extends Controller
         $profile = $request->user()->profile;
 
         $profile->update($request->validated());
+        $profile->updateCompletionPercentage();
 
         return new ProfileResource($profile);
     }
@@ -28,4 +29,6 @@ class ProfileController extends Controller
     {
         return new ProfileResource($request->user()->load('profile.photos')->profile);
     }
+
+
 }

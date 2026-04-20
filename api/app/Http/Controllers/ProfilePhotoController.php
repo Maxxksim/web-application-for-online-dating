@@ -9,6 +9,7 @@ use App\Services\PhotoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -36,8 +37,12 @@ class ProfilePhotoController extends Controller
     #[Authorize('delete', 'photo')]
     public function deletePhoto(ProfilePhoto $photo): JsonResponse
     {
-        $photo->delete();
-        Storage::disk('public')->delete($photo->path);
+        DB::transaction(function () use ($photo) {
+            $profile = $photo->profile;
+            $photo->delete();
+            Storage::disk('public')->delete($photo->path);
+            $profile->updateCompletionPercentage();
+        });
 
         return response()->json([], Response::HTTP_NO_CONTENT);
     }

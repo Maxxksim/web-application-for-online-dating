@@ -14,7 +14,8 @@ class ProfileResource extends JsonResource
             'date_of_birthday' => $this->date_of_birthday,
             'gender' => $this->gender,
             'description' => $this->description,
-            'photos' => ProfilePhotoResource::collection($this->photos)
+            'photos' => ProfilePhotoResource::collection($this->photos),
+            'completion_percentage' => $this->when($request->user()->id === $this->user_id, $this->completion_percentage),
         ];
     }
 }

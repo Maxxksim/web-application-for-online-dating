@@ -13,7 +13,7 @@ class UpdateProfileRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'date_of_birthday' => ['required', 'date'],
             'gender' => ['required', 'in:male,female'],
-            'description' => ['sometimes', 'string', 'max:500'],
+            'description' => ['nullable', 'sometimes', 'string', 'max:500'],
         ];
     }
 }
