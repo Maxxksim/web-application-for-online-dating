@@ -15,6 +15,8 @@ class ProfileResource extends JsonResource
             'gender' => $this->gender,
             'description' => $this->description,
             'photos' => ProfilePhotoResource::collection($this->photos),
+            'country' => $this->country,
+            'city' => $this->city,
             'completion_percentage' => $this->when($request->user()->id === $this->user_id, $this->completion_percentage),
         ];
     }
