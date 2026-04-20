@@ -12,12 +12,14 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name')->nullable();
-            $table->date('date_of_birthday')->nullable();
+            $table->date('date_of_birth')->nullable();
             $table->enum('gender', ['male', 'female'])->nullable();
-            $table->string('location')->nullable();
-            $table->string('description')->default('');
+            $table->string('country')->nullable();
+            $table->string('city')->nullable();
+            $table->string('description')->nullable();
             $table->integer('relevance_score')->default(3);
             $table->boolean('is_enabled')->default(false);
+            $table->integer(('completion_percentage'))->default(0);
             $table->timestamps();
         });
     }
