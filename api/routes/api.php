@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\GeolocationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Middleware\AuthorizedForGuestOnly;
@@ -23,8 +24,8 @@ Route::prefix('auth')->group(function () {
 });
 
 
-Route::prefix('profile')->group(function () {
-    Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('profile')->group(function () {
         Route::controller(ProfileController::class)->group(function () {
             Route::put('', 'updateProfile');
             Route::get('', 'getOwnProfile');
@@ -34,6 +35,7 @@ Route::prefix('profile')->group(function () {
             Route::post('/photo', 'addPhoto');
             Route::delete('/photo/{photo}', 'deletePhoto');
         });
+        Route::patch('/geolocation', [GeolocationController::class, 'updateGeolocation']);
     });
 });
 
