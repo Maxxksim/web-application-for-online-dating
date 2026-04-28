@@ -11,7 +11,7 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'date_of_birthday' => ['required', 'date'],
+            'date_of_birth' => ['required', 'date'],
             'gender' => ['required', 'in:male,female'],
             'description' => ['nullable', 'sometimes', 'string', 'max:500'],
         ];

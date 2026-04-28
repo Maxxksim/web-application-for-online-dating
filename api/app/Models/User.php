@@ -31,9 +31,4 @@ class User extends Authenticatable
     {
         return $this->hasOne(Profile::class);
     }
-
-    public function geolocation(): HasOne
-    {
-        return $this->hasOne(Geolocation::class);
-    }
 }

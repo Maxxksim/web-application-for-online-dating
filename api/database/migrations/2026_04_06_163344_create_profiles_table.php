@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Enums\DatingPurpose;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -17,6 +18,7 @@ return new class extends Migration {
             $table->string('country')->nullable();
             $table->string('city')->nullable();
             $table->string('description')->nullable();
+            $table->enum('dating_purpose', DatingPurpose::toArray())->nullable();
             $table->integer('relevance_score')->default(3);
             $table->boolean('is_enabled')->default(false);
             $table->integer(('completion_percentage'))->default(0);

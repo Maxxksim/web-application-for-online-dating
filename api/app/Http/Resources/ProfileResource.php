@@ -11,7 +11,7 @@ class ProfileResource extends JsonResource
     {
         return [
             'name' => $this->name,
-            'date_of_birthday' => $this->date_of_birthday,
+            'date_of_birth' => $this->date_of_birth,
             'gender' => $this->gender,
             'description' => $this->description,
             'photos' => ProfilePhotoResource::collection($this->photos),

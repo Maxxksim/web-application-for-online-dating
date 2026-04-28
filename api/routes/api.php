@@ -3,8 +3,11 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\GeolocationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilePhotoController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SwipeController;
 use App\Http\Middleware\AuthorizedForGuestOnly;
 use Illuminate\Support\Facades\Route;
 
@@ -27,7 +30,7 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('profile')->group(function () {
         Route::controller(ProfileController::class)->group(function () {
-            Route::put('', 'updateProfile');
+            Route::patch('', 'updateProfile');
             Route::get('', 'getOwnProfile');
             Route::get('/{profile}', 'getProfile');
         });
@@ -36,6 +39,18 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/photo/{photo}', 'deletePhoto');
         });
         Route::patch('/geolocation', [GeolocationController::class, 'updateGeolocation']);
+    });
+    Route::post('/swipe/{swiped_id}', [SwipeController::class, 'swipe']);
+
+    Route::prefix('notifications')->controller(NotificationController::class)->group(function () {
+        Route::get('', 'index');
+        Route::patch('/{id}', 'markAsRead');
+    });
+
+    Route::prefix('search')->controller(SearchController::class)->group(function () {
+        Route::get('/filters', 'getFilters');
+        Route::patch('/filters', 'updateFilters');
+        Route::get('/profiles', 'getProfilesByFilters');
     });
 });
 

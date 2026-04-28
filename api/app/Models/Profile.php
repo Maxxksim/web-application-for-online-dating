@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['user_id', 'name', 'date_of_birth', 'gender', 'country', 'city', 'description', 'relevance_score', 'completion_percentage'])]
 class Profile extends Model
@@ -18,6 +19,26 @@ class Profile extends Model
     public function photos(): HasMany
     {
         return $this->hasMany(ProfilePhoto::class);
+    }
+
+    public function swipes(): HasMany
+    {
+        return $this->hasMany(Swipe::class);
+    }
+
+    public function mutualLikes(): HasMany
+    {
+        return $this->hasMany(MutualLike::class);
+    }
+
+    public function searchFilters(): HasMany
+    {
+        return $this->hasMany(SearchFilters::class);
+    }
+
+    public function geolocation(): HasOne
+    {
+        return $this->hasOne(Geolocation::class);
     }
 
     public function updateCompletionPercentage(): void

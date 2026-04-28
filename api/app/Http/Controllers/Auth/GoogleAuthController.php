@@ -40,6 +40,7 @@ class GoogleAuthController extends Controller
                 'password' => bcrypt(Str::random(16)),
             ]);
             $newUser->profile()->create();
+            $newUser->profile()->searchFilters()->create();
 
             return $newUser->createToken('auth', expiresAt: now()->addMonth())->plainTextToken;
         });

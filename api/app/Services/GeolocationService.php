@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class GeolocationService
@@ -11,9 +12,10 @@ class GeolocationService
     {
         $location = $this->getLocation($coordinates);
 
-        $user->geolocation()->updateOrCreate([], [
+        $user->profile->geolocation()->updateOrCreate([], [
             'latitude' => $coordinates['latitude'],
             'longitude' => $coordinates['longitude'],
+            'geo_point' => DB::raw("ST_SetSRID(ST_MakePoint($coordinates[longitude], $coordinates[longitude]), 4326)")
         ]);
 
         $user->profile()->update([
