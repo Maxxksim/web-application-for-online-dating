@@ -43,13 +43,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/swipe/{swiped_id}', [SwipeController::class, 'swipe']);
 
     Route::prefix('notifications')->controller(NotificationController::class)->group(function () {
-        Route::get('', 'index');
+        Route::get('', 'getUnreadNotifications');
         Route::patch('/{id}', 'markAsRead');
     });
 
     Route::prefix('search')->controller(SearchController::class)->group(function () {
-        Route::get('/filters', 'getFilters');
-        Route::patch('/filters', 'updateFilters');
+        Route::get('/filters', 'getSearchFilters');
+        Route::patch('/filters', 'updateSearchFilters');
         Route::get('/profiles', 'getProfilesByFilters');
     });
 });

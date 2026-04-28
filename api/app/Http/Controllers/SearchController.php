@@ -27,7 +27,7 @@ class SearchController extends Controller
     public function getProfilesByFilters(Request $request, SearchService $searchService): JsonResponse
     {
         try {
-            $result = $searchService->searchByFilters($request->user->profile());
+            $result = $searchService->searchByFilters($request->user()->profile());
         } catch (\Exception $e) {
             return response()->json(['message' => 'Something went wrong'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

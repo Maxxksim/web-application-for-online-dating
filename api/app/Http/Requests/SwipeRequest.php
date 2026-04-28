@@ -10,7 +10,7 @@ class SwipeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'is_liked' => 'required|boolean',
+            'is_liked' => ['required', 'boolean']
         ];
     }
 }

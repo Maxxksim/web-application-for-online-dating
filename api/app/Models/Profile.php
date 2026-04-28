@@ -45,7 +45,7 @@ class Profile extends Model
     public function updateCompletionPercentage(): void
     {
         $countPhotos = $this->photos()->count();
-        $countFilled = collect($this->only(['name', 'date_of_birthday', 'gender', 'description']))->filter(fn($value) => $value !== null)->count();
+        $countFilled = collect($this->only(['name', 'date_of_birth', 'gender', 'description']))->filter(fn($value) => $value !== null)->count();
 
         $this->update([
             'completion_percentage' => (int)(($countPhotos + $countFilled) / 7 * 100)

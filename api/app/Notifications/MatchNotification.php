@@ -42,7 +42,7 @@ class MatchNotification extends Notification
     public function toDatabase(User $notifiable): array
     {
         return [
-            'matched_with_id' => $this->matchedWith->profile_id,
+            'matched_with_profile_id' => $this->matchedWith->id,
         ];
     }
 }

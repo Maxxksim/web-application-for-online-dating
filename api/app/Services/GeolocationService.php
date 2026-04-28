@@ -15,7 +15,7 @@ class GeolocationService
         $user->profile->geolocation()->updateOrCreate([], [
             'latitude' => $coordinates['latitude'],
             'longitude' => $coordinates['longitude'],
-            'geo_point' => DB::raw("ST_SetSRID(ST_MakePoint($coordinates[longitude], $coordinates[longitude]), 4326)")
+            'geo_point' => DB::raw("ST_SetSRID(ST_MakePoint($coordinates[longitude], $coordinates[latitude]), 4326)")
         ]);
 
         $user->profile()->update([

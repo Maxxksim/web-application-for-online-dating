@@ -14,12 +14,12 @@ class SwipeService
 
     }
 
-    public function swipe(int $swiper_id, int $swiped_id, bool $isLike): void
+    public function swipe(int $swiper_id, int $swiped_id, bool $isLiked): void
     {
         Swipe::create([
             'swiper_id' => $swiper_id,
             'swiped_id' => $swiped_id,
-            'is_like' => $isLike
+            'is_liked' => $isLiked
         ]);
 
         if ($this->isMatch($swiper_id, $swiped_id)) {
