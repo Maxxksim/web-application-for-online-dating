@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,9 +32,9 @@ class Profile extends Model
         return $this->hasMany(MutualLike::class);
     }
 
-    public function searchFilters(): HasMany
+    public function searchFilters(): HasOne
     {
-        return $this->hasMany(SearchFilters::class);
+        return $this->hasOne(SearchFilters::class);
     }
 
     public function geolocation(): HasOne
@@ -49,5 +50,10 @@ class Profile extends Model
         $this->update([
             'completion_percentage' => (int)(($countPhotos + $countFilled) / 7 * 100)
         ]);
+    }
+
+    public function getAgeAttribute(): int
+    {
+        return Carbon::parse($this->date_of_birth)->age;
     }
 }

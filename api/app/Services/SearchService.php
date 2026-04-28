@@ -16,7 +16,7 @@ class SearchService
     public function searchByFilters(Profile $profile): LengthAwarePaginator
     {
 
-        $searchFilters = $profile->searchFilters();
+        $searchFilters = $profile->searchFilters;
         $currentGeoPoint = $profile->geolocation->geo_point;
 
         return Profile::join('geolocations', 'profiles.id', '=', 'geolocations.profile_id')
@@ -24,7 +24,10 @@ class SearchService
                 $searchFilters['distance'] * 1000
             ])
             ->where('profiles.id', '!=', $profile->id)
-            ->whereBetween('profiles.age', [$searchFilters['min_age'], $searchFilters['max_age']])
+            ->whereRaw("DATE_PART('year', AGE(profiles.date_of_birth)) BETWEEN ? AND ?", [
+                $searchFilters->min_age,
+                $searchFilters->max_age
+            ])
             ->where('profiles.gender', $searchFilters['gender'])
             ->select('profiles.*')
             ->selectRaw("ST_Distance(geolocations.geo_point::geography, {$currentGeoPoint}::geography) / 1000 as distance")
