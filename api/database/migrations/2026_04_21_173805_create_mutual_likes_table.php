@@ -10,8 +10,8 @@ return new class extends Migration {
     {
         Schema::create('mutual_likes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('first_profile_id')->constrained('profiles', column: 'id')->cascadeOnDelete();
-            $table->foreignId('second_profile_id')->constrained('profiles', 'id')->cascadeOnDelete();
+            $table->foreignId('first_user_id')->constrained('users', column: 'id')->cascadeOnDelete();
+            $table->foreignId('second_user_id')->constrained('users', 'id')->cascadeOnDelete();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

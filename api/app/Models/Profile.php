@@ -22,26 +22,6 @@ class Profile extends Model
         return $this->hasMany(ProfilePhoto::class);
     }
 
-    public function swipes(): HasMany
-    {
-        return $this->hasMany(Swipe::class);
-    }
-
-    public function mutualLikes(): HasMany
-    {
-        return $this->hasMany(MutualLike::class);
-    }
-
-    public function searchFilters(): HasOne
-    {
-        return $this->hasOne(SearchFilters::class);
-    }
-
-    public function geolocation(): HasOne
-    {
-        return $this->hasOne(Geolocation::class);
-    }
-
     public function updateCompletionPercentage(): void
     {
         $countPhotos = $this->photos()->count();

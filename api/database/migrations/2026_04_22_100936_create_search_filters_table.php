@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('search_filters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('profile_id')->constrained('profiles')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users', 'id')->cascadeOnDelete();
             $table->integer('min_age')->default(16);
             $table->integer('max_age')->default(50);
             $table->enum('gender', ['male', 'female'])->nullable();

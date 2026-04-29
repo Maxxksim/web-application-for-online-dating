@@ -11,11 +11,7 @@ class SendMatchNotification
     {
         $match = $event->match;
 
-        $firstUser = $match->firstProfile->user;
-        $secondUser = $match->secondProfile->user;
-
-        $firstUser->notify(new MatchNotification($match->secondProfile));
-        $secondUser->notify(new MatchNotification($match->firstProfile));
-
+        $match->firstUser->notify(new MatchNotification($match->secondUser()->profile));
+        $match->secondUser->notify(new MatchNotification($match->firstUser()->profile));
     }
 }

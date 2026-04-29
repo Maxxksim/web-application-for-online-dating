@@ -9,13 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['swiper_id', 'swiped_id', 'is_liked'])]
 class Swipe extends Model
 {
-    public function profileSwiper(): BelongsTo
+    public function swiper(): BelongsTo
     {
-        return $this->belongsTo(Profile::class, 'swiper_id');
+        return $this->belongsTo(User::class, 'swiper_id');
     }
 
-    public function profileSwiped(): BelongsTo
+    public function swiped(): BelongsTo
     {
-        return $this->belongsTo(Profile::class, 'swiped_id');
+        return $this->belongsTo(User::class, 'swiped_id');
     }
 }

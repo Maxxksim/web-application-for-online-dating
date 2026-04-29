@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->enum('dating_purpose', DatingPurpose::toArray())->nullable();
             $table->integer('relevance_score')->default(3);
             $table->boolean('is_enabled')->default(false);
-            $table->integer(('completion_percentage'))->default(0);
+            $table->integer('completion_percentage')->default(0);
             $table->timestamps();
         });
     }

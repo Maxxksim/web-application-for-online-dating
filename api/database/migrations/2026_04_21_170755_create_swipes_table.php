@@ -9,8 +9,8 @@ return new class extends Migration {
     {
         Schema::create('swipes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('swiper_id')->constrained('profiles', 'id')->cascadeOnDelete();
-            $table->foreignId('swiped_id')->constrained('profiles', 'id')->cascadeOnDelete();
+            $table->foreignId('swiper_id')->constrained('users', 'id')->cascadeOnDelete();
+            $table->foreignId('swiped_id')->constrained('users', 'id')->cascadeOnDelete();
             $table->boolean('is_liked');
             $table->timestamps();
         });

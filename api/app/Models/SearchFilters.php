@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['min_age', 'max_age', 'gender', 'distance'])]
 class SearchFilters extends Model
 {
-    public function profile(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Profile::class);
+        return $this->belongsTo(User::class);
     }
 }
