@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['profile_id', 'latitude', 'longitude', 'geo_point'])]
+#[Fillable(['user_id', 'latitude', 'longitude', 'geo_point'])]
 class Geolocation extends Model
 {
     public function profile(): BelongsTo

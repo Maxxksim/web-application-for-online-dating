@@ -43,7 +43,7 @@ class User extends Authenticatable
         return $this->hasMany(MutualLike::class);
     }
 
-    public function searchFilters(): HasOne
+    public function searchFilter(): HasOne
     {
         return $this->hasOne(SearchFilters::class);
     }

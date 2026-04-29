@@ -6,6 +6,7 @@ use App\Http\Requests\ProfilePhotoRequest;
 use App\Jobs\ProcessValidatePhoto;
 use App\Models\ProfilePhoto;
 use App\Services\PhotoService;
+use App\Services\ProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
@@ -15,18 +16,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ProfilePhotoController extends Controller
 {
+    public function __construct(private readonly PhotoService $photoService, private readonly ProfileService $profileService)
+    {
 
-    public function addPhoto(ProfilePhotoRequest $request, PhotoService $photoService): JsonResponse
+    }
+
+    public function addPhoto(ProfilePhotoRequest $request): JsonResponse
     {
         $photos = $request->validated()['photos'];;
 
         foreach ($photos as $photo) {
-            $photoName = $photoService->buildFileName();
+            $photoName = $this->photoService->buildFileName();
             ($profile = $request->user()->profile)->photos()->create([
                 'path' => 'profile_photos/' . $photoName,
             ]);
 
-            Storage::disk('public')->put('profile_photos/' . $photoName, $photoService->compressImage($photo));
+            Storage::disk('public')->put('profile_photos/' . $photoName, $this->photoService->compressImage($photo));
         }
 
         ProcessValidatePhoto::dispatch($profile);
@@ -41,7 +46,7 @@ class ProfilePhotoController extends Controller
             $profile = $photo->profile;
             $photo->delete();
             Storage::disk('public')->delete($photo->path);
-            $profile->updateCompletionPercentage();
+            $this->profileService->updateCompletionPercentage($profile);
         });
 
         return response()->json([], Response::HTTP_NO_CONTENT);

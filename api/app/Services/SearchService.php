@@ -9,12 +9,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class SearchService
 {
-
-    public function __construct()
-    {
-
-    }
-
     public function searchByFilters(SearchFilters $searchFilters, int $user_id): LengthAwarePaginator
     {
         $userGeoPoint = "(SELECT geo_point FROM geolocations WHERE user_id = ?)::geography";

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['first_profile_id', 'second_profile_id', 'is_active'])]
+#[Fillable(['first_user_id', 'second_user_id', 'is_active'])]
 class MutualLike extends Model
 {
     public function firstUser(): BelongsTo

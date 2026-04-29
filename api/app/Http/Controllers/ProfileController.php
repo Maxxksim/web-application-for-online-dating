@@ -5,29 +5,37 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\ProfileResource;
 use App\Models\Profile;
+use App\Services\ProfileService;
+use HttpResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 
 class ProfileController extends Controller
 {
-    public function updateProfile(UpdateProfileRequest $request): ProfileResource
+    public function __construct(private readonly ProfileService $profileService)
+    {
+    }
+
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
     {
         $profile = $request->user()->profile;
 
         $profile->update($request->validated());
-        $profile->updateCompletionPercentage();
+        $this->profileService->updateCompletionPercentage($profile);
 
-        return new ProfileResource($profile);
+        return response()->json(['message' => 'Profile updated successfully.'], Response::HTTP_OK);
     }
 
-    public function getProfile(Profile $profile): ProfileResource
+    public function getProfile(Profile $profile): JsonResponse
     {
-        return new ProfileResource($profile->load('photos'));
+        return response()->json(['profile' => new ProfileResource($profile->load('photos'))], Response::HTTP_OK);
     }
 
-    public function getOwnProfile(Request $request): ProfileResource
+    public function getOwnProfile(Request $request): JsonResponse
     {
-        return new ProfileResource($request->user()->load('profile.photos')->profile);
+        return response()->json(['profile' => new ProfileResource($request->user()->profile->loadMissing('photos'))], Response::HTTP_OK);
     }
 
 

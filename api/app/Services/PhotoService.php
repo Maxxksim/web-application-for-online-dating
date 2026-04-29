@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
+use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 
 
 class PhotoService
@@ -30,7 +32,13 @@ class PhotoService
             );
         }
 
-        return $request->post(config('services.face_validator.url'))->json();
+        try {
+            $response = $request->post(config('services.face_validator.url'))->json();
+        } catch (ConnectionException $e) {
+            throw new ServiceUnavailableHttpException(message: 'Face validator service is unavailable');
+        }
+
+        return $response;
     }
 
     public function buildFileName(): string

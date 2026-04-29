@@ -9,11 +9,6 @@ use App\Models\Swipe;
 
 class SwipeService
 {
-    public function __construct()
-    {
-
-    }
-
     public function swipe(int $swiper_id, int $swiped_id, bool $isLiked): void
     {
         Swipe::create([

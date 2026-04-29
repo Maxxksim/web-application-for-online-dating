@@ -45,4 +45,8 @@ return [
         'url' => env('FACE_VALIDATOR_URL'),
     ],
 
+    'reverse_geocoding' => [
+        'url' => env('REVERSE_GEOCODING_URL'),
+    ]
+
 ];

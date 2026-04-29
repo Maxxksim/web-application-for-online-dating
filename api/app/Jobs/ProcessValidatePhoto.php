@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Profile;
 use App\Services\PhotoService;
+use App\Services\ProfileService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Collection;
@@ -19,14 +20,12 @@ class ProcessValidatePhoto implements ShouldQueue
 
     }
 
-    public function handle(PhotoService $photoService): void
+    public function handle(PhotoService $photoService, ProfileService $profileService): void
     {
         $photos = $this->profile->photos()->where('is_approved', false)->get();
         $validatedPhotos = $photoService->validateUserPhotos($photos->toArray());
 
         foreach ($validatedPhotos as $namePhoto => $validatedPhoto) {
-
-
             if ($validatedPhoto['result']) {
                 $this->profile->photos()
                     ->where('path', 'profile_photos/' . $namePhoto)
@@ -40,7 +39,7 @@ class ProcessValidatePhoto implements ShouldQueue
             }
         }
 
-        $this->profile->updateCompletionPercentage();
+        $profileService->updateCompletionPercentage($this->profile);
     }
 
     public function failed(\Throwable $exception): void

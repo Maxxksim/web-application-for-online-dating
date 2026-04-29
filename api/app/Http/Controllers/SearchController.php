@@ -11,6 +11,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SearchController extends Controller
 {
+    public function __construct(private readonly SearchService $searchService)
+    {
+
+    }
 
     public function getSearchFilters(Request $request): JsonResponse
     {
@@ -21,21 +25,17 @@ class SearchController extends Controller
     {
         $request->user()->profile->searchFilters->update($request->validated());
 
-        return response()->json(['message' => 'Search filters updated'], Response::HTTP_OK);
+        return response()->json(['message' => 'Search filters updated successfully.'], Response::HTTP_OK);
     }
 
-    public function getProfilesByFilters(Request $request, SearchService $searchService): JsonResponse
+    public function getProfilesByFilters(Request $request): JsonResponse
     {
-        try {
-            $result = $searchService->searchByFilters($request->user()->profile);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Something went wrong'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        $profiles = $this->searchService->searchByFilters($request->user()->searchFilter, $request->user()->id);
 
-        if (empty($result)) {
+        if (empty($profiles)) {
             return response()->json(['message' => 'No profiles found matching your filters'], Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json(['result' => $result], Response::HTTP_OK);
+        return response()->json(['profiles' => $profiles], Response::HTTP_OK);
     }
 }
