@@ -9,11 +9,12 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class SearchService
 {
-    public function searchByFilters(SearchFilters $searchFilters, int $user_id): LengthAwarePaginator
+    public function searchByFilters(SearchFilters $searchFilters, int $user_id, string $user_gender): LengthAwarePaginator
     {
         $userGeoPoint = "(SELECT geo_point FROM geolocations WHERE user_id = ?)::geography";
 
         return Profile::join('geolocations', 'profiles.user_id', '=', 'geolocations.user_id')
+            ->join('search_filters', 'profiles.user_id', '=', 'search_filters.user_id')
             ->whereRaw("ST_DWithin(geolocations.geo_point::geography, {$userGeoPoint}, ?)", [
                 $user_id,
                 $searchFilters->distance * 1000
@@ -26,7 +27,18 @@ class SearchService
                 $searchFilters->min_age,
                 $searchFilters->max_age
             ])
-            ->where('profiles.gender', $searchFilters->gender)
+            ->where(function ($query) use ($searchFilters, $user_gender) {
+                if ($searchFilters->gender === 'both') {
+                    $query->where('search_filters.gender', 'both')
+                        ->orWhere('search_filters.gender', $user_gender);
+                } else {
+                    $query->where('search_filters.gender', $user_gender)
+                        ->orWhere('search_filters.gender', 'both');
+                }
+            })
+            ->when($searchFilters->gender !== 'both', function ($query) use ($searchFilters) {
+                $query->where('profiles.gender', $searchFilters->gender);
+            })
             ->select('profiles.*')
             ->selectRaw("ST_Distance(geolocations.geo_point::geography, {$userGeoPoint}) / 1000 as distance", [
                 $user_id

@@ -30,7 +30,7 @@ class SearchController extends Controller
 
     public function getProfilesByFilters(Request $request): JsonResponse
     {
-        $profiles = $this->searchService->searchByFilters($request->user()->searchFilter, $request->user()->id);
+        $profiles = $this->searchService->searchByFilters($request->user()->searchFilter, $request->user()->id, $request->user()->profile->gender);
 
         if (empty($profiles)) {
             return response()->json(['message' => 'No profiles found matching your filters'], Response::HTTP_NOT_FOUND);
