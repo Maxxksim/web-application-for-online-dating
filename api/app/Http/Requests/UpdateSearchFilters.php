@@ -12,7 +12,7 @@ class UpdateSearchFilters extends FormRequest
         return [
             'min_age' => ['required', 'integer', 'min:16', 'lt:max_age'],
             'max_age' => ['required', 'integer', 'max:120', 'gt:min_age'],
-            'gender' => ['required', 'string', 'in:man,woman'],
+            'gender' => ['required', 'string', 'in:man,woman,both'],
             'distance' => ['required', 'integer', 'min:1'],
         ];
     }

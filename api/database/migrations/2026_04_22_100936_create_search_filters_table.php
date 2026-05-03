@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained('users', 'id')->cascadeOnDelete();
             $table->integer('min_age')->default(16);
             $table->integer('max_age')->default(50);
-            $table->enum('gender', ['male', 'female'])->nullable();
+            $table->enum('gender', ['male', 'female', 'both'])->nullable();
             $table->integer('distance')->default(10);
             $table->timestamps();
         });
