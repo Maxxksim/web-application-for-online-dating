@@ -10,7 +10,7 @@ return new class extends Migration {
     {
         Schema::create('geolocations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users', 'id')->cascadeOnDelete();
             $table->geometry('geo_point', 'point', 4326)->nullable();
             $table->spatialIndex('geo_point');
             $table->timestamps();

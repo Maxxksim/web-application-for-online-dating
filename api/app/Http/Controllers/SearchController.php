@@ -18,12 +18,12 @@ class SearchController extends Controller
 
     public function getSearchFilters(Request $request): JsonResponse
     {
-        return response()->json(new SearchFiltersResource($request->user()->profile->searchFilters), Response::HTTP_OK);
+        return response()->json(['filters' => new SearchFiltersResource($request->user()->searchFilter)], Response::HTTP_OK);
     }
 
     public function updateSearchFilters(UpdateSearchFilters $request): JsonResponse
     {
-        $request->user()->profile->searchFilters->update($request->validated());
+        $request->user()->searchFilter->update($request->validated());
 
         return response()->json(['message' => 'Search filters updated successfully.'], Response::HTTP_OK);
     }

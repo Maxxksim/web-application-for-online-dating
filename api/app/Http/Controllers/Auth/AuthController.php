@@ -19,7 +19,7 @@ class AuthController extends Controller
         $user = Db::transaction(function () use ($request) {
             $user = User::create($request->validated());
             $user->profile()->create();
-            $user->searchFilters()->create();
+            $user->searchFilter()->create();
 
             return $user;
         });

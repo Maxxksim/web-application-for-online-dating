@@ -23,21 +23,23 @@ class DatabaseSeeder extends Seeder
         ["longitude" => 20.998805601572645, "latitude" => 56.49033013918047]
     ];
 
-
     public function run(LocationService $locationService, ProfileService $profileService): void
     {
-        User::factory(10)->create()->each(function (User $user) use ($locationService, $profileService) {
+        $coordinates = $this->coordinates;
+        User::factory(8)->create()->each(function (User $user) use ($locationService, $profileService, &$coordinates) {
             $user->profile()->create([
                 'name' => fake()->name(),
                 'date_of_birth' => fake()->dateTimeBetween('-50 years', '-18 years')->format('Y-m-d'),
-                'gender' => fake(['woman', 'man']),
+                'gender' => fake()->randomElement(['woman', 'man']),
             ]);
             $user->searchFilter()->create([
-                'gender' => fake(['woman', 'man', 'both']),
-                'age' => random_int(16, 30),
+                'gender' => fake()->randomElement(['woman', 'man', 'both']),
+                'min_age' => random_int(16, 20),
+                'max_age' => random_int(20, 30),
                 'distance' => random_int(5, 20),
             ]);
-            $locationService->updateLocation($user, array_pop($this->coordinates), $profileService);
+
+            $locationService->updateLocation($user, array_pop($coordinates), $profileService);
         });
 
 
