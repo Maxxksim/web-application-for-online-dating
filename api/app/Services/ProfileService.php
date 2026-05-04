@@ -15,12 +15,4 @@ class ProfileService
             'completion_percentage' => (int)(($countPhotos + $countFilled) / 7 * 100)
         ]);
     }
-
-    public function updateLocation(Profile $profile, $location): void
-    {
-        $profile->update([
-            'city' => $location['city'],
-            'country' => $location['country'],
-        ]);
-    }
 }

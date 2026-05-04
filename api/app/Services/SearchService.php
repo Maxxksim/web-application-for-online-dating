@@ -27,18 +27,10 @@ class SearchService
                 $searchFilters->min_age,
                 $searchFilters->max_age
             ])
-            ->where(function ($query) use ($searchFilters, $user_gender) {
-                if ($searchFilters->gender === 'both') {
-                    $query->where('search_filters.gender', 'both')
-                        ->orWhere('search_filters.gender', $user_gender);
-                } else {
-                    $query->where('search_filters.gender', $user_gender)
-                        ->orWhere('search_filters.gender', 'both');
-                }
-            })
             ->when($searchFilters->gender !== 'both', function ($query) use ($searchFilters) {
                 $query->where('profiles.gender', $searchFilters->gender);
             })
+            ->whereIn('search_filters.gender', ['both', $user_gender])
             ->select('profiles.*')
             ->selectRaw("ST_Distance(geolocations.geo_point::geography, {$userGeoPoint}) / 1000 as distance", [
                 $user_id

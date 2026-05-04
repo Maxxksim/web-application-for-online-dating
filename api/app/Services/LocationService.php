@@ -10,7 +10,7 @@ use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 
 class LocationService
 {
-    public function updateLocation(User $user, array $coordinates, ProfileService $profileService): void
+    public function updateLocation(User $user, array $coordinates): void
     {
         $location = $this->getLocation($coordinates);
 
@@ -18,7 +18,10 @@ class LocationService
             'geo_point' => DB::raw("ST_SetSRID(ST_MakePoint($coordinates[longitude], $coordinates[latitude]), 4326)")
         ]);
 
-        $profileService->updateLocation($user->profile, $location);
+        $user->profile()->update([
+            'city' => $location['city'],
+            'country' => $location['country'],
+        ]);
     }
 
     private function getLocation(array $coordinates): array
@@ -31,7 +34,7 @@ class LocationService
                     'format' => 'json',
                 ]);
         } catch (ConnectionException $e) {
-            throw new ServiceUnavailableHttpException(message: 'Reverse geocoding service is unavailable');
+            throw new ServiceUnavailableHttpException(message: $e->getMessage());
         }
 
         $address = $response->json('address');

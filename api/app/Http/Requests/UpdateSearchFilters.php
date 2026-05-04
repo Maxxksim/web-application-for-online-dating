@@ -10,10 +10,10 @@ class UpdateSearchFilters extends FormRequest
     public function rules(): array
     {
         return [
-            'min_age' => ['required', 'integer', 'min:16', 'lt:max_age'],
-            'max_age' => ['required', 'integer', 'max:120', 'gt:min_age'],
-            'gender' => ['required', 'string', 'in:man,woman,both'],
-            'distance' => ['required', 'integer', 'min:1'],
+            'min_age' => ['sometimes', 'integer', 'min:16', 'lt:max_age'],
+            'max_age' => ['sometimes', 'integer', 'max:120', 'gt:min_age'],
+            'gender' => ['sometimes', 'string', 'in:man,woman,both'],
+            'distance' => ['sometimes', 'integer', 'min:1'],
         ];
     }
 }
