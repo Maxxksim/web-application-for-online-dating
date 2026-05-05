@@ -20,8 +20,8 @@ class SwipeService
         if ($this->isMatch($swiper_id, $swiped_id)) {
 
             $match = MutualLike::create([
-                'first_profile_id' => $swiper_id,
-                'second_profile_id' => $swiped_id,
+                'first_user_id' => $swiper_id,
+                'second_user_id' => $swiped_id,
             ]);
 
             MatchCreated::dispatch($match);

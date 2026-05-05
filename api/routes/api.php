@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
-use App\Http\Controllers\GeolocationController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -42,9 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/location', [LocationController::class, 'updateLocation']);
     Route::post('/swipes/{swiped_id}', [SwipeController::class, 'swipe']);
 
-    Route::prefix('notifications')->controller(NotificationController::class)->group(function () {
-        Route::get('', 'getUnreadNotifications');
-        Route::patch('/{id}', 'markAsRead');
+    Route::controller(NotificationController::class)->group(function () {
+        Route::get('notifications', 'getUnreadNotifications');
+        Route::patch('notifications/{id}', 'markAsRead');
     });
 
     Route::prefix('search')->controller(SearchController::class)->group(function () {

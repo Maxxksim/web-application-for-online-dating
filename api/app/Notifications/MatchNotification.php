@@ -14,35 +14,21 @@ class MatchNotification extends Notification
     use Queueable;
 
     public function __construct(
-        private readonly Profile $matchedWith,
+        private readonly User $matchedWithUser,
     )
     {
     }
 
 
-    /**
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
         return ['database'];
     }
-    /* implement later
-        public function toMail(object $notifiable): MailMessage
-        {
-            return (new MailMessage)
-                ->line('The introduction to the notification.')
-                ->action('Notification Action', url('/'))
-                ->line('Thank you for using our application!');
-        }
-    */
-    /**
-     * @return array<string, mixed>
-     */
+
     public function toDatabase(User $notifiable): array
     {
         return [
-            'matched_with_profile_id' => $this->matchedWith->id,
+            'matched_user_profile_id' => $this->matchedWithUser->profile->id,
         ];
     }
 }
