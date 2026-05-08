@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 // use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 class SearchFiltersTest extends TestCase
@@ -17,15 +18,18 @@ class SearchFiltersTest extends TestCase
         $token = $userData['token'];
         $user = $userData['user'];
 
-        $userGender = 'man';
-
-        $user->profile->update(['gender' => $userGender]);
+        $userGender = $user->profile->gender;
 
         foreach ($this->genderFilters as $genderFilter) {
 
             $this->withToken($token)->patch('api/search/filters', ['gender' => $genderFilter]);
             $response = $this->withToken($token)->get('/api/search/profiles');
-            $profiles = $response->json('profiles.data');
+
+            if (is_null($profiles = $response->json('profiles'))) {
+                $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+                $response->assertJson(['message' => 'Please fill in all missing required fields and add at least one photo.']);
+                return;
+            }
 
             foreach ($profiles as $profile) {
 

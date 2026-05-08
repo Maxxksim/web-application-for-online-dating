@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Events\MatchCreated;
 use App\Models\MutualLike;
-use App\Models\Profile;
 use App\Models\Swipe;
+use App\Models\User;
 
 class SwipeService
 {
@@ -34,5 +34,18 @@ class SwipeService
             ->where('swiped_id', $swiper_id)
             ->where('is_liked', true)
             ->exists();
+    }
+
+    public function getWhoLiked(User $user): array
+    {
+        return Swipe::join('profiles', 'profiles.user_id', '=', 'swiper_id')
+            ->where('swiped_id', $user->id)
+            ->where('is_liked', true)
+            ->select('profiles.*');
+    }
+
+    public function getMutualLikes(User $user): array
+    {
+        return MutualLike::where('first_user_id', $user->id)->orWhere('second_user_id', $user->id);
     }
 }

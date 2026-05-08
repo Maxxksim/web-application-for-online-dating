@@ -29,8 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('profiles')->group(function () {
         Route::controller(ProfileController::class)->group(function () {
             Route::patch('/me', 'updateProfile');
-            Route::get('/me', 'getOwnProfile');
+            Route::get('/me', 'getMyProfile');
             Route::get('/{profile}', 'getProfile');
+            Route::patch('/enable', 'enableProfile');
+            Route::patch('/disable', 'disableProfile');
         });
         Route::controller(ProfilePhotoController::class)->group(function () {
             Route::post('/photos', 'addPhoto');

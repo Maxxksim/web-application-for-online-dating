@@ -9,31 +9,31 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class SearchService
 {
-    public function searchByFilters(SearchFilters $searchFilters, int $user_id, string $user_gender): LengthAwarePaginator
+    public function searchByFilters(User $user): LengthAwarePaginator
     {
         $userGeoPoint = "(SELECT geo_point FROM geolocations WHERE user_id = ?)::geography";
 
         return Profile::join('geolocations', 'profiles.user_id', '=', 'geolocations.user_id')
             ->join('search_filters', 'profiles.user_id', '=', 'search_filters.user_id')
             ->whereRaw("ST_DWithin(geolocations.geo_point::geography, {$userGeoPoint}, ?)", [
-                $user_id,
-                $searchFilters->distance * 1000
+                $user->id,
+                $user->searchFilter->distance * 1000
             ])
-            ->where('profiles.user_id', '!=', $user_id)
-            ->whereNotIn('profiles.user_id', function ($query) use ($user_id) {
-                $query->select('swiped_id')->from('swipes')->where('swiper_id', $user_id);
+            ->where('profiles.user_id', '!=', $user->id)
+            ->whereNotIn('profiles.user_id', function ($query) use ($user) {
+                $query->select('swiped_id')->from('swipes')->where('swiper_id', $user->id);
             })
             ->whereRaw("DATE_PART('year', AGE(profiles.date_of_birth)) BETWEEN ? AND ?", [
-                $searchFilters->min_age,
-                $searchFilters->max_age
+                $user->searchFilter->min_age,
+                $user->searchFilter->max_age
             ])
-            ->when($searchFilters->gender !== 'both', function ($query) use ($searchFilters) {
-                $query->where('profiles.gender', $searchFilters->gender);
+            ->when($user->searchFilter->gender !== 'both', function ($query) use ($user) {
+                $query->where('profiles.gender', $user->searchFilter->gender);
             })
-            ->whereIn('search_filters.gender', ['both', $user_gender])
+            ->whereIn('search_filters.gender', ['both', $user->gender])
             ->select('profiles.*')
             ->selectRaw("ST_Distance(geolocations.geo_point::geography, {$userGeoPoint}) / 1000 as distance", [
-                $user_id
+                $user->id
             ])
             ->orderBy('distance')
             ->paginate(20);
