@@ -2,15 +2,17 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Facades\Log;
-use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class NotificationTest extends TestCase
 {
-    public function test_get_notification_after_mutual_like()
+    private array $expectedNotificationTypes = [
+        'Match' => 'App\Notifications\MatchNotification',
+        'Like' => 'App\Notifications\LikeNotification'
+    ];
+
+    public function test_get_notification_after_like_and_match(): void
     {
         $firstUser = $this->getUser();
         $secondUser = $this->getUser();
@@ -28,8 +30,12 @@ class NotificationTest extends TestCase
 
         $secondUserNotifications = $this->actingAs($secondUser['user'], 'sanctum')->get('/api/notifications')['notifications'];
 
-        $this->assertCount(1, $firstUserNotifications);
-        $this->assertCount(1, $secondUserNotifications);
+        $this->assertCount(2, $firstUserNotifications);
+        $this->assertEquals($this->expectedNotificationTypes['Like'], $firstUserNotifications[0]['type']);
+        $this->assertEquals($this->expectedNotificationTypes['Match'], $firstUserNotifications[1]['type']);
 
+        $this->assertCount(2, $secondUserNotifications);
+        $this->assertEquals($this->expectedNotificationTypes['Like'], $secondUserNotifications[0]['type']);
+        $this->assertEquals($this->expectedNotificationTypes['Match'], $secondUserNotifications[1]['type']);
     }
 }

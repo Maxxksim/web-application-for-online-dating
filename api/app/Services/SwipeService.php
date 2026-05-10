@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\LikeProcessed;
 use App\Events\MatchCreated;
 use App\Models\MutualLike;
 use App\Models\Swipe;
@@ -11,11 +12,15 @@ class SwipeService
 {
     public function swipe(int $swiper_id, int $swiped_id, bool $isLiked): void
     {
-        Swipe::create([
+        $swipe = Swipe::create([
             'swiper_id' => $swiper_id,
             'swiped_id' => $swiped_id,
             'is_liked' => $isLiked
         ]);
+
+        if ($isLiked) {
+            LikeProcessed::dispatch($swipe);
+        }
 
         if ($this->isMatch($swiper_id, $swiped_id)) {
 
