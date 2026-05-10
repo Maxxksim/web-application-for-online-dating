@@ -19,6 +19,7 @@ class ProfileResource extends JsonResource
             'city' => $this->city,
             'age' => $this->age,
             'completion_percentage' => $this->when($request->user()->id === $this->user_id, $this->completion_percentage),
+            'is_enabled' => $this->is_enabled,
         ];
     }
 }

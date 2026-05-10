@@ -6,6 +6,7 @@ use App\Models\Profile;
 use App\Models\SearchFilters;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class SearchService
 {
@@ -30,7 +31,8 @@ class SearchService
             ->when($user->searchFilter->gender !== 'both', function ($query) use ($user) {
                 $query->where('profiles.gender', $user->searchFilter->gender);
             })
-            ->whereIn('search_filters.gender', ['both', $user->gender])
+            ->whereIn('search_filters.gender', ['both', $user->profile->gender])
+            ->where('is_enabled', true)
             ->select('profiles.*')
             ->selectRaw("ST_Distance(geolocations.geo_point::geography, {$userGeoPoint}) / 1000 as distance", [
                 $user->id

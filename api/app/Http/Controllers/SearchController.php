@@ -8,6 +8,7 @@ use App\Services\ProfileService;
 use App\Services\SearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class SearchController extends Controller
@@ -32,7 +33,7 @@ class SearchController extends Controller
     public function getProfilesByFilters(Request $request): JsonResponse
     {
         if ($this->profileService->isProfileReadyForSearching($request->user()->profile)) {
-            $profiles = $this->searchService->searchByFilters($request->user);
+            $profiles = $this->searchService->searchByFilters($request->user());
 
             if (empty($profiles)) {
                 return response()->json(['message' => 'No profiles found matching your filters'], Response::HTTP_NOT_FOUND);

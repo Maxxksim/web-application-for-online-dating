@@ -25,7 +25,7 @@ class SearchFiltersTest extends TestCase
             $this->withToken($token)->patch('api/search/filters', ['gender' => $genderFilter]);
             $response = $this->withToken($token)->get('/api/search/profiles');
 
-            if (is_null($profiles = $response->json('profiles'))) {
+            if (empty($profiles = $response->json('profiles.data'))) {
                 $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
                 $response->assertJson(['message' => 'Please fill in all missing required fields and add at least one photo.']);
                 return;
