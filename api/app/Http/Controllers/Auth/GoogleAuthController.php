@@ -35,14 +35,10 @@ class GoogleAuthController extends Controller
         }
 
         $token = Db::transaction(function () use ($user) {
-            $newUser = User::create([
+            return User::create([
                 'email' => $user->email,
                 'password' => bcrypt(Str::random(16)),
-            ]);
-            $newUser->profile()->create();
-            $newUser->searchFilter()->create();
-
-            return $newUser->createToken('auth', expiresAt: now()->addMonth())->plainTextToken;
+            ])->createToken('auth', expiresAt: now()->addMonth())->plainTextToken;
         });
 
         return response("<script>window.opener.postMessage({ token: '{$token}' }, '{$frontendUrl}');window.close();</script>");

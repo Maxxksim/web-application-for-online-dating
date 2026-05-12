@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class GeolocationRequest extends FormRequest
+class UpdateGeolocationRequest extends FormRequest
 {
 
     public function rules(): array

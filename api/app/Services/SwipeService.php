@@ -18,19 +18,16 @@ class SwipeService
             'is_liked' => $isLiked
         ]);
 
-        if ($isLiked) {
-            LikeProcessed::dispatch($swipe);
+        if (!$isLiked) {
+            return;
         }
 
         if ($this->isMatch($swiper_id, $swiped_id)) {
-
-            $match = MutualLike::create([
-                'first_user_id' => $swiper_id,
-                'second_user_id' => $swiped_id,
-            ]);
-
-            MatchCreated::dispatch($match);
+            $this->handleMatch($swiper_id, $swiped_id);
+            return;
         }
+        
+        LikeProcessed::dispatch($swipe);
     }
 
     private function isMatch(int $swiper_id, int $swiped_id): bool
@@ -39,6 +36,16 @@ class SwipeService
             ->where('swiped_id', $swiper_id)
             ->where('is_liked', true)
             ->exists();
+    }
+
+    private function handleMatch(int $swiper_id, int $swiped_id): void
+    {
+        $match = MutualLike::create([
+            'first_user_id' => $swiper_id,
+            'second_user_id' => $swiped_id,
+        ]);
+
+        MatchCreated::dispatch($match);
     }
 
     public function getWhoLiked(User $user): array

@@ -40,6 +40,7 @@ class ProcessValidatePhoto implements ShouldQueue
         }
 
         $profileService->updateCompletionPercentage($this->profile);
+        $profileService->enableIfReady($this->profile);
     }
 
     public function failed(\Throwable $exception): void

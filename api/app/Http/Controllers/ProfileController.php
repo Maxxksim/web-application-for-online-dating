@@ -23,6 +23,7 @@ class ProfileController extends Controller
 
         $profile->update($request->validated());
         $this->profileService->updateCompletionPercentage($profile);
+        $this->profileService->enableIfReady($profile);
 
         return response()->json(['message' => 'Profile updated successfully.'], Response::HTTP_OK);
     }
@@ -39,9 +40,13 @@ class ProfileController extends Controller
 
     public function enableProfile(Request $request): JsonResponse
     {
-        if ($this->profileService->isProfileReadyForSearching($request->user()->profile)) {
-            $request->user()->profile->update(['is_enabled' => true]);
+        if ($request->user()->profile->is_enabled) {
 
+            return response()->json(['message' => 'Profile is already enabled.'], Response::HTTP_OK);
+        }
+
+        if ($this->profileService->enableIfReady($request->user()->profile)) {
+            
             return response()->json(['message' => 'Profile enabled successfully.'], Response::HTTP_OK);
         }
 
@@ -55,6 +60,7 @@ class ProfileController extends Controller
     {
         if ($request->user()->profile->is_enabled) {
             $request->user()->profile->update(['is_enabled' => false]);
+
             return response()->json(['message' => 'Profile disabled successfully.'], Response::HTTP_OK);
         }
 

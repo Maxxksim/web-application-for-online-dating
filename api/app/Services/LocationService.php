@@ -14,7 +14,7 @@ class LocationService
     {
         $location = $this->getLocation($coordinates);
 
-        $user->geolocation()->updateOrCreate([], [
+        $user->geolocation()->update([
             'geo_point' => DB::raw("ST_SetSRID(ST_MakePoint($coordinates[longitude], $coordinates[latitude]), 4326)")
         ]);
 
@@ -40,7 +40,7 @@ class LocationService
         $address = $response->json('address');
 
         return [
-            'city' => $address['city'] ?? $address['town'] ?? $address['village'] ?? null,
+            'city' => $address['city'] ?? $address['town'] ?? $address['village'] ?? $address['municipality'] ?? null,
             'country' => $address['country'] ?? null,
         ];
     }
