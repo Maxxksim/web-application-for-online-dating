@@ -12,7 +12,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class LikeProcessed
+class LikeProcessed implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -25,7 +25,7 @@ class LikeProcessed
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('likes' . $this->swipe->swiped_id),
+            new PrivateChannel('likes.' . $this->swipe->swiped_id),
         ];
     }
 
