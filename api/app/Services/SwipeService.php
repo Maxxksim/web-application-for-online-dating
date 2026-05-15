@@ -26,7 +26,7 @@ class SwipeService
             $this->handleMatch($swiper_id, $swiped_id);
             return;
         }
-        
+
         LikeProcessed::dispatch($swipe);
     }
 
@@ -56,8 +56,16 @@ class SwipeService
             ->select('profiles.*');
     }
 
-    public function getMutualLikes(User $user): array
+    public function getMatches(User $user): array
     {
         return MutualLike::where('first_user_id', $user->id)->orWhere('second_user_id', $user->id);
+    }
+
+    public function haveMatch(int $firstUserId, int $secondUserId): bool
+    {
+        return MutualLike::whereIn('first_user_id', [$firstUserId, $secondUserId])
+            ->whereIn('second_user_id', [$firstUserId, $secondUserId])
+            ->where('first_user_id', '!=', 'second_user_id')
+            ->exists();
     }
 }

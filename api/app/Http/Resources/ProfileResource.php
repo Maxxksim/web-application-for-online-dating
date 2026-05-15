@@ -10,6 +10,7 @@ class ProfileResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'user_id' => $this->when($request->user()->id === $this->user_id, $this->user_id),
             'name' => $this->name,
             'date_of_birth' => $this->date_of_birth,
             'gender' => $this->gender,

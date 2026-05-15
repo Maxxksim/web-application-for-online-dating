@@ -4,8 +4,11 @@ namespace App\Listeners;
 
 use App\Events\MatchCreated;
 use App\Notifications\MatchNotification;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Queue\Attributes\Queue;
 
-class SendMatchNotification
+#[Queue('notifications')]
+class SendMatchNotification implements ShouldQueue
 {
     public function handle(MatchCreated $event): void
     {

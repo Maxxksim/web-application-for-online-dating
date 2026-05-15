@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilePhotoController;
@@ -45,7 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(NotificationController::class)->group(function () {
         Route::get('notifications', 'getUnreadNotifications');
-        Route::patch('notifications/{id}', 'markAsRead');
+        Route::patch('notifications/{notification}', 'markAsRead');
     });
 
     Route::prefix('search')->controller(SearchController::class)->group(function () {
@@ -53,5 +55,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/filters', 'updateSearchFilters');
         Route::get('/profiles', 'getProfilesByFilters');
     });
+
+    Route::get('/chats', [ChatController::class, 'getChats']);
+    Route::put('/chats/{user}', [ChatController::class, 'firstOrCreate']);
+    Route::get('/chats/{chat}/messages', [MessageController::class, 'getMessages']);
+    Route::post('/chats/{chat}/messages', [MessageController::class, 'sendMessage']);
 });
 
