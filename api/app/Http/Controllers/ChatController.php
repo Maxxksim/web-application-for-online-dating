@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Services\ChatService;
+use App\Services\MatchService;
 use App\Services\SwipeService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -11,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ChatController extends Controller
 {
-    public function __construct(private readonly ChatService $chatService, private readonly SwipeService $swipeService)
+    public function __construct(private readonly ChatService $chatService, private readonly MatchService $matchService)
     {
 
     }
@@ -29,7 +30,7 @@ class ChatController extends Controller
             return response()->json(['message' => 'You cannot create chat with yourself.'], Response::HTTP_FORBIDDEN);
         }
 
-        if (!$this->swipeService->haveMatch($request->user()->id, $recipient->id)) {
+        if (!$this->matchService->haveMatch($request->user()->id, $recipient->id)) {
             return response()->json(['message' => 'You cannot create chat without matching.'], Response::HTTP_FORBIDDEN);
         }
 

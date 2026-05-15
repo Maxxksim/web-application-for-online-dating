@@ -47,25 +47,4 @@ class SwipeService
 
         MatchCreated::dispatch($match);
     }
-
-    public function getWhoLiked(User $user): array
-    {
-        return Swipe::join('profiles', 'profiles.user_id', '=', 'swiper_id')
-            ->where('swiped_id', $user->id)
-            ->where('is_liked', true)
-            ->select('profiles.*');
-    }
-
-    public function getMatches(User $user): array
-    {
-        return MutualLike::where('first_user_id', $user->id)->orWhere('second_user_id', $user->id);
-    }
-
-    public function haveMatch(int $firstUserId, int $secondUserId): bool
-    {
-        return MutualLike::whereIn('first_user_id', [$firstUserId, $secondUserId])
-            ->whereIn('second_user_id', [$firstUserId, $secondUserId])
-            ->where('first_user_id', '!=', 'second_user_id')
-            ->exists();
-    }
 }

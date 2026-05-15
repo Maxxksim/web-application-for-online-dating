@@ -30,7 +30,6 @@ class MessageController extends Controller
 
         $this->messageService->sendMessage($chat, $request->user()->id, $request->validated('text'));
 
-        return response()->json(['message' => 'Message has been sent.'], Response::HTTP_OK);
-
+        return response()->json(['message' => 'Message has been sent.'], Response::HTTP_CREATED);
     }
 }

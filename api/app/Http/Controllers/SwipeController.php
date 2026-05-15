@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SwipeRequest;
 use App\Services\SwipeService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class SwipeController extends Controller
