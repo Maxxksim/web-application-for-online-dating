@@ -16,6 +16,10 @@ class LikeController extends Controller
 
     public function getLikes(Request $request): JsonResponse
     {
-        return response()->json(['likes' => $this->likeService->getWhoLiked($request->user())], Response::HTTP_OK);
+        if (($likes = $this->likeService->getProfilesWhoLiked($request->user()))->isEmpty()) {
+            return response()->json(['message' => 'Nobody hasn\'t liked you yet.'], Response::HTTP_OK);
+        }
+
+        return response()->json(['likes' => $likes->toResourceCollection()], Response::HTTP_OK);
     }
 }

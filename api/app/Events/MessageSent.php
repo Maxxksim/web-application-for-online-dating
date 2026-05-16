@@ -9,8 +9,10 @@ use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\Attributes\Queue;
 use Illuminate\Queue\SerializesModels;
 
+#[Queue('messages')]
 class MessageSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -20,16 +22,16 @@ class MessageSent implements ShouldBroadcast
 
     }
 
+    public function broadcastAs(): string
+    {
+        return 'message.sent';
+    }
+
     public function broadcastOn(): array
     {
         return [
             new PrivateChannel("chat.{$this->message->chat_id}"),
         ];
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'message.sent';
     }
 
     public function broadcastWith(): array
@@ -39,12 +41,7 @@ class MessageSent implements ShouldBroadcast
             'chat_id' => $this->message->chat_id,
             'user_id' => $this->message->user_id,
             'message' => $this->message->text,
-            'read_at' => $this->message->read_at,
             'created_at' => $this->message->created_at,
-            'user' => [
-                'id' => $this->message->user->id,
-                'name' => $this->message->user->profile->name,
-            ],
         ];
     }
 }

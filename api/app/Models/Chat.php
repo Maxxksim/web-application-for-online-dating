@@ -17,13 +17,19 @@ class Chat extends Model
         return $this->hasMany(Message::class);
     }
 
-    public function users(): BelongsToMany
+    public function firstUser(): BelongsTo
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsTo(User::class, 'first_user_id');
     }
 
-    public function getOtherUser(int $userId): User
+    public function secondUser(): BelongsTo
     {
-        return $this->users->firstWhere('id', '!=', $userId);
+        return $this->belongsTo(User::class, 'second_user_id');
     }
+
+    public function interlocutor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'interlocutor_id');
+    }
+
 }

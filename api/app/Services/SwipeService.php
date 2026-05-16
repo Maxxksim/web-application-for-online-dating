@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Events\LikeProcessed;
+use App\Events\LikeSent;
 use App\Events\MatchCreated;
 use App\Models\MutualLike;
 use App\Models\Swipe;
@@ -27,7 +27,7 @@ class SwipeService
             return;
         }
 
-        LikeProcessed::dispatch($swipe);
+        LikeSent::dispatch($swipe);
     }
 
     private function isMatch(int $swiper_id, int $swiped_id): bool

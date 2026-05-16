@@ -8,14 +8,17 @@ class ProfileService
 {
     private const array REQUIRED_FIELDS = ['name', 'date_of_birth', 'gender', 'city'];
     private const array OPTIONAL_FIELDS = ['description'];
+    private const int MAX_PHOTOS = 3;
 
     public function updateCompletionPercentage(Profile $profile): void
     {
         $countPhotos = $profile->photos()->count();
         $countFilled = collect($profile->only(array_merge(self::REQUIRED_FIELDS, self::OPTIONAL_FIELDS)))->filter(fn($value) => $value !== null)->count();
 
+        $total = count(array_merge(self::REQUIRED_FIELDS, self::OPTIONAL_FIELDS)) + self::MAX_PHOTOS;
+
         $profile->update([
-            'completion_percentage' => (int)(($countPhotos + $countFilled) / (count([self::REQUIRED_FIELDS, self::OPTIONAL_FIELDS])) * 100)
+            'completion_percentage' => (int)(($countPhotos + $countFilled) / $total * 100)
         ]);
     }
 

@@ -2,17 +2,18 @@
 
 namespace App\Services;
 
+use App\Models\Profile;
 use App\Models\Swipe;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 
 class LikeService
 {
-    public function getWhoLiked(User $user): array
+    public function getProfilesWhoLiked(User $user): Collection
     {
-        return Swipe::join('profiles', 'profiles.user_id', '=', 'swiper_id')
-            ->where('swiped_id', $user->id)
-            ->where('is_liked', true)
-            ->select('profiles.*')
-            ->get();
+        return Profile::whereHas('swipes', function ($query) use ($user) {
+            $query->where('swiped_id', $user->id)
+                ->where('is_liked', true);
+        })->get();
     }
 }

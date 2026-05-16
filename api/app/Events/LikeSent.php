@@ -12,7 +12,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class LikeProcessed implements ShouldBroadcast
+class LikeSent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -20,6 +20,11 @@ class LikeProcessed implements ShouldBroadcast
     )
     {
 
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'like.processed';
     }
 
     public function broadcastOn(): array

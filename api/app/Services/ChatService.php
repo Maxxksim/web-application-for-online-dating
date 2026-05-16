@@ -4,11 +4,14 @@ namespace App\Services;
 
 use App\Models\Chat;
 use App\Models\User;
+use App\Services\traits\SortsUserIds;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ChatService
 {
+    use SortsUserIds;
+
     public function __construct()
     {
 
@@ -16,36 +19,31 @@ class ChatService
 
     public function getUserChats(User $user): Collection
     {
-        return $user->chats()->with([
-            'users' => function ($query) use ($user) {
-                $query->where('users.id', '!=', $user->id)
-                    ->select('users.id');
-            },
-        ])->withCount([
-            'messages as unread_count' => function ($query) use ($user) {
-                $query->whereNull('read_at')
-                    ->where('user_id', '!=', $user->id);
-            },
-        ])->orderByDesc('chats.last_message_at')->get();
+        return $user->chats()
+            ->select('chats.*', DB::raw("
+            CASE WHEN first_user_id = {$user->id}
+            THEN second_user_id
+            ELSE first_user_id END as interlocutor_id
+        "))
+            ->with('interlocutor.profile')
+            ->withCount([
+                'messages as unread_count' => fn($q) => $q->whereNull('read_at')
+                    ->where('user_id', '!=', $user->id),
+            ])
+            ->orderByDesc('chats.last_message_at')
+            ->get();
     }
 
     public function firstOrCreate(User $sender, User $recipient): array
     {
-        return DB::transaction(function () use ($sender, $recipient) {
-            $chat = Chat::whereAttachedTo($sender)
-                ->whereAttachedTo($recipient)
-                ->lockForUpdate()
-                ->first();
+        [$firstId, $secondId] = $this->sortUserIds($sender->id, $recipient->id);
 
-            if ($chat) {
-                return ['chat' => $chat, 'isExisted' => true];
-            }
+        $chat = Chat::firstOrCreate([
+            'first_user_id' => $firstId,
+            'second_user_id' => $secondId,
+        ]);
 
-            $chat = Chat::create();
-            $chat->users()->attach([$sender->id, $recipient->id]);
-
-            return ['chat' => $chat, 'isExisted' => false];
-        });
+        return ['chat' => $chat, 'isExisted' => !$chat->wasRecentlyCreated];
     }
 
 }

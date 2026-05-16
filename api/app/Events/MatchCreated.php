@@ -19,6 +19,11 @@ class MatchCreated implements ShouldBroadcast
     {
     }
 
+    public function broadcastAs(): string
+    {
+        return 'match.created';
+    }
+
     public function broadcastOn(): array
     {
         return [

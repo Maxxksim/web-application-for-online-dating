@@ -24,7 +24,7 @@ class MessageService
         }
     }
 
-    public function sendMessage(Chat $chat, int $userId, string $text): Message
+    public function sendMessage(Chat $chat, int $userId, string $text): void
     {
         $message = DB::transaction(function () use ($chat, $userId, $text) {
             $message = $chat->messages()->create([
@@ -36,12 +36,9 @@ class MessageService
 
             return $message;
         });
-
-        $message->load('user');
-
+        
         MessageSent::dispatch($message);
 
-        return $message;
     }
 
     public function getMessages(Chat $chat, int $perPage = 30): LengthAwarePaginator
