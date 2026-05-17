@@ -11,6 +11,16 @@ export default defineConfig([
     files: ['**/*.{vue,js,mjs,jsx}'],
   },
 
+  {
+    name: 'app/node-config-files',
+    files: ['**/*.{config,configs}.{js,mjs}', '**/vite.config.js', '**/tailwind.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
 
   {
