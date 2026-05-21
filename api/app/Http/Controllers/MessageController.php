@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class MessageController extends Controller
 {
-    public function __construct(private readonly MessageService $messageService, private readonly ChatService $chatService, private readonly SwipeService $swipeService)
+    public function __construct(private readonly MessageService $messageService)
     {
 
     }
@@ -25,10 +25,10 @@ class MessageController extends Controller
         return response()->json(['messages' => $messages], Response::HTTP_OK);
     }
 
-    public function sendMessage(MessageRequest $request, Chat $chat): Response
+    public function sendMessage(MessageRequest $request, User $recipient): Response
     {
 
-        $this->messageService->sendMessage($chat, $request->user()->id, $request->validated('text'));
+        $this->messageService->sendMessage($request->user(), $recipient, $request->validated('text'));
 
         return response()->json(['message' => 'Message has been sent.'], Response::HTTP_CREATED);
     }

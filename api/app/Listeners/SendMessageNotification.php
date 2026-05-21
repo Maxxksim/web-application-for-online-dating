@@ -7,7 +7,7 @@ use App\Notifications\MessageNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\Attributes\Queue;
 
-#[Queue('notifications')]
+#[Queue('messages')]
 class SendMessageNotification implements ShouldQueue
 {
     public function handle(MessageSent $event): void
