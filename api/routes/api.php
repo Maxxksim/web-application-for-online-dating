@@ -63,6 +63,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/chats', [ChatController::class, 'getChats']);
     Route::get('/chats/{chat}/messages', [MessageController::class, 'getMessages']);
-    Route::post('/chats/{chat}/messages', [MessageController::class, 'sendMessage']);
+    Route::post('/chats/{recipient}/messages', [MessageController::class, 'sendMessage']);
 });
 
