@@ -13,7 +13,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\Attributes\Queue;
 use Illuminate\Queue\SerializesModels;
 
-#[Queue('messages')]
+//#[Queue('messages')]
 class MessageSent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
@@ -31,7 +31,8 @@ class MessageSent implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("chat.{$this->message->chat_id}"),
+            new PrivateChannel("chats.{$this->message->recipient_id}"),
+            new PrivateChannel("chats.{$this->message->sender_id}"),
         ];
     }
 
@@ -40,9 +41,9 @@ class MessageSent implements ShouldBroadcastNow
         return [
             'id' => $this->message->id,
             'chat_id' => $this->message->chat_id,
-            'user_id' => $this->message->user_id,
-            'message' => $this->message->text,
-            'created_at' => $this->message->created_at,
+            'sender_id' => $this->message->sender_id,
+            'text' => $this->message->text,
+            'created_at' => $this->message->created_at->toIso8601String()
         ];
     }
 }

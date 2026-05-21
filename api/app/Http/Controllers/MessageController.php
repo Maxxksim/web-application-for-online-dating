@@ -22,7 +22,7 @@ class MessageController extends Controller
     {
         $messages = $this->messageService->getMessages($chat);
 
-        return response()->json(['messages' => $messages], Response::HTTP_OK);
+        return response()->json(['messages' => $messages->toResourceCollection()], Response::HTTP_OK);
     }
 
     public function sendMessage(MessageRequest $request, User $recipient): Response

@@ -30,7 +30,8 @@ class MessageService
         $chat = $this->chatService->firstOrCreate($sender, $recipient);
 
         $message = $chat->messages()->create([
-            'user_id' => $sender->id,
+            'sender_id' => $sender->id,
+            'recipient_id' => $recipient->id,
             'text' => $text,
         ]);
 
@@ -42,7 +43,7 @@ class MessageService
     public function getMessages(Chat $chat, int $perPage = 30): LengthAwarePaginator
     {
         return $chat->messages()
-            ->with('user.profile')
+            ->with('sender.profile')
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }
