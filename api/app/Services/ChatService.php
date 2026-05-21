@@ -6,7 +6,6 @@ use App\Models\Chat;
 use App\Models\User;
 use App\Services\traits\SortsUserIds;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
 
 class ChatService
 {
@@ -20,30 +19,25 @@ class ChatService
     public function getUserChats(User $user): Collection
     {
         return $user->chats()
-            ->select('chats.*', DB::raw("
-            CASE WHEN first_user_id = {$user->id}
-            THEN second_user_id
-            ELSE first_user_id END as interlocutor_id
-        "))
-            ->with('interlocutor.profile')
+            ->with(['users' => fn($q) => $q->where('users.id', '!=', $user->id)->with('profile')])
             ->withCount([
-                'messages as unread_count' => fn($q) => $q->whereNull('read_at')
-                    ->where('user_id', '!=', $user->id),
+                'messages as unread_count' => fn($q) => $q
+                    ->whereNull('read_at')
+                    ->where('messages.user_id', '!=', $user->id),
             ])
-            ->orderByDesc('chats.last_message_at')
+            ->orderByDesc('last_message_at')
             ->get();
     }
 
-    public function firstOrCreate(User $sender, User $recipient): array
+    public function firstOrCreate(User $sender, User $recipient): Chat
     {
-        [$firstId, $secondId] = $this->sortUserIds($sender->id, $recipient->id);
+        if ($chat = Chat::whereAttachedTo($sender)->whereAttachedTo($recipient)->first()) {
+            return $chat;
+        }
 
-        $chat = Chat::firstOrCreate([
-            'first_user_id' => $firstId,
-            'second_user_id' => $secondId,
-        ]);
+        ($chat = Chat::create())->users()->attach([$sender->id, $recipient->id]);
 
-        return ['chat' => $chat, 'isExisted' => !$chat->wasRecentlyCreated];
+        return $chat;
     }
 
 }
