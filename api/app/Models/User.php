@@ -37,9 +37,14 @@ class User extends Authenticatable
         return $this->hasOne(Profile::class);
     }
 
-    public function swipes(): HasMany
+    public function swipedBy(): HasMany
     {
-        return $this->hasMany(Swipe::class);
+        return $this->hasMany(Swipe::class, 'swiper_id');
+    }
+
+    public function receivedSwipes(): HasMany
+    {
+        return $this->hasMany(Swipe::class, 'swiped_id');
     }
 
     public function mutualLikes(): HasMany
@@ -62,9 +67,9 @@ class User extends Authenticatable
         return $this->hasMany(Message::class);
     }
 
-    public function chats(): HasMany
+    public function chats(): belongsToMany
     {
-        return $this->hasMany(Chat::class);
+        return $this->belongsToMany(Chat::class);
     }
 
 }

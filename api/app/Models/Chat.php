@@ -17,19 +17,8 @@ class Chat extends Model
         return $this->hasMany(Message::class);
     }
 
-    public function firstUser(): BelongsTo
+    public function users(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'first_user_id');
+        return $this->belongsToMany(User::class);
     }
-
-    public function secondUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'second_user_id');
-    }
-
-    public function interlocutor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'interlocutor_id');
-    }
-
 }

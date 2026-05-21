@@ -6,7 +6,7 @@ use App\Models\Profile;
 
 class ProfileService
 {
-    private const array REQUIRED_FIELDS = ['name', 'date_of_birth', 'gender', 'city'];
+    private const array REQUIRED_FIELDS = ['name', 'date_of_birth', 'gender', 'country'];
     private const array OPTIONAL_FIELDS = ['description'];
     private const int MAX_PHOTOS = 3;
 

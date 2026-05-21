@@ -35,8 +35,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/me', 'updateProfile');
             Route::get('/me', 'getMyProfile');
             Route::get('/{profile}', 'getProfile');
-            Route::patch('/enable', 'enableProfile');
-            Route::patch('/disable', 'disableProfile');
+            Route::patch('/me/enable', 'enableProfile');
+            Route::patch('/me/disable', 'disableProfile');
         });
         Route::controller(ProfilePhotoController::class)->group(function () {
             Route::post('/photos', 'addPhoto');
@@ -62,7 +62,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('/chats', [ChatController::class, 'getChats']);
-    Route::put('/chats/{user}', [ChatController::class, 'firstOrCreate']);
     Route::get('/chats/{chat}/messages', [MessageController::class, 'getMessages']);
     Route::post('/chats/{chat}/messages', [MessageController::class, 'sendMessage']);
 });

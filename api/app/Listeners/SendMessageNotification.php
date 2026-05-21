@@ -12,6 +12,10 @@ class SendMessageNotification implements ShouldQueue
 {
     public function handle(MessageSent $event): void
     {
-        $event->message->chat->interlocutor->notify(new MessageNotification($event->message));
+        $interlocutor = $event->message->chat->users()
+            ->where('users.id', '!=', $event->message->user_id)
+            ->first();
+
+        $interlocutor->notify(new MessageNotification($event->message));
     }
 }

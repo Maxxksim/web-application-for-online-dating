@@ -27,7 +27,7 @@ class MatchService
     {
         return MutualLike::whereIn('first_user_id', [$firstUserId, $secondUserId])
             ->whereIn('second_user_id', [$firstUserId, $secondUserId])
-            ->where('first_user_id', '!=', 'second_user_id')
+            ->whereColumn('first_user_id', '!=', 'second_user_id')
             ->exists();
     }
 }

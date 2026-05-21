@@ -11,9 +11,10 @@ class LikeService
 {
     public function getProfilesWhoLiked(User $user): Collection
     {
-        return Profile::whereHas('swipes', function ($query) use ($user) {
-            $query->where('swiped_id', $user->id)
-                ->where('is_liked', true);
-        })->get();
+        return Profile::whereIn('user_id',
+            $user->receivedSwipes()
+                ->where('is_liked', true)
+                ->pluck('swiper_id')
+        )->get();
     }
 }
