@@ -6,12 +6,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'chat_id', 'text', 'read_at'])]
+#[Fillable(['sender_id', 'recipient_id', 'chat_id', 'text', 'read_at'])]
 class Message extends Model
 {
-    public function user(): BelongsTo
+    public function sender(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'sender_id');
     }
 
     public function chat(): BelongsTo

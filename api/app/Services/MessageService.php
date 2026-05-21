@@ -43,7 +43,7 @@ class MessageService
     public function getMessages(Chat $chat, int $perPage = 30): LengthAwarePaginator
     {
         return $chat->messages()
-            ->with('user.profile')
+            ->with('sender.profile')
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }

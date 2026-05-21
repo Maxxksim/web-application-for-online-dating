@@ -23,7 +23,7 @@ class ChatService
             ->withCount([
                 'messages as unread_count' => fn($q) => $q
                     ->whereNull('read_at')
-                    ->where('messages.user_id', '!=', $user->id),
+                    ->where('messages.sender_id', '!=', $user->id),
             ])
             ->orderByDesc('last_message_at')
             ->get();
