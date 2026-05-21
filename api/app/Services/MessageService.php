@@ -30,7 +30,8 @@ class MessageService
         $chat = $this->chatService->firstOrCreate($sender, $recipient);
 
         $message = $chat->messages()->create([
-            'user_id' => $sender->id,
+            'sender_id' => $sender->id,
+            'recipient_id' => $recipient->id,
             'text' => $text,
         ]);
 

@@ -12,8 +12,9 @@ return new class extends Migration {
     {
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('chat_id')->constrained('chats')->cascadeOnDelete();
+            $table->integer('recipient_id');
             $table->text('text');
             $table->timestamp('read_at')->nullable();
             $table->index(['chat_id', 'created_at']);
