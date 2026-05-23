@@ -22,6 +22,7 @@ return new class extends Migration {
             $table->integer('relevance_score')->default(3);
             $table->boolean('is_enabled')->default(false);
             $table->integer('completion_percentage')->default(0);
+            $table->date('relevance_score_updated_on')->nullable();
             $table->timestamps();
         });
     }

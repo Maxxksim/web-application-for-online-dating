@@ -34,9 +34,10 @@ class SearchController extends Controller
     {
         if ($this->profileService->isProfileReadyForSearching($request->user()->profile)) {
 
-            if(!$request->user()->profile->is_enabled) {
+            if (!$request->user()->profile->is_enabled) {
                 return response()->json(['message' => 'You must enable your profile.'], Response::HTTP_FORBIDDEN);
             }
+            $this->profileService->updateRelevanceScore($request->user()->profile);
             $profiles = $this->searchService->searchByFilters($request->user());
 
             if (empty($profiles)) {

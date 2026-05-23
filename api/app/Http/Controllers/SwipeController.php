@@ -17,8 +17,12 @@ class SwipeController extends Controller
 
     public function swipe(SwipeRequest $request, int $swiped_id): JsonResponse
     {
+        if ($this->swipeService->isSwiped($request->user()->id, $swiped_id)) {
+            return response()->json(['message' => 'Already swiped.'], Response::HTTP_CONFLICT);
+        }
+
         $this->swipeService->swipe($request->user()->id, $swiped_id, $request->boolean('is_liked'));
 
-        return response()->json([], Response::HTTP_NO_CONTENT);
+        return response()->json(['message' => 'Swiped successfully.'], Response::HTTP_OK);
     }
 }

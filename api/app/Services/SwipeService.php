@@ -30,12 +30,17 @@ class SwipeService
         LikeSent::dispatch($swipe);
     }
 
+    public function isSwiped(int $swiper_id, int $swiped_id): bool
+    {
+        return Swipe::where('swiper_id', $swiped_id)->exists();
+    }
+
     private function isMatch(int $swiper_id, int $swiped_id): bool
     {
         return Swipe::where('swiper_id', $swiped_id)
-            ->where('swiped_id', $swiper_id)
-            ->where('is_liked', true)
-            ->exists();
+        ->where('swiped_id', $swiper_id)
+        ->where('is_liked', true)
+        ->exists();
     }
 
     private function handleMatch(int $swiper_id, int $swiped_id): void

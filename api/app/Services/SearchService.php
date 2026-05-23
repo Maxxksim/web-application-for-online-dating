@@ -36,7 +36,7 @@ class SearchService
             ->select('profiles.*')
             ->selectRaw("ST_Distance(geolocations.geo_point::geography, {$userGeoPoint}) / 1000 as distance", [
                 $user->id
-            ])
+            ])->orderBy('relevance_score', 'DESC')
             ->orderBy('distance')
             ->paginate(20);
     }

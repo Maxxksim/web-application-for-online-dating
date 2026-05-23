@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'name', 'date_of_birth', 'gender', 'country', 'city', 'description', 'relevance_score', 'completion_percentage', 'is_enabled'])]
+
+#[Fillable(['user_id', 'name', 'date_of_birth', 'gender', 'country', 'city', 'description', 'relevance_score', 'completion_percentage', 'is_enabled', 'relevance_score_updated_on'])]
 class Profile extends Model
 {
     public function user(): BelongsTo
@@ -25,5 +25,12 @@ class Profile extends Model
     public function getAgeAttribute(): int
     {
         return Carbon::parse($this->date_of_birth)->age;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'relevance_score_updated_on' => 'date',
+        ];
     }
 }

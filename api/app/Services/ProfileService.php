@@ -9,6 +9,7 @@ class ProfileService
     private const array REQUIRED_FIELDS = ['name', 'date_of_birth', 'gender', 'country'];
     private const array OPTIONAL_FIELDS = ['description'];
     private const int MAX_PHOTOS = 3;
+    private const int DAILY_SEARCH_RELEVANCE_BONUS = 3;
 
     public function updateCompletionPercentage(Profile $profile): void
     {
@@ -45,4 +46,21 @@ class ProfileService
 
         return false;
     }
+
+    public function updateRelevanceScore(Profile $profile): void
+    {
+        $daysSinceUpdate = $profile->relevance_score_updated_on->diffInDays(now());
+
+        if ($daysSinceUpdate >= 1) {
+            $profile->decrement('relevance_score', $daysSinceUpdate);
+        }
+
+        if (!$profile->relevance_score_updated_on->isToday()) {
+            $profile->increment('relevance_score', self::DAILY_SEARCH_RELEVANCE_BONUS);
+        }
+
+        $profile->update(['relevance_score_updated_on' => now()]);
+    }
+
+
 }
