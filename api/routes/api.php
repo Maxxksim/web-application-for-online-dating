@@ -11,6 +11,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Middleware\AuthorizedForGuestOnly;
 use Illuminate\Support\Facades\Route;
@@ -64,5 +65,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chats', [ChatController::class, 'getChats']);
     Route::get('/chats/{chat}/messages', [MessageController::class, 'getMessages']);
     Route::post('/chats/{recipient}/messages', [MessageController::class, 'sendMessage']);
+
+    Route::prefix('subscription')->controller(SubscriptionController::class)->group(function () {
+        Route::post('/checkout', 'checkout');
+        Route::get('/status', 'status');
+        Route::delete('/cancel', 'cancel');
+    });
 });
 

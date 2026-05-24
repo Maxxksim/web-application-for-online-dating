@@ -4,13 +4,10 @@ namespace App\Services;
 
 use App\Models\Chat;
 use App\Models\User;
-use App\Services\traits\SortsUserIds;
 use Illuminate\Database\Eloquent\Collection;
 
 class ChatService
 {
-    use SortsUserIds;
-
     public function __construct()
     {
 
