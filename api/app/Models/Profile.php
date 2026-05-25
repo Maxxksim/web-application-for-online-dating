@@ -33,4 +33,9 @@ class Profile extends Model
             'relevance_score_updated_on' => 'date',
         ];
     }
+
+    public function interests(): HasMany
+    {
+        return $this->hasMany(Interest::class);
+    }
 }

@@ -2,9 +2,6 @@
 
 namespace App\Models\Traits;
 
-/**
- * @method static cases()
- */
 trait EnumToArrayTrait
 {
     public static function toArray(): array

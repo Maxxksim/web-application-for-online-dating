@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchSettingsRequest;
 use App\Http\Requests\UpdateSearchFilters;
 use App\Http\Resources\SearchFiltersResource;
 use App\Services\ProfileService;
@@ -30,7 +31,7 @@ class SearchController extends Controller
         return response()->json(['message' => 'Search filters updated successfully.'], Response::HTTP_OK);
     }
 
-    public function getProfilesByFilters(Request $request): JsonResponse
+    public function getProfilesByFilters(SearchSettingsRequest $request): JsonResponse
     {
         if ($this->profileService->isProfileReadyForSearching($request->user()->profile)) {
 
@@ -38,7 +39,7 @@ class SearchController extends Controller
                 return response()->json(['message' => 'You must enable your profile.'], Response::HTTP_FORBIDDEN);
             }
             $this->profileService->updateRelevanceScore($request->user()->profile);
-            $profiles = $this->searchService->searchByFilters($request->user());
+            $profiles = $this->searchService->searchByFilters($request->user(), $request->validated('additional_filters'));
 
             if (empty($profiles)) {
                 return response()->json(['message' => 'No profiles found matching your filters'], Response::HTTP_NOT_FOUND);

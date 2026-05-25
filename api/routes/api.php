@@ -9,6 +9,7 @@ use App\Http\Controllers\MatchController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileInterestController;
 use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SubscriptionController;
@@ -42,6 +43,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::controller(ProfilePhotoController::class)->group(function () {
             Route::post('/photos', 'addPhoto');
             Route::delete('/photos/{photo}', 'deletePhoto');
+        });
+
+        Route::controller(ProfileInterestController::class)->group(function () {
+            Route::post('/interests', 'addInterest');
+            Route::delete('/interests/{interest}', 'deleteInterest');
         });
     });
 
