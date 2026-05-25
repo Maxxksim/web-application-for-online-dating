@@ -9,8 +9,10 @@ use App\Http\Controllers\MatchController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileInterestController;
 use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Middleware\AuthorizedForGuestOnly;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +28,7 @@ Route::prefix('auth')->group(function () {
             Route::get('google/callback', 'handleGoogleCallback');
         });
     });
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::delete('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -41,6 +43,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::controller(ProfilePhotoController::class)->group(function () {
             Route::post('/photos', 'addPhoto');
             Route::delete('/photos/{photo}', 'deletePhoto');
+        });
+
+        Route::controller(ProfileInterestController::class)->group(function () {
+            Route::post('/interests', 'addInterest');
+            Route::delete('/interests/{interest}', 'deleteInterest');
         });
     });
 
@@ -64,5 +71,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/chats', [ChatController::class, 'getChats']);
     Route::get('/chats/{chat}/messages', [MessageController::class, 'getMessages']);
     Route::post('/chats/{recipient}/messages', [MessageController::class, 'sendMessage']);
+
+    Route::prefix('subscription')->controller(SubscriptionController::class)->group(function () {
+        Route::post('/checkout', 'checkout');
+        Route::get('/status', 'status');
+        Route::delete('/cancel', 'cancel');
+    });
 });
 
