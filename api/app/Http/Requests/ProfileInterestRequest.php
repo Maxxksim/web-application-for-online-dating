@@ -14,21 +14,18 @@ class ProfileInterestRequest extends FormRequest
         $profile = $this->user()->profile;
 
         return [
-            'interests' => [
+            'interest' => [
                 'required',
-                'array',
+                'string',
                 'min:1',
                 function ($attribute, $value, $fail) use ($profile) {
                     if ($profile->interests()->count() + count($value) > 10) {
                         $fail('You can have a maximum of 10 interests.');
                     }
                 },
-            ],
-            'interests.*' => [
-                'required',
                 Rule::enum(Interest::class),
-                Rule::unique('interests', 'interest')->where('profile_id', $profile->id),
-            ],
+                Rule::unique('interests', 'interest')->where('profile_id', $profile->id)
+            ]
         ];
     }
 }

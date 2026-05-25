@@ -11,12 +11,7 @@ class ProfileInterestController extends Controller
 {
     public function addInterest(ProfileInterestRequest $request): JsonResponse
     {
-        $request->user->profile->interests()->createMany(
-            array_map(
-                fn($interest) => ['interest' => $interest],
-                $request->validated('interests')
-            )
-        );
+        $request->user()->profile->interests()->create($request->validated());
 
         return response()->json(['message' => 'Interests have added successfully.'], Response::HTTP_CREATED);
     }

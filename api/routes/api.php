@@ -16,6 +16,7 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SwipeController;
 use App\Http\Middleware\AuthorizedForGuestOnly;
 use Illuminate\Support\Facades\Route;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 
 Route::prefix('auth')->group(function () {
     Route::middleware([AuthorizedForGuestOnly::class])->group(function () {
@@ -78,4 +79,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/cancel', 'cancel');
     });
 });
+
+Route::post('subscription/stripe/webhook', [WebhookController::class, 'handleWebhook']);
 
