@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/location', [LocationController::class, 'updateLocation']);
 
     Route::post('/swipes/{swiped_id}', [SwipeController::class, 'swipe']);
+    Route::delete('/swipes/{swiped_id}', [SwipeController::class, 'rollbackSwipe']);
     Route::get('/likes', [LikeController::class, 'getLikes']);
     Route::get('/matches', [MatchController::class, 'getMatches']);
 

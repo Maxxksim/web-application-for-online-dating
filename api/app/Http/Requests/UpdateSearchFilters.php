@@ -18,6 +18,8 @@ class UpdateSearchFilters extends FormRequest
 {
     public function rules(): array
     {
+        $this->subscriptionService->isActive($this->user(), 'premium');
+
         return [
             'min_age' => ['sometimes', 'integer', 'min:16', 'lt:max_age'],
             'max_age' => ['sometimes', 'integer', 'max:120', 'gt:min_age'],
@@ -38,6 +40,7 @@ class UpdateSearchFilters extends FormRequest
             'max_height' => ['sometimes', 'numeric', 'gt:min_height'],
             'min_weight' => ['sometimes', 'numeric', 'lt:max_weight'],
             'max_weight' => ['sometimes', 'numeric', 'gt:min_weight'],
+            'use_advanced_filters' => ['sometimes', 'boolean'],
         ];
     }
 }

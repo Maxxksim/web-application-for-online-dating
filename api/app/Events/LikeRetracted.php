@@ -3,7 +3,6 @@
 namespace App\Events;
 
 use App\Models\Swipe;
-use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -12,7 +11,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class LikeSent implements ShouldBroadcast
+class LikeRetracted implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -24,7 +23,7 @@ class LikeSent implements ShouldBroadcast
 
     public function broadcastAs(): string
     {
-        return 'like.processed';
+        return 'like.retracted';
     }
 
     public function broadcastOn(): array
@@ -37,8 +36,7 @@ class LikeSent implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'message' => 'You have received a like from ' . $this->swipe->swiper->profile->name,
-            'profile_id' => $this->swipe->swiper->profile->id
+            'profile_id' => $this->swipe->swiper_id
         ];
     }
 }

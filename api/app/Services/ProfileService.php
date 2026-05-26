@@ -10,6 +10,7 @@ class ProfileService
     private const array OPTIONAL_FIELDS = ['description'];
     private const int MAX_PHOTOS = 3;
     private const int DAILY_SEARCH_RELEVANCE_BONUS = 3;
+    private const int RELEVANCE_BONUS_MULTIPLIER = 2;
 
     public function updateCompletionPercentage(Profile $profile): void
     {
@@ -47,7 +48,7 @@ class ProfileService
         return false;
     }
 
-    public function updateRelevanceScore(Profile $profile): void
+    public function updateRelevanceScore(Profile $profile, bool $isSubscription): void
     {
         $daysSinceUpdate = $profile->relevance_score_updated_on->diffInDays(now());
 
@@ -56,11 +57,12 @@ class ProfileService
         }
 
         if (!$profile->relevance_score_updated_on->isToday()) {
-            $profile->increment('relevance_score', self::DAILY_SEARCH_RELEVANCE_BONUS);
+            if ($isSubscription) {
+                $profile->increment('relevance_score', self::DAILY_SEARCH_RELEVANCE_BONUS * self::RELEVANCE_BONUS_MULTIPLIER);
+            } else {
+                $profile->increment('relevance_score', self::DAILY_SEARCH_RELEVANCE_BONUS);
+            }
         }
-
         $profile->update(['relevance_score_updated_on' => now()]);
     }
-
-
 }

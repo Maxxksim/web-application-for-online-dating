@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class SearchService
 {
-    public function searchByFilters(User $user, bool $additionalFilters = false): LengthAwarePaginator
+    public function searchByFilters(User $user): LengthAwarePaginator
     {
         $userGeoPoint = "(SELECT geo_point FROM geolocations WHERE user_id = ?)::geography";
 
@@ -40,7 +40,7 @@ class SearchService
                 $user->id
             ]);
 
-        if ($user->subscribed('premium') && $additionalFilters) {
+        if ($user->subscribed('premium') && $user->searchFilter->use_advanced_filters) {
             $this->applyAdditionalFilters($query, $user->searchFilter);
         }
 

@@ -14,6 +14,7 @@ class LikeService
         return Profile::whereIn('user_id',
             $user->receivedSwipes()
                 ->where('is_liked', true)
+                ->whereNotIn('swiper_id', $user->swipedBy()->select('swiped_id'))
                 ->pluck('swiper_id')
         )->get();
     }

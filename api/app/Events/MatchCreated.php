@@ -37,9 +37,11 @@ class MatchCreated implements ShouldBroadcast
         return [
             'User.' . $this->match->first_user_id => [
                 'message' => 'You have matched with ' . $this->match->firstUser->profile->name . '!',
+                'profile_id' => $this->match->firstUser->profile->id
             ],
             'User.' . $this->match->second_user_id => [
                 'message' => 'You have matched with ' . $this->match->secondUser->profile->name . '!',
+                'profile_id' => $this->match->secondUser->profile->id
             ],
         ];
     }

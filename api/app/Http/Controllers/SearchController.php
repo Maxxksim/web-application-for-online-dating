@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateSearchFilters;
 use App\Http\Resources\SearchFiltersResource;
 use App\Services\ProfileService;
 use App\Services\SearchService;
+use App\Services\SubscriptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SearchController extends Controller
 {
-    public function __construct(private readonly SearchService $searchService, private readonly ProfileService $profileService)
+    public function __construct(private readonly SearchService $searchService, private readonly ProfileService $profileService, private readonly SubscriptionService $subscriptionService)
     {
 
     }
@@ -26,20 +27,26 @@ class SearchController extends Controller
 
     public function updateSearchFilters(UpdateSearchFilters $request): JsonResponse
     {
-        $request->user()->searchFilter->update($request->validated());
+        $data = $request->validated();
+
+        if (!$this->subscriptionService->isActive($request->user(), 'premium')) {
+            $data['use_advanced_filters'] = false;
+        }
+
+        $request->user()->searchFilter->update($data);
 
         return response()->json(['message' => 'Search filters updated successfully.'], Response::HTTP_OK);
     }
 
-    public function getProfilesByFilters(SearchSettingsRequest $request): JsonResponse
+    public function getProfilesByFilters(Request $request): JsonResponse
     {
         if ($this->profileService->isProfileReadyForSearching($request->user()->profile)) {
 
             if (!$request->user()->profile->is_enabled) {
                 return response()->json(['message' => 'You must enable your profile.'], Response::HTTP_FORBIDDEN);
             }
-            $this->profileService->updateRelevanceScore($request->user()->profile);
-            $profiles = $this->searchService->searchByFilters($request->user(), $request->validated('additional_filters'));
+            $this->profileService->updateRelevanceScore($request->user()->profile, $this->subscriptionService->isActive($request->user(), 'premium'));
+            $profiles = $this->searchService->searchByFilters($request->user());
 
             if (empty($profiles)) {
                 return response()->json(['message' => 'No profiles found matching your filters'], Response::HTTP_NOT_FOUND);
