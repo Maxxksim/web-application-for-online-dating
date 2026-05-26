@@ -28,6 +28,7 @@ class SearchFiltersResource extends JsonResource
             'max_height'     => $this->max_height,
             'min_weight'     => $this->min_weight,
             'max_weight'     => $this->max_weight,
+            'use_advanced_filters' => $this->use_advanced_filters
         ];
     }
 }

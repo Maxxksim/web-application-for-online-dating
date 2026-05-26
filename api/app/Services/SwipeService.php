@@ -7,14 +7,16 @@ use App\Events\MatchCreated;
 use App\Models\MutualLike;
 use App\Models\Swipe;
 use App\Models\User;
+use App\Notifications\LikeNotification;
+use Illuminate\Support\Facades\DB;
 
 class SwipeService
 {
-    public function swipe(int $swiper_id, int $swiped_id, bool $isLiked): void
+    public function swipe(int $swiperId, int $swipedId, bool $isLiked): void
     {
         $swipe = Swipe::create([
-            'swiper_id' => $swiper_id,
-            'swiped_id' => $swiped_id,
+            'swiper_id' => $swiperId,
+            'swiped_id' => $swipedId,
             'is_liked' => $isLiked
         ]);
 
@@ -22,34 +24,63 @@ class SwipeService
             return;
         }
 
-        if ($this->isMatch($swiper_id, $swiped_id)) {
-            $this->handleMatch($swiper_id, $swiped_id);
+        if ($this->isMatch($swiperId, $swipedId)) {
+            $this->handleMatch($swiperId, $swipedId);
             return;
         }
 
         LikeSent::dispatch($swipe);
     }
 
-    public function isSwiped(int $swiper_id, int $swiped_id): bool
+    public function isSwiped(int $swiperId, int $swipedId): bool
     {
-        return Swipe::where('swiper_id', $swiped_id)->exists();
+        return Swipe::where('swiper_id', $swiperId)->where('swiped_id', $swipedId)->exists();
     }
 
-    private function isMatch(int $swiper_id, int $swiped_id): bool
+    private function isMatch(int $swiperId, int $swipedId): bool
     {
-        return Swipe::where('swiper_id', $swiped_id)
-        ->where('swiped_id', $swiper_id)
-        ->where('is_liked', true)
-        ->exists();
+        return Swipe::where('swiper_id', $swipedId)
+            ->where('swiped_id', $swiperId)
+            ->where('is_liked', true)
+            ->exists();
     }
 
-    private function handleMatch(int $swiper_id, int $swiped_id): void
+    private function handleMatch(int $swiperId, int $swipedId): void
     {
         $match = MutualLike::create([
-            'first_user_id' => $swiper_id,
-            'second_user_id' => $swiped_id,
+            'first_user_id' => $swiperId,
+            'second_user_id' => $swipedId,
         ]);
 
         MatchCreated::dispatch($match);
+    }
+
+    public function rollbackSwipe(int $swiperId, int $swipedId): void
+    {
+        $swipe = Swipe::where('swiper_id', $swiperId)
+            ->where('swiped_id', $swipedId)
+            ->first();
+
+        DB::transaction(function () use ($swipe, $swiperId, $swipedId) {
+            $swipe->delete();
+
+            if (!$swipe->is_liked) {
+                return;
+            }
+
+            $this->retractLikeNotification($swiperId, $swipedId);
+
+        });
+    }
+
+
+    private function retractLikeNotification(int $swiperId, int $swipedId): void
+    {
+        $swipedUser = User::find($swipedId);
+
+        $swipedUser->notifications()
+            ->where('type', LikeNotification::class)
+            ->whereJsonContains('data->user_id', $swiperId)
+            ->delete();
     }
 }

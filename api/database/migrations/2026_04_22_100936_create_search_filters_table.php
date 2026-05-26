@@ -35,6 +35,7 @@ return new class extends Migration {
             $table->enum('children', ChildrenStatus::toArray())->nullable();
             $table->enum('zodiac_sign', ZodiacSign::toArray())->nullable();
             $table->enum('exercise', Habit::toArray())->nullable();
+            $table->boolean('use_advanced_filters')->default(false);
             $table->timestamps();
         });
     }
