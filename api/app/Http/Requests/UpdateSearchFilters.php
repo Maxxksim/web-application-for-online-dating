@@ -10,7 +10,6 @@ use App\Models\Enums\Habit;
 use App\Models\Enums\HairColor;
 use App\Models\Enums\ZodiacSign;
 use App\Models\Interest;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,8 +17,6 @@ class UpdateSearchFilters extends FormRequest
 {
     public function rules(): array
     {
-        $this->subscriptionService->isActive($this->user(), 'premium');
-
         return [
             'min_age' => ['sometimes', 'integer', 'min:16', 'lt:max_age'],
             'max_age' => ['sometimes', 'integer', 'max:120', 'gt:min_age'],
