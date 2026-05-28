@@ -2,7 +2,7 @@
  * auth.js — Authentication API calls
  * POST /api/auth/register
  * POST /api/auth/login
- * POST /api/auth/logout
+ * DELETE /api/auth/logout
  * GET  /api/auth/google/redirect
  */
 
@@ -32,7 +32,7 @@ export const authApi = {
    * @returns {Promise<{ message: string }>}
    */
   logout() {
-    return apiClient.post('/auth/logout')
+    return apiClient.delete('/auth/logout')
   },
 
   /**

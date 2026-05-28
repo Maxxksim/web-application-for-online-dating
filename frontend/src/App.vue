@@ -1,16 +1,16 @@
 <template>
-  <div id="app" class="h-full min-h-screen">
-    <AppLayout v-if="!route.meta.public">
+  <div class="min-h-screen bg-transparent text-slate-900">
+    <AppLayout>
       <RouterView v-slot="{ Component }">
         <Transition name="page" mode="out-in">
-          <component :is="Component" :key="route.name" />
+          <component :is="Component" :key="route.fullPath" />
         </Transition>
       </RouterView>
     </AppLayout>
-    <RouterView v-else />
 
     <Teleport to="body">
       <ToastContainer />
+      <NotificationPopups />
     </Teleport>
   </div>
 </template>
@@ -22,6 +22,7 @@ import { useAuthStore } from '@/stores/auth.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
 import { useProfileStore } from '@/stores/profile.js'
 import ToastContainer from '@/components/ToastContainer.vue'
+import NotificationPopups from '@/components/NotificationPopups.vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 
 const authStore = useAuthStore()

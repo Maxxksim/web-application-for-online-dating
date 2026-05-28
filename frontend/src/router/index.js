@@ -12,10 +12,10 @@ const HomeView          = () => import('@/views/HomeView.vue')
 const AuthView          = () => import('@/views/AuthView.vue')
 const SwipeView         = () => import('@/views/SwipeView.vue')
 const ProfileView       = () => import('@/views/ProfileView.vue')
-const NotificationsView = () => import('@/views/NotificationsView.vue')
 const SearchSettingsView = () => import('@/views/SearchSettingsView.vue')
 const ChatsView         = () => import('@/views/ChatsView.vue')
 const ConnectionsView   = () => import('@/views/ConnectionsView.vue')
+const SubscriptionResultView = () => import('@/views/SubscriptionResultView.vue')
 
 const routes = [
   {
@@ -43,12 +43,6 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/notifications',
-    name: 'notifications',
-    component: NotificationsView,
-    meta: { requiresAuth: true },
-  },
-  {
     path: '/chats',
     name: 'chats',
     component: ChatsView,
@@ -64,6 +58,12 @@ const routes = [
     path: '/search-settings',
     name: 'search-settings',
     component: SearchSettingsView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/subscription/:status',
+    name: 'subscription-status',
+    component: SubscriptionResultView,
     meta: { requiresAuth: true },
   },
 ]

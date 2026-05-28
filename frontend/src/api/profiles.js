@@ -3,10 +3,12 @@
  * GET   /api/profiles/me
  * GET   /api/profiles/{id}
  * PATCH /api/profiles/me
- * PATCH /api/profiles/enable
- * PATCH /api/profiles/disable
+ * PATCH /api/profiles/me/enable
+ * PATCH /api/profiles/me/disable
  * POST  /api/profiles/photos
  * DELETE /api/profiles/photos/{id}
+ * POST  /api/profiles/interests
+ * DELETE /api/profiles/interests/{id}
  */
 
 import apiClient from './axios.js'
@@ -43,7 +45,7 @@ export const profilesApi = {
    * @returns {Promise<{ message: string } | { message: string, missing_fields: string[] }>}
    */
   enable() {
-    return apiClient.patch('/profiles/enable')
+    return apiClient.patch('/profiles/me/enable')
   },
 
   /**
@@ -51,7 +53,7 @@ export const profilesApi = {
    * @returns {Promise<{ message: string }>}
    */
   disable() {
-    return apiClient.patch('/profiles/disable')
+    return apiClient.patch('/profiles/me/disable')
   },
 
   /**
@@ -74,5 +76,23 @@ export const profilesApi = {
    */
   deletePhoto(photoId) {
     return apiClient.delete(`/profiles/photos/${photoId}`)
+  },
+
+  /**
+   * Add an interest to profile
+   * @param {string} interest
+   * @returns {Promise<{ message: string }>}
+   */
+  addInterest(interest) {
+    return apiClient.post('/profiles/interests', { interest })
+  },
+
+  /**
+   * Delete a profile interest
+   * @param {number} interestId
+   * @returns {Promise<{ message: string }>}
+   */
+  deleteInterest(interestId) {
+    return apiClient.delete(`/profiles/interests/${interestId}`)
   },
 }

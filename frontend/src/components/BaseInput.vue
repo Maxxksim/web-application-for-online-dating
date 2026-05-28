@@ -1,9 +1,14 @@
 <template>
-  <div class="field">
-    <label v-if="label" :for="inputId" class="field__label">{{ label }}</label>
+  <div class="flex flex-col gap-1.5">
+    <label v-if="label" :for="inputId" class="text-sm font-medium text-slate-600">
+      {{ label }}
+    </label>
 
-    <div class="field__wrap" :class="{ 'field__wrap--error': error }">
-      <span v-if="$slots.prefix" class="field__icon field__icon--left">
+    <div
+      class="relative flex items-center rounded-2xl border bg-white transition focus-within:ring-2 focus-within:ring-cyan-500 focus-within:ring-offset-2 focus-within:ring-offset-slate-50"
+      :class="error ? 'border-rose-500' : 'border-slate-200'"
+    >
+      <span v-if="$slots.prefix" class="pointer-events-none absolute left-3 flex items-center text-slate-400">
         <slot name="prefix" />
       </span>
 
@@ -18,18 +23,26 @@
         spellcheck="false"
         :value="modelValue"
         :rows="type === 'textarea' ? rows : undefined"
-        class="field__input"
-        :class="{ 'field__input--padded-left': $slots.prefix }"
+        class="w-full resize-y rounded-2xl border-0 bg-transparent px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:outline-none"
+        :class="[
+          $slots.prefix ? 'pl-10' : '',
+          $slots.suffix ? 'pr-10' : '',
+          type === 'textarea' ? 'min-h-28' : '',
+        ]"
         @input="$emit('update:modelValue', $event.target.value)"
       />
 
-      <span v-if="$slots.suffix" class="field__icon field__icon--right">
+      <span v-if="$slots.suffix" class="pointer-events-none absolute right-3 flex items-center text-slate-400">
         <slot name="suffix" />
       </span>
     </div>
 
-    <p v-if="error" class="field__error">{{ error }}</p>
-    <p v-else-if="hint" class="field__hint">{{ hint }}</p>
+    <p v-if="error" class="mt-0.5 text-sm text-rose-500">
+      {{ error }}
+    </p>
+    <p v-else-if="hint" class="mt-0.5 text-sm text-slate-500">
+      {{ hint }}
+    </p>
   </div>
 </template>
 
@@ -38,93 +51,17 @@ import { computed } from 'vue'
 
 defineOptions({ inheritAttrs: false })
 
-const props = defineProps({
+defineProps({
   modelValue: { type: [String, Number], default: '' },
-  label:      { type: String, default: '' },
-  type:       { type: String, default: 'text' },
-  rows:       { type: Number, default: 4 },
+  label: { type: String, default: '' },
+  type: { type: String, default: 'text' },
+  rows: { type: Number, default: 4 },
   autocomplete: { type: String, default: 'off' },
-  error:      { type: String, default: '' },
-  hint:       { type: String, default: '' },
+  error: { type: String, default: '' },
+  hint: { type: String, default: '' },
 })
 
 defineEmits(['update:modelValue'])
 
 const inputId = computed(() => `field-${Math.random().toString(36).slice(2)}`)
 </script>
-
-<style scoped>
-.field { display: flex; flex-direction: column; gap: 6px; }
-
-.field__label {
-  font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.field__wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  transition: border-color var(--duration-fast) var(--ease-smooth),
-              box-shadow var(--duration-fast) var(--ease-smooth);
-}
-.field__wrap:focus-within {
-  border-color: var(--color-violet-500);
-  box-shadow: 0 0 0 3px rgba(139,92,246,0.15);
-}
-.field__wrap--error {
-  border-color: #f87171;
-}
-.field__wrap--error:focus-within {
-  box-shadow: 0 0 0 3px rgba(248,113,113,0.15);
-}
-
-.field__input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text-primary);
-  padding: 13px 16px;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  width: 100%;
-  resize: vertical;
-  border-radius: inherit;
-  background-clip: padding-box;
-}
-.field__input:focus-visible { outline: none; }
-.field__input:-webkit-autofill,
-.field__input:-webkit-autofill:hover,
-.field__input:-webkit-autofill:focus,
-.field__input:-webkit-autofill:active {
-  -webkit-text-fill-color: var(--text-primary);
-  caret-color: var(--text-primary);
-  -webkit-box-shadow: 0 0 0 1000px var(--color-bg-elevated) inset;
-  border-radius: inherit;
-  background-clip: padding-box;
-  transition: background-color 9999s ease-out 0s;
-}
-.field__input::placeholder { color: var(--text-muted); }
-.field__input--padded-left { padding-left: 44px; }
-
-.field__icon {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  color: var(--text-muted);
-  pointer-events: none;
-}
-.field__icon--left  { left: 14px; }
-.field__icon--right { right: 14px; }
-
-.field__error { font-size: 0.8rem; color: #f87171; }
-.field__hint  { font-size: 0.8rem; color: var(--text-muted); }
-</style>

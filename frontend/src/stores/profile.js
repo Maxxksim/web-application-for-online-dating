@@ -24,10 +24,12 @@ export const useProfileStore = defineStore('profile', () => {
   const isLoadingDeck  = ref(false)
   const hydratedProfileIds = ref(new Set())
   const hydrationInFlight = new Set()
+  const lastSwipedId   = ref(null)
 
   // ── Search Filters ──
   const filters        = ref(null)
   const isLoadingFilters = ref(false)
+  const useAdditionalFilters = ref(false)
 
   // ── Getters ──
   const currentCard = computed(() => deck.value[0] || null)
@@ -157,6 +159,33 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
+  async function addInterest(interest) {
+    try {
+      await profilesApi.addInterest(interest)
+      await fetchMyProfile()
+      return { success: true }
+    } catch (err) {
+      const data = err.response?.data
+      const message = data?.errors
+        ? Object.values(data.errors).flat().join(' ')
+        : data?.message || 'Failed to add interest.'
+      return { success: false, message }
+    }
+  }
+
+  async function deleteInterest(interestId) {
+    try {
+      await profilesApi.deleteInterest(interestId)
+      if (myProfile.value?.interests) {
+        myProfile.value.interests = myProfile.value.interests.filter((i) => i.id !== interestId)
+      }
+      return { success: true }
+    } catch (err) {
+      const message = err.response?.data?.message || 'Unable to delete interest.'
+      return { success: false, message }
+    }
+  }
+
   async function swipeCard(userId, isLiked) {
     const swipedId = Number(userId)
     if (!Number.isInteger(swipedId) || swipedId <= 0) {
@@ -169,6 +198,7 @@ export const useProfileStore = defineStore('profile', () => {
 
     try {
       await swipesApi.swipe(swipedId, isLiked)
+      lastSwipedId.value = swipedId
     } catch (err) {
       // Restore card on failure
       deck.value.unshift(swiped)
@@ -182,6 +212,19 @@ export const useProfileStore = defineStore('profile', () => {
     }
 
     return true
+  }
+
+  async function rollbackSwipe() {
+    if (!lastSwipedId.value) return { success: false, message: 'Nothing to undo.' }
+    try {
+      await swipesApi.rollbackSwipe(lastSwipedId.value)
+      lastSwipedId.value = null
+      await fetchDeck(true) // Reload deck to potentially bring back the swiped card
+      return { success: true }
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to undo swipe.'
+      return { success: false, message }
+    }
   }
 
   async function hydrateDeckProfiles(profiles = deck.value) {
@@ -226,6 +269,7 @@ export const useProfileStore = defineStore('profile', () => {
     try {
       const { data } = await searchApi.getFilters()
       filters.value = data.filters
+      useAdditionalFilters.value = Boolean(data.filters?.use_advanced_filters)
       return { success: true }
     } catch (err) {
       console.error(err)
@@ -248,17 +292,30 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
+  async function setUseAdditionalFilters(value, { refresh = true } = {}) {
+    useAdditionalFilters.value = Boolean(value)
+    try {
+      await searchApi.updateFilters({ use_advanced_filters: Boolean(value) })
+      if (filters.value) filters.value.use_advanced_filters = Boolean(value)
+    } catch (err) {
+      console.error('Failed to persist advanced filters toggle', err)
+    }
+    if (refresh) fetchDeck(true)
+  }
+
   return {
     // State
     myProfile, isLoadingProfile, profileError,
-    deck, deckMeta, isLoadingDeck,
-    filters, isLoadingFilters,
+    deck, deckMeta, isLoadingDeck, lastSwipedId,
+    filters, isLoadingFilters, useAdditionalFilters,
     // Getters
     currentCard, hasCards, completionPct,
     // Actions
     fetchMyProfile, updateMyProfile, toggleProfileVisibility,
     uploadPhotos, deletePhoto,
-    fetchDeck, swipeCard,
+    addInterest, deleteInterest,
+    fetchDeck, swipeCard, rollbackSwipe,
     fetchFilters, updateFilters,
+    setUseAdditionalFilters,
   }
 })

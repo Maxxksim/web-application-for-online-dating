@@ -82,27 +82,19 @@ const startGoogleAuth = () => {
 
 <template>
   <div class="auth-page">
-    <!-- Ambient background -->
-    <div class="auth-bg" aria-hidden="true">
-      <div class="app-orb app-orb--one animate-float" />
-      <div class="app-orb app-orb--two" />
-      <div class="app-orb app-orb--three" />
-      <div class="app-grid" />
-    </div>
-
-    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-10 relative z-[1]">
+    <div class="auth-container">
       <RouterLink to="/" class="auth-back">← Back to Home</RouterLink>
 
-      <div class="w-full max-w-md glass-panel p-8 md:p-10 animate-fade-in-up">
-        <div class="text-center mb-8">
+      <div class="auth-card glass-panel animate-fade-in-up">
+        <div class="auth-card__header">
           <p class="eyebrow">MatchFlow</p>
-          <h2 class="page-title text-3xl mt-2">
+          <h2 class="auth-card__title">
             {{ isLogin ? 'Welcome back' : 'Create your account' }}
           </h2>
-          <p class="page-subtitle">Sign in or create an account in seconds.</p>
+          <p class="auth-card__subtitle">Sign in or create an account in seconds.</p>
         </div>
 
-        <form @submit.prevent="submit" class="space-y-5" autocomplete="off">
+        <form @submit.prevent="submit" class="auth-card__form" autocomplete="off">
           <BaseInput
             v-model="email"
             name="mf_email"
@@ -138,18 +130,18 @@ const startGoogleAuth = () => {
           </BaseButton>
         </form>
 
-        <div v-if="localError || apiError" class="glass-panel glass-panel--tight px-4 py-3 text-sm text-rose-200 border border-rose-400/30 mt-4">
+        <div v-if="localError || apiError" class="auth-card__error">
           {{ localError || apiError }}
         </div>
 
-        <BaseButton variant="secondary" size="md" full class="mt-4" @click="startGoogleAuth">
+        <BaseButton variant="secondary" size="md" full class="auth-card__google" @click="startGoogleAuth">
           Continue with Google
         </BaseButton>
 
-        <div class="divider-glow my-6" />
+        <div class="divider-glow" />
 
-        <div class="text-center">
-          <button @click="isLogin = !isLogin" class="text-sm text-violet-200 hover:text-white transition">
+        <div class="auth-card__toggle">
+          <button @click="isLogin = !isLogin">
             {{ isLogin ? 'Need an account? Create one' : 'Already have an account? Sign in' }}
           </button>
         </div>
@@ -160,29 +152,89 @@ const startGoogleAuth = () => {
 
 <style scoped>
 .auth-page {
-  position: relative;
   min-height: 100vh;
-  background: var(--gradient-app);
-  overflow: hidden;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.auth-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
+.auth-container {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: 20px;
 }
 
 .auth-back {
-  position: absolute;
-  top: 24px;
-  left: 24px;
+  display: block;
+  margin-bottom: 16px;
   font-size: 0.85rem;
   color: var(--text-muted);
   transition: color var(--duration-fast) var(--ease-smooth);
-  z-index: 10;
 }
 .auth-back:hover {
   color: var(--text-primary);
+}
+
+.auth-card {
+  padding: 32px;
+}
+
+.auth-card__header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-card__title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 8px 0 6px;
+  color: var(--text-primary);
+}
+
+.auth-card__subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.auth-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-card__error {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: var(--color-rose);
+  font-size: 0.85rem;
+}
+
+.auth-card__google {
+  margin-top: 12px;
+}
+
+.auth-card__toggle {
+  text-align: center;
+  padding-top: 16px;
+}
+
+.auth-card__toggle button {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: opacity var(--duration-fast);
+}
+
+.auth-card__toggle button:hover {
+  opacity: 0.8;
 }
 </style>

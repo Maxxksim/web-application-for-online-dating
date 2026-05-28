@@ -1,15 +1,22 @@
 <template>
-  <div class="action-buttons flex justify-center items-center gap-3 sm:gap-4 mt-0 select-none relative z-10 w-full max-w-[320px] sm:max-w-[360px] px-2 sm:px-4">
-    <button class="action-button action-button--no" @click="handle('dislike')" :disabled="disabled" aria-label="Pass">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
+  <div class="action-buttons">
+    <button v-if="showUndo" class="action-btn action-btn--undo action-btn--small" @click="handle('undo')" :disabled="disabled" aria-label="Undo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7v6h6" />
+        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
       </svg>
     </button>
 
-    <button class="action-button action-button--yes" @click="handle('like')" :disabled="disabled" aria-label="Like">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+    <button class="action-btn action-btn--no" @click="handle('dislike')" :disabled="disabled" aria-label="Pass">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+
+    <button class="action-btn action-btn--yes" @click="handle('like')" :disabled="disabled" aria-label="Like">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
       </svg>
     </button>
   </div>
@@ -17,72 +24,88 @@
 
 <script setup>
 defineProps({
-  disabled: {
-    type: Boolean,
-    default: false
-  }
+  disabled: { type: Boolean, default: false },
+  showUndo: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['like', 'dislike', 'action'])
+const emit = defineEmits(['like', 'dislike', 'undo', 'action'])
 
 const handle = (type) => {
   emit('action', type)
-  emit(type)
+  if (type !== 'action') emit(type)
 }
 </script>
 
 <style scoped>
-.action-button {
-  width: 50px;
-  height: 50px;
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  user-select: none;
+  position: relative;
+  z-index: 10;
+  max-width: 300px;
+  width: 100%;
+}
+
+.action-btn {
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(167, 139, 250, 0.25);
-  background: rgba(16, 8, 30, 0.85);
-  color: #fff;
-  box-shadow: 0 10px 20px rgba(10, 6, 20, 0.5);
-  transition: transform var(--duration-fast) var(--ease-spring),
+  border: 1px solid var(--border-color);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
     box-shadow var(--duration-fast) var(--ease-spring),
-    background var(--duration-fast) var(--ease-smooth),
     border-color var(--duration-fast) var(--ease-smooth);
 }
 
-.action-button:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 14px 26px rgba(10, 6, 20, 0.6);
+.action-btn--small {
+  width: 44px;
+  height: 44px;
 }
 
-.action-button:active:not(:disabled) {
-  transform: scale(0.97);
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: var(--shadow-lg);
 }
 
-.action-button:disabled {
-  opacity: 0.45;
+.action-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.action-btn:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.action-button--no {
-  color: #fda4af;
-  border-color: rgba(244, 114, 182, 0.4);
-  background: rgba(76, 12, 30, 0.6);
+.action-btn--no {
+  color: var(--color-rose);
+  border-color: rgba(244, 63, 94, 0.25);
+}
+.action-btn--no:hover:not(:disabled) {
+  border-color: var(--color-rose);
 }
 
-.action-button--yes {
-  color: #6ee7b7;
-  border-color: rgba(16, 185, 129, 0.5);
-  background: rgba(8, 45, 40, 0.6);
+.action-btn--yes {
+  color: var(--color-emerald);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.action-btn--yes:hover:not(:disabled) {
+  border-color: var(--color-emerald);
 }
 
-@media (max-width: 640px) {
-  .action-buttons {
-    max-width: 300px;
-  }
-
-  .action-button {
-    width: 46px;
-    height: 46px;
-  }
+.action-btn--undo {
+  color: #eab308; /* yellow-500 */
+  border-color: rgba(234, 179, 8, 0.3);
+}
+.action-btn--undo:hover:not(:disabled) {
+  border-color: #eab308;
 }
 </style>

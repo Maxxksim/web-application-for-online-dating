@@ -1,262 +1,70 @@
-<script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth.js'
-import BaseButton from '@/components/BaseButton.vue'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-const isAuthed = computed(() => authStore.isAuthenticated)
-
-const goAuth = (mode = 'login') => router.push({ name: 'auth', query: { mode } })
-const goDiscover = () => router.push({ name: 'discover' })
-
-</script>
-
 <template>
-  <div class="home">
-    <!-- Ambient background -->
-    <div class="home-bg" aria-hidden="true">
-      <div class="home-orb home-orb--1 animate-float" />
-      <div class="home-orb home-orb--2" />
-      <div class="home-orb home-orb--3 animate-float" style="animation-delay: -3s" />
-      <div class="app-grid" />
+  <div class="relative min-h-screen overflow-hidden bg-[#f8fafc]">
+    <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+      <div class="absolute -left-32 -top-24 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(20,184,166,0.35),rgba(20,184,166,0))]"></div>
+      <div class="absolute -right-28 top-10 h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(56,189,248,0.35),rgba(56,189,248,0))]"></div>
+      <div class="absolute bottom-[-180px] left-[12%] h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(250,204,21,0.25),rgba(250,204,21,0))]"></div>
+      <div class="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.05)_1px,transparent_1px)] bg-[size:90px_90px] opacity-40"></div>
     </div>
 
-    <!-- ═══ HERO ═══ -->
-    <section class="hero">
-      <div class="hero__content animate-fade-in-up">
-        <p class="eyebrow">MatchFlow</p>
-        <h1 class="hero__title">
-          Where Connections<br />
-          Become <span class="gradient-text">Real</span>
-        </h1>
-        <p class="hero__subtitle">
-          Find someone who gets you — starting now.
-        </p>
-        <div class="hero__actions">
-          <BaseButton v-if="!isAuthed" variant="primary" size="lg" @click="goAuth('register')">
-            Get Started
-          </BaseButton>
-          <BaseButton v-if="!isAuthed" variant="secondary" size="lg" @click="goAuth('login')">
-            Sign In
-          </BaseButton>
-          <BaseButton v-if="isAuthed" variant="primary" size="lg" @click="goDiscover">
-            Go to Discover
-          </BaseButton>
-        </div>
-      </div>
+    <div class="relative mx-auto flex min-h-screen max-w-4xl items-center px-6 py-16">
+      <div class="grid w-full grid-cols-2 items-center gap-8">
 
-      <!-- Floating cards decoration -->
-      <div class="hero__visual animate-fade-in-up" style="animation-delay: 0.2s" aria-hidden="true">
-        <div class="hero-card hero-card--1">
-          <div class="hero-card__avatar">💜</div>
-          <div class="hero-card__text">
-            <span class="hero-card__name">Sara, 24</span>
-            <span class="hero-card__loc">2 km away</span>
+        <div class="flex flex-col gap-5">
+          <h1 class="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
+            Meet people who match your pace.
+          </h1>
+          <div class="flex flex-wrap gap-3">
+            <RouterLink
+              :to="{ name: 'auth', query: { mode: 'register' } }"
+              class="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(15,23,42,0.25)] transition hover:-translate-y-0.5"
+            >Create account</RouterLink>
+            <RouterLink
+              :to="{ name: 'auth', query: { mode: 'login' } }"
+              class="inline-flex items-center justify-center rounded-2xl border border-slate-200/80 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:border-slate-300"
+            >Sign in</RouterLink>
           </div>
         </div>
-        <div class="hero-card hero-card--2">
-          <div class="hero-card__avatar">🧡</div>
-          <div class="hero-card__text">
-            <span class="hero-card__name">Max, 27</span>
-            <span class="hero-card__loc">5 km away</span>
+
+        <div class="relative h-[420px]">
+          <!-- Julia -->
+          <div class="absolute left-[2%] top-4 z-10 h-[370px] w-[57%] -rotate-[5deg] overflow-hidden rounded-[22px] border-2 border-white/65 shadow-[0_16px_40px_rgba(15,23,42,0.22)]">
+            <img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=600&q=80" alt="Julia" class="h-full w-full object-cover" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
+              <div class="flex items-baseline gap-2">
+                <p class="text-lg font-semibold">Julia</p>
+                <span class="text-sm text-white/75">24</span>
+              </div>
+              <div class="mt-1 flex items-center gap-1.5 text-[11px] text-white/65">
+                <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
+                2 km away
+              </div>
+            </div>
+          </div>
+
+          <!-- Leo (blonde) -->
+          <div class="absolute right-[2%] top-11 z-20 h-[380px] w-[57%] rotate-[2.5deg] overflow-hidden rounded-[22px] border-2 border-white/65 shadow-[0_18px_44px_rgba(15,23,42,0.25)]">
+            <img
+              src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80"
+              alt="Leo"
+              class="h-full w-full object-cover"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-4 text-white">
+              <div class="flex items-baseline gap-2">
+                <p class="text-lg font-semibold">Leo</p>
+                <span class="text-sm text-white/75">27</span>
+              </div>
+              <div class="mt-1 flex items-center gap-1.5 text-[11px] text-white/65">
+                <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
+                4 km away
+              </div>
+            </div>
           </div>
         </div>
-        <div class="hero-card hero-card--3">
-          <div class="hero-card__stamp">MATCH</div>
-        </div>
-      </div>
-    </section>
 
+      </div>
+    </div>
   </div>
 </template>
-
-<style scoped>
-/* ── Layout ── */
-.home {
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-}
-
-.home-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.home-orb {
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(100px);
-  opacity: 0.35;
-  pointer-events: none;
-}
-.home-orb--1 {
-  width: 600px; height: 600px;
-  background: rgba(139, 92, 246, 0.7);
-  top: -200px; right: -200px;
-}
-.home-orb--2 {
-  width: 500px; height: 500px;
-  background: rgba(217, 70, 239, 0.55);
-  bottom: -180px; left: -180px;
-}
-.home-orb--3 {
-  width: 400px; height: 400px;
-  background: rgba(251, 113, 133, 0.4);
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-section, footer {
-  position: relative;
-  z-index: 1;
-}
-
-/* ── Hero ── */
-.hero {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 60px;
-  min-height: 100vh;
-  padding: 80px 24px 60px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.hero__content {
-  flex: 1;
-  max-width: 580px;
-}
-
-.hero__title {
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 5vw, 4.2rem);
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--text-primary);
-  margin: 12px 0 24px;
-}
-
-.hero__subtitle {
-  font-size: clamp(1rem, 1.5vw, 1.15rem);
-  line-height: 1.7;
-  color: var(--text-secondary);
-  max-width: 460px;
-  margin-bottom: 36px;
-}
-
-.hero__actions {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-/* Floating visual decoration */
-.hero__visual {
-  position: relative;
-  width: 320px;
-  height: 400px;
-  flex-shrink: 0;
-}
-
-.hero-card {
-  position: absolute;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--shadow-soft);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.hero-card--1 {
-  background: rgba(17, 8, 33, 0.75);
-  top: 30px; left: 0;
-  animation: floatSoft 6s ease-in-out infinite;
-}
-.hero-card--2 {
-  background: rgba(17, 8, 33, 0.75);
-  top: 140px; right: 0;
-  animation: floatSoft 6s ease-in-out infinite;
-  animation-delay: -2s;
-}
-.hero-card--3 {
-  background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(217,70,239,0.25));
-  border-color: rgba(217, 70, 239, 0.4);
-  bottom: 60px; left: 50%; transform: translateX(-50%);
-  animation: floatSoft 6s ease-in-out infinite;
-  animation-delay: -4s;
-  padding: 14px 32px;
-}
-
-.hero-card__avatar {
-  font-size: 2rem;
-  width: 48px; height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: rgba(139, 92, 246, 0.2);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-}
-
-.hero-card__text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.hero-card__name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--text-primary);
-}
-.hero-card__loc {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-.hero-card__stamp {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  font-weight: 800;
-  letter-spacing: 0.3em;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-/* ── Responsive ── */
-@media (max-width: 900px) {
-  .hero {
-    flex-direction: column;
-    text-align: center;
-    padding-top: 100px;
-    min-height: auto;
-  }
-  .hero__subtitle {
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .hero__actions {
-    justify-content: center;
-  }
-  .hero__visual {
-    width: 280px;
-    height: 340px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero__visual {
-    display: none;
-  }
-}
-</style>

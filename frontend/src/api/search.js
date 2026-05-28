@@ -41,6 +41,8 @@ export const searchApi = {
    * @returns {Promise<{ profiles: PaginatedProfiles }>}
    */
   getProfiles(page = 1) {
-    return apiClient.get('/search/profiles', { params: { page } })
+    return apiClient.get('/search/profiles', {
+      params: { page },
+    })
   },
 }

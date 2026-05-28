@@ -7,61 +7,56 @@ import { chatsApi } from '@/api/chats.js'
 import { profilesApi } from '@/api/profiles.js'
 import { swipesApi } from '@/api/swipes.js'
 import { useToast } from '@/composables/useToast.js'
-import { useNotificationsStore } from '@/stores/notifications.js'
 import { useProfileStore } from '@/stores/profile.js'
 import BaseButton from '@/components/BaseButton.vue'
 
 const router = useRouter()
 const { toast } = useToast()
-const notificationsStore = useNotificationsStore()
 const profileStore = useProfileStore()
 
 const activeTab = ref('likes')
 
 const likes = ref([])
 const isLoadingLikes = ref(false)
+const hasLoadedLikes = ref(false)
 
 const matches = ref([])
 const isLoadingMatches = ref(false)
+const hasLoadedMatches = ref(false)
 
 const profilesMap = ref({})
-const chatProfilesByUserId = ref({})
 const previewProfile = ref(null)
 const previewLoading = ref(false)
 const previewActionLoading = ref(false)
 
-const notifications = computed(() => notificationsStore.notifications)
-const isLoadingNotifications = computed(() => notificationsStore.isLoading)
-
-const getProfileId = (profile) => profile?.profile_id || profile?.id || profile?.profileId || null
-const getProfileUserId = (profile) => profile?.user_id || profile?.userId || profile?.user?.id || null
-const getMatchUserId = (match) => match?.user_id || match?.userId || match?.user?.id || null
+const getProfileId = (p) => p?.profile_id || p?.id || p?.profileId || null
+const getProfileUserId = (p) => p?.user_id || p?.userId || p?.user?.id || null
+const getMatchUserId = (m) => m?.user_id || m?.userId || m?.user?.id || null
 
 const loadLikes = async () => {
   isLoadingLikes.value = true
   try {
     const { data } = await likesApi.getAll()
     likes.value = Array.isArray(data.likes) ? data.likes : []
-    await hydrateLikesPhotos()
-  } catch (err) {
+    await hydratePhotos(likes.value)
+  } catch {
     toast.error('Unable to load likes.')
   } finally {
     isLoadingLikes.value = false
+    hasLoadedLikes.value = true
   }
 }
 
-const hydrateLikesPhotos = async () => {
-  const targets = likes.value.filter((like) => !like.photos?.length)
+const hydratePhotos = async (list) => {
+  const targets = list.filter((item) => !item.photos?.length)
   await Promise.allSettled(
-    targets.map(async (like) => {
-      const profileId = getProfileId(like)
+    targets.map(async (item) => {
+      const profileId = getProfileId(item)
       if (!profileId) return
       try {
         const { data } = await profilesApi.getById(profileId)
-        if (data?.profile?.photos) {
-          like.photos = data.profile.photos
-        }
-      } catch (err) {
+        if (data?.profile?.photos) item.photos = data.profile.photos
+      } catch {
         // ignore
       }
     })
@@ -73,30 +68,13 @@ const loadMatches = async () => {
   try {
     const { data } = await matchesApi.getAll()
     matches.value = Array.isArray(data.matches) ? data.matches : []
-    await hydrateMatchesPhotos()
-  } catch (err) {
+    await hydratePhotos(matches.value)
+  } catch {
     toast.error('Unable to load matches.')
   } finally {
     isLoadingMatches.value = false
+    hasLoadedMatches.value = true
   }
-}
-
-const hydrateMatchesPhotos = async () => {
-  const targets = matches.value.filter((match) => !match.photos?.length)
-  await Promise.allSettled(
-    targets.map(async (match) => {
-      const profileId = getProfileId(match)
-      if (!profileId) return
-      try {
-        const { data } = await profilesApi.getById(profileId)
-        if (data?.profile?.photos) {
-          match.photos = data.profile.photos
-        }
-      } catch (err) {
-        // ignore
-      }
-    })
-  )
 }
 
 const openLikePreview = async (like) => {
@@ -111,16 +89,9 @@ const openLikePreview = async (like) => {
 
   try {
     const { data } = await profilesApi.getById(profileId)
-    previewProfile.value = {
-      ...(data?.profile || {}),
-      ...like,
-      profile_id: profileId,
-    }
-  } catch (err) {
-    previewProfile.value = {
-      ...like,
-      profile_id: profileId,
-    }
+    previewProfile.value = { ...(data?.profile || {}), ...like, profile_id: profileId }
+  } catch {
+    previewProfile.value = { ...like, profile_id: profileId }
   } finally {
     previewLoading.value = false
   }
@@ -132,7 +103,7 @@ const closePreview = () => {
 }
 
 const refreshAll = async () => {
-  await Promise.allSettled([loadLikes(), loadMatches(), refreshNotifications()])
+  await Promise.allSettled([loadLikes(), loadMatches()])
 }
 
 const handlePreviewAction = async (isLiked) => {
@@ -151,7 +122,7 @@ const handlePreviewAction = async (isLiked) => {
     previewProfile.value = null
     await refreshAll()
     toast.success(isLiked ? 'Like sent.' : 'Passed.')
-  } catch (err) {
+  } catch {
     toast.error('Unable to save your choice.')
   } finally {
     previewActionLoading.value = false
@@ -166,151 +137,55 @@ const startChat = async (match) => {
   }
 
   try {
-    const { data } = await chatsApi.firstOrCreate(userId)
-    router.push({ name: 'chats', query: { chat: data.chat?.id } })
-  } catch (err) {
-    toast.error('Unable to start chat.')
-  }
-}
-
-const getNotificationProfileId = (notification) =>
-  notification.data?.matched_user_profile_id || notification.data?.liked_by_user_profile_id
-
-const getNotificationSenderId = (notification) => notification.data?.sender_id
-
-const isMatch = (notification) => notification.type?.includes('MatchNotification')
-const isMessage = (notification) => notification.type?.includes('MessageNotification')
-
-const formatRelativeTime = (value) => {
-  if (!value) return ''
-  const date = new Date(value)
-  const diffMs = date.getTime() - Date.now()
-  const diffMinutes = Math.round(diffMs / 60000)
-
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
-  if (Math.abs(diffMinutes) < 60) return rtf.format(diffMinutes, 'minute')
-
-  const diffHours = Math.round(diffMinutes / 60)
-  if (Math.abs(diffHours) < 24) return rtf.format(diffHours, 'hour')
-
-  const diffDays = Math.round(diffHours / 24)
-  return rtf.format(diffDays, 'day')
-}
-
-const hydrateProfiles = async () => {
-  const ids = notifications.value
-    .map(getNotificationProfileId)
-    .filter(Boolean)
-    .filter((id) => !profilesMap.value[id])
-
-  await Promise.allSettled(
-    ids.map(async (id) => {
-      try {
-        const { data } = await profilesApi.getById(id)
-        profilesMap.value[id] = data.profile
-      } catch (err) {
-        // ignore
-      }
-    })
-  )
-}
-
-const loadChatProfiles = async () => {
-  try {
     const { data } = await chatsApi.getAll()
-    const chats = Array.isArray(data.chats) ? data.chats : []
-    const map = {}
-    chats.forEach((chat) => {
-      const userId = chat?.interlocutor_id || chat?.interlocutor?.id
-      const profile = chat?.interlocutor?.profile || null
-      if (userId && profile) map[userId] = profile
+    const chatsList = Array.isArray(data.chats) ? data.chats : []
+    const currentId = profileStore.myProfile?.user_id
+    const existing = chatsList.find((chat) => {
+      const other = chat?.users?.find((u) => u?.id !== currentId)
+      return other?.id === userId
     })
-    chatProfilesByUserId.value = map
-  } catch (err) {
-    // ignore
-  }
-}
 
-const displayNotifications = computed(() =>
-  notifications.value.map((notification) => {
-    const profileId = getNotificationProfileId(notification)
-    const profile = profileId ? profilesMap.value[profileId] : null
-    const senderId = getNotificationSenderId(notification)
-    const senderProfile = senderId ? chatProfilesByUserId.value[senderId] : null
-    const label = isMatch(notification) ? 'Match' : isMessage(notification) ? 'Message' : 'Like'
-    const name = profile?.name || senderProfile?.name || 'someone'
+    const profileId = getProfileId(match)
+    const query = profileId
+      ? { user: userId, profile: profileId }
+      : { user: userId }
 
-    return {
-      id: notification.id,
-      label,
-      message: isMatch(notification)
-        ? `You matched with ${name}.`
-        : isMessage(notification)
-          ? `New message from ${name}.`
-          : `New like from ${name}.`,
-      time: formatRelativeTime(notification.created_at),
-      profile: profile || senderProfile,
-      initial: name?.[0] || 'M',
+    if (existing?.id) {
+      router.push({ name: 'chats', query: { chat: existing.id } })
+      return
     }
-  })
-)
 
-const refreshNotifications = async () => {
-  const result = await notificationsStore.fetchAll()
-  if (!result?.success) {
-    toast.error('Unable to load activity.')
+    router.push({ name: 'chats', query })
+  } catch {
+    toast.error('Unable to open chat.')
   }
-  await hydrateProfiles()
-
-  if (notifications.value.some(isMessage)) {
-    await loadChatProfiles()
-  }
-}
-
-const handleNotificationClick = async (notification) => {
-  await notificationsStore.markAsRead(notification.id)
-  if (isMessage(notification) && notification.data?.chat_id) {
-    router.push({ name: 'chats', query: { chat: notification.data.chat_id } })
-  }
-}
-
-const markAll = async () => {
-  await notificationsStore.markAllAsRead()
 }
 
 onMounted(async () => {
   if (!profileStore.myProfile) await profileStore.fetchMyProfile()
-  await Promise.allSettled([loadLikes(), loadMatches(), refreshNotifications()])
-})
-
-watch(notifications, async () => {
-  await hydrateProfiles()
-  if (notifications.value.some(isMessage)) {
-    await loadChatProfiles()
-  }
+  await Promise.allSettled([loadLikes(), loadMatches()])
 })
 </script>
 
 <template>
-  <div class="page">
-    <div class="page-header">
+  <div class="page min-h-screen bg-transparent text-slate-900 px-4 py-6 sm:px-6 lg:px-8">
+    <div class="page-header max-w-6xl mx-auto mb-8">
       <p class="eyebrow">Connections</p>
-      <h1 class="page-title">Likes, matches, activity</h1>
+      <h1 class="page-title">Connections</h1>
     </div>
 
-    <div class="tabs">
+    <div class="tabs flex flex-wrap gap-3 mb-6 max-w-6xl mx-auto">
       <button class="tab" :class="{ 'tab--active': activeTab === 'likes' }" @click="activeTab = 'likes'">Likes</button>
       <button class="tab" :class="{ 'tab--active': activeTab === 'matches' }" @click="activeTab = 'matches'">Matches</button>
-      <button class="tab" :class="{ 'tab--active': activeTab === 'activity' }" @click="activeTab = 'activity'">Activity</button>
     </div>
 
-    <section v-if="activeTab === 'likes'" class="glass-panel p-4 md:p-6">
-      <div v-if="isLoadingLikes" class="text-sm text-white/60">Loading likes...</div>
-      <div v-else-if="!likes.length" class="text-sm text-white/60">No likes yet.</div>
+    <!-- Likes -->
+    <section v-if="activeTab === 'likes'" class="glass-panel section-panel rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div v-if="hasLoadedLikes && !likes.length" class="section-status">No likes yet.</div>
       <div v-else class="connections-grid">
         <button
-          v-for="(like, index) in likes"
-          :key="like.profile_id || like.id || like.user_id || like.userId || index"
+          v-for="(like, i) in likes"
+          :key="like.profile_id || like.id || like.user_id || like.userId || i"
           type="button"
           class="connection-card connection-card--clickable"
           @click="openLikePreview(like)"
@@ -330,11 +205,11 @@ watch(notifications, async () => {
       </div>
     </section>
 
-    <section v-else-if="activeTab === 'matches'" class="glass-panel p-4 md:p-6">
-      <div v-if="isLoadingMatches" class="text-sm text-white/60">Loading matches...</div>
-      <div v-else-if="!matches.length" class="text-sm text-white/60">No matches yet.</div>
+    <!-- Matches -->
+    <section v-else-if="activeTab === 'matches'" class="glass-panel section-panel rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div v-if="hasLoadedMatches && !matches.length" class="section-status">No matches yet.</div>
       <div v-else class="connections-grid">
-        <div v-for="(match, index) in matches" :key="match.id || match.user_id || match.userId || index" class="connection-card">
+        <div v-for="(match, i) in matches" :key="match.id || match.user_id || match.userId || i" class="connection-card rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
           <div class="connection-card__avatar">
             <img v-if="match.photos?.[0]?.url" :src="match.photos[0].url" alt="Profile" />
             <span v-else>{{ match.name?.[0] || 'M' }}</span>
@@ -346,87 +221,41 @@ watch(notifications, async () => {
             </p>
             <p class="connection-card__meta">{{ match.city || 'Nearby' }}</p>
           </div>
-          <BaseButton
-            size="sm"
-            variant="secondary"
-            :disabled="!getMatchUserId(match)"
-            @click="startChat(match)"
-          >
+          <BaseButton size="sm" variant="secondary" :disabled="!getMatchUserId(match)" @click="startChat(match)">
             Chat
           </BaseButton>
         </div>
       </div>
     </section>
 
-    <section v-else class="glass-panel p-4 md:p-6">
-      <div class="flex items-center justify-between mb-4">
-        <p class="text-sm uppercase tracking-[0.3em] text-white/60">Unread</p>
-        <BaseButton v-if="displayNotifications.length" size="sm" variant="ghost" @click="markAll">
-          Mark all as read
-        </BaseButton>
-      </div>
-
-      <div class="flex-1 overflow-y-auto">
-        <div v-if="isLoadingNotifications" class="text-sm text-white/60">Loading...</div>
-        <ul v-else-if="displayNotifications.length > 0" class="flex flex-col gap-3">
-          <li
-            v-for="notification in displayNotifications"
-            :key="notification.id"
-            class="glass-panel glass-panel--tight px-4 py-3 flex items-center gap-3 hover:border-violet-400/60 transition cursor-pointer"
-            @click="handleNotificationClick(notification)"
-          >
-            <div class="w-10 h-10 rounded-full overflow-hidden border border-white/10">
-              <img v-if="notification.profile?.photos?.[0]?.url" :src="notification.profile.photos[0].url" alt="Profile" class="w-full h-full object-cover" />
-              <div v-else class="w-full h-full flex items-center justify-center bg-white/10 text-sm font-semibold">
-                {{ notification.initial }}
-              </div>
-            </div>
-            <span class="chip">{{ notification.label }}</span>
-            <div class="flex-1">
-              <p class="text-sm font-semibold text-white">{{ notification.message }}</p>
-              <p class="text-xs text-white/60">{{ notification.time }}</p>
-            </div>
-          </li>
-        </ul>
-        <div v-else class="text-center text-white/60 py-10">
-          <p>No activity yet.</p>
-        </div>
-      </div>
-    </section>
-
+    <!-- Preview modal -->
     <transition name="preview-pop">
-      <div v-if="previewProfile" class="profile-preview-modal" @click.self="closePreview">
-        <div class="profile-preview-shell glass-panel">
-          <button class="profile-preview-close" type="button" @click="closePreview">×</button>
+      <div v-if="previewProfile" class="preview-modal" @click.self="closePreview">
+        <div class="preview-shell glass-panel">
+          <button class="preview-close" type="button" @click="closePreview">×</button>
 
-          <div v-if="previewLoading" class="profile-preview-state text-white/70">
-            Loading profile...
-          </div>
+          <div v-if="previewLoading" class="preview-loading">Loading profile...</div>
 
           <template v-else>
-            <div class="profile-preview-photo">
-              <img
-                v-if="previewProfile.photos?.[0]?.url"
-                :src="previewProfile.photos[0].url"
-                :alt="previewProfile.name || 'Profile'"
-              />
-              <div v-else class="profile-preview-photo__fallback">
+            <div class="preview-photo">
+              <img v-if="previewProfile.photos?.[0]?.url" :src="previewProfile.photos[0].url" :alt="previewProfile.name || 'Profile'" />
+              <div v-else class="preview-photo__fallback">
                 {{ previewProfile.name?.[0] || 'M' }}
               </div>
             </div>
 
-            <div class="profile-preview-body">
-              <div class="flex items-end gap-2 mb-1">
-                <h2 class="text-2xl font-extrabold leading-none">{{ previewProfile.name || 'Someone' }}</h2>
-                <span v-if="previewProfile.age" class="text-lg opacity-90">{{ previewProfile.age }}</span>
+            <div class="preview-body">
+              <div class="preview-body__name-row">
+                <h2 class="preview-body__name">{{ previewProfile.name || 'Someone' }}</h2>
+                <span v-if="previewProfile.age" class="preview-body__age">{{ previewProfile.age }}</span>
               </div>
-              <p class="text-xs text-white/70 mb-3">{{ previewProfile.city || 'Nearby' }}</p>
-              <p class="text-sm leading-5 text-white/90 line-clamp-4">
+              <p class="preview-body__location">{{ previewProfile.city || 'Nearby' }}</p>
+              <p class="preview-body__bio">
                 {{ previewProfile.description || previewProfile.bio || 'No bio provided.' }}
               </p>
             </div>
 
-            <div class="profile-preview-actions">
+            <div class="preview-actions">
               <BaseButton variant="secondary" full :disabled="previewActionLoading" @click="handlePreviewAction(false)">
                 Pass
               </BaseButton>
@@ -444,33 +273,66 @@ watch(notifications, async () => {
 <style scoped>
 .tabs {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .tab {
   padding: 8px 18px;
   border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.85);
   color: var(--text-secondary);
   font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: border-color var(--duration-fast) var(--ease-smooth),
-    color var(--duration-fast) var(--ease-smooth),
-    background var(--duration-fast) var(--ease-smooth);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--duration-fast), color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
 }
 
 .tab--active {
-  color: var(--text-primary);
-  border-color: var(--border-active);
-  background: rgba(165, 139, 255, 0.15);
+  color: var(--color-accent);
+  border-color: rgba(14, 165, 233, 0.45);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05));
+  box-shadow: var(--shadow-md);
 }
 
+.section-panel {
+  padding: 18px;
+}
+
+.section-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-panel__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.section-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.section-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px 0;
+}
+
+/* Connections grid */
 .connections-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
 }
 
 .connection-card {
@@ -478,37 +340,39 @@ watch(notifications, async () => {
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
 }
 
 .connection-card--clickable {
   width: 100%;
   text-align: left;
   cursor: pointer;
-  transition: transform var(--duration-fast) var(--ease-smooth),
-    border-color var(--duration-fast) var(--ease-smooth),
-    background var(--duration-fast) var(--ease-smooth);
+  transition: transform var(--duration-fast), border-color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
 }
 
 .connection-card--clickable:hover {
-  transform: translateY(-1px);
-  border-color: rgba(167, 139, 250, 0.35);
-  background: rgba(167, 139, 250, 0.08);
+  transform: translateY(-2px);
+  border-color: rgba(14, 165, 233, 0.45);
+  background: rgba(14, 165, 233, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .connection-card__avatar {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(165, 139, 255, 0.2);
-  border: 1px solid rgba(165, 139, 255, 0.4);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05));
+  color: var(--color-accent);
   font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.2);
 }
 
 .connection-card__avatar img {
@@ -519,113 +383,142 @@ watch(notifications, async () => {
 
 .connection-card__body {
   flex: 1;
+  min-width: 0;
 }
 
 .connection-card__name {
   font-weight: 600;
-  margin: 0 0 4px;
+  margin: 0 0 2px;
+  font-size: 0.9rem;
 }
 
 .connection-card__age {
-  margin-left: 6px;
+  margin-left: 4px;
   font-weight: 400;
   color: var(--text-muted);
 }
 
 .connection-card__meta {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   margin: 0;
 }
 
-.profile-preview-modal {
+/* Preview modal */
+.preview-modal {
   position: fixed;
   inset: 0;
   z-index: 220;
-  background: rgba(9, 5, 15, 0.66);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 16px;
 }
 
-.profile-preview-shell {
+.preview-shell {
   position: relative;
   width: min(88vw, 380px);
-  max-height: min(78svh, 620px);
+  max-height: min(78svh, 580px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.profile-preview-close {
+.preview-close {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 32px;
-  height: 32px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: white;
-  font-size: 22px;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   z-index: 2;
 }
 
-.profile-preview-photo {
-  min-height: 210px;
-  max-height: 240px;
-  background: linear-gradient(160deg, rgba(18, 8, 32, 0.9), rgba(32, 12, 56, 0.85));
+.preview-photo {
+  min-height: 200px;
+  max-height: 230px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(14, 165, 233, 0.05));
 }
 
-.profile-preview-photo img,
-.profile-preview-photo__fallback {
+.preview-photo img,
+.preview-photo__fallback {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.profile-preview-photo__fallback {
+.preview-photo__fallback {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 800;
-  color: white;
-  background: linear-gradient(135deg, rgba(165, 139, 255, 0.4), rgba(255, 159, 199, 0.4));
+  color: var(--color-accent);
+  background: var(--color-accent-muted);
 }
 
-.profile-preview-body {
-  padding: 14px 14px 10px;
+.preview-body {
+  padding: 14px 16px 8px;
 }
 
-.profile-preview-actions {
+.preview-body__name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.preview-body__name {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.preview-body__age {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+.preview-body__location {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.preview-body__bio {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.preview-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  padding: 0 14px 14px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 16px 16px;
 }
 
-.profile-preview-state {
-  min-height: 260px;
+.preview-loading {
+  min-height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-@media (max-width: 640px) {
-  .profile-preview-shell {
-    width: min(92vw, 360px);
-  }
-
-  .profile-preview-photo {
-    min-height: 190px;
-    max-height: 220px;
-  }
+  color: var(--text-muted);
 }
 
 .preview-pop-enter-active,
@@ -638,14 +531,20 @@ watch(notifications, async () => {
   opacity: 0;
 }
 
-.preview-pop-enter-active .profile-preview-shell,
-.preview-pop-leave-active .profile-preview-shell {
+.preview-pop-enter-active .preview-shell,
+.preview-pop-leave-active .preview-shell {
   transition: transform 180ms var(--ease-spring), opacity 180ms var(--ease-smooth);
 }
 
-.preview-pop-enter-from .profile-preview-shell,
-.preview-pop-leave-to .profile-preview-shell {
-  transform: translateY(10px) scale(0.96);
+.preview-pop-enter-from .preview-shell,
+.preview-pop-leave-to .preview-shell {
+  transform: translateY(8px) scale(0.97);
   opacity: 0;
+}
+
+@media (max-width: 640px) {
+  .preview-shell {
+    width: min(92vw, 360px);
+  }
 }
 </style>
