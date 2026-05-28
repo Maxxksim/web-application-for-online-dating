@@ -31,6 +31,7 @@ class Profile extends Model
     {
         return [
             'relevance_score_updated_on' => 'date',
+            'is_enabled' => 'boolean'
         ];
     }
 
