@@ -168,58 +168,55 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="page min-h-screen bg-transparent text-slate-900 px-4 py-6 sm:px-6 lg:px-8">
-    <div class="page-header max-w-6xl mx-auto mb-8">
-      <p class="eyebrow">Connections</p>
-      <h1 class="page-title">Connections</h1>
-    </div>
+  <div class="page px-4 py-6 sm:px-6 lg:px-8">
 
-    <div class="tabs flex flex-wrap gap-3 mb-6 max-w-6xl mx-auto">
-      <button class="tab" :class="{ 'tab--active': activeTab === 'likes' }" @click="activeTab = 'likes'">Likes</button>
-      <button class="tab" :class="{ 'tab--active': activeTab === 'matches' }" @click="activeTab = 'matches'">Matches</button>
+
+    <div class="flex flex-wrap gap-[10px] mb-6 max-w-6xl mx-auto">
+      <button class="px-[18px] py-[8px] rounded-full border border-slate-200 bg-white/85 text-slate-700 text-[0.85rem] font-semibold cursor-pointer shadow-sm transition-all duration-[160ms]" :class="activeTab === 'likes' ? 'text-cyan-500 border-sky-500/45 bg-gradient-to-br from-sky-500/15 to-sky-500/5 shadow-md' : ''" @click="activeTab = 'likes'">Likes</button>
+      <button class="px-[18px] py-[8px] rounded-full border border-slate-200 bg-white/85 text-slate-700 text-[0.85rem] font-semibold cursor-pointer shadow-sm transition-all duration-[160ms]" :class="activeTab === 'matches' ? 'text-cyan-500 border-sky-500/45 bg-gradient-to-br from-sky-500/15 to-sky-500/5 shadow-md' : ''" @click="activeTab = 'matches'">Matches</button>
     </div>
 
     <!-- Likes -->
-    <section v-if="activeTab === 'likes'" class="glass-panel section-panel rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div v-if="hasLoadedLikes && !likes.length" class="section-status">No likes yet.</div>
-      <div v-else class="connections-grid">
+    <section v-if="activeTab === 'likes'" class="glass-panel p-[18px]">
+      <div v-if="hasLoadedLikes && !likes.length" class="text-[0.85rem] text-slate-500">No likes yet.</div>
+      <div v-else class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[14px]">
         <button
           v-for="(like, i) in likes"
           :key="like.profile_id || like.id || like.user_id || like.userId || i"
           type="button"
-          class="connection-card connection-card--clickable"
+          class="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-slate-200/50 bg-white/50 w-full text-left cursor-pointer transition-all duration-[160ms] hover:-translate-y-0.5 hover:border-sky-500/45 hover:bg-sky-500/10 hover:shadow-md"
           @click="openLikePreview(like)"
         >
-          <div class="connection-card__avatar">
-            <img v-if="like.photos?.[0]?.url" :src="like.photos[0].url" alt="Profile" />
+          <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-sky-500/15 to-sky-500/5 text-cyan-500 font-bold shrink-0 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.2)]">
+            <img v-if="like.photos?.[0]?.url" :src="like.photos[0].url" alt="Profile" class="w-full h-full object-cover" />
             <span v-else>{{ like.name?.[0] || 'M' }}</span>
           </div>
-          <div class="connection-card__body">
-            <p class="connection-card__name">
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold m-0 mb-0.5 text-[0.9rem]">
               {{ like.name || 'Someone' }}
-              <span v-if="like.age" class="connection-card__age">{{ like.age }}</span>
+              <span v-if="like.age" class="ml-1 font-normal text-slate-500">{{ like.age }}</span>
             </p>
-            <p class="connection-card__meta">{{ like.city || 'Nearby' }}</p>
+            <p class="text-[0.78rem] text-slate-500 m-0">{{ like.city || 'Nearby' }}</p>
           </div>
         </button>
       </div>
     </section>
 
     <!-- Matches -->
-    <section v-else-if="activeTab === 'matches'" class="glass-panel section-panel rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div v-if="hasLoadedMatches && !matches.length" class="section-status">No matches yet.</div>
-      <div v-else class="connections-grid">
-        <div v-for="(match, i) in matches" :key="match.id || match.user_id || match.userId || i" class="connection-card rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div class="connection-card__avatar">
-            <img v-if="match.photos?.[0]?.url" :src="match.photos[0].url" alt="Profile" />
+    <section v-else-if="activeTab === 'matches'" class="glass-panel p-[18px]">
+      <div v-if="hasLoadedMatches && !matches.length" class="text-[0.85rem] text-slate-500">No matches yet.</div>
+      <div v-else class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[14px]">
+        <div v-for="(match, i) in matches" :key="match.id || match.user_id || match.userId || i" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-slate-200/50 bg-white/50">
+          <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-sky-500/15 to-sky-500/5 text-cyan-500 font-bold shrink-0 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.2)]">
+            <img v-if="match.photos?.[0]?.url" :src="match.photos[0].url" alt="Profile" class="w-full h-full object-cover" />
             <span v-else>{{ match.name?.[0] || 'M' }}</span>
           </div>
-          <div class="connection-card__body">
-            <p class="connection-card__name">
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold m-0 mb-0.5 text-[0.9rem]">
               {{ match.name || 'New match' }}
-              <span v-if="match.age" class="connection-card__age">{{ match.age }}</span>
+              <span v-if="match.age" class="ml-1 font-normal text-slate-500">{{ match.age }}</span>
             </p>
-            <p class="connection-card__meta">{{ match.city || 'Nearby' }}</p>
+            <p class="text-[0.78rem] text-slate-500 m-0">{{ match.city || 'Nearby' }}</p>
           </div>
           <BaseButton size="sm" variant="secondary" :disabled="!getMatchUserId(match)" @click="startChat(match)">
             Chat
@@ -230,32 +227,32 @@ onMounted(async () => {
 
     <!-- Preview modal -->
     <transition name="preview-pop">
-      <div v-if="previewProfile" class="preview-modal" @click.self="closePreview">
-        <div class="preview-shell glass-panel">
-          <button class="preview-close" type="button" @click="closePreview">×</button>
+      <div v-if="previewProfile" class="fixed inset-0 z-[220] bg-black/30 backdrop-blur-[6px] flex items-center justify-center p-4" @click.self="closePreview">
+        <div class="preview-shell glass-panel relative w-full max-w-[380px] sm:max-w-[360px] max-h-[78svh] sm:max-h-[580px] overflow-hidden flex flex-col">
+          <button class="absolute top-2 right-2 w-[30px] h-[30px] border-none rounded-full bg-black/50 text-white text-[20px] leading-none cursor-pointer z-10" type="button" @click="closePreview">×</button>
 
-          <div v-if="previewLoading" class="preview-loading">Loading profile...</div>
+          <div v-if="previewLoading" class="min-h-[240px] flex items-center justify-center text-slate-500">Loading profile...</div>
 
           <template v-else>
-            <div class="preview-photo">
-              <img v-if="previewProfile.photos?.[0]?.url" :src="previewProfile.photos[0].url" :alt="previewProfile.name || 'Profile'" />
-              <div v-else class="preview-photo__fallback">
+            <div class="min-h-[200px] max-h-[230px] bg-gradient-to-br from-sky-500/20 to-sky-500/5">
+              <img v-if="previewProfile.photos?.[0]?.url" :src="previewProfile.photos[0].url" :alt="previewProfile.name || 'Profile'" class="w-full h-full object-cover block" />
+              <div v-else class="w-full h-full flex items-center justify-center text-[2.5rem] font-bold text-cyan-500 bg-cyan-50">
                 {{ previewProfile.name?.[0] || 'M' }}
               </div>
             </div>
 
-            <div class="preview-body">
-              <div class="preview-body__name-row">
-                <h2 class="preview-body__name">{{ previewProfile.name || 'Someone' }}</h2>
-                <span v-if="previewProfile.age" class="preview-body__age">{{ previewProfile.age }}</span>
+            <div class="px-4 pt-3.5 pb-2">
+              <div class="flex items-baseline gap-1.5 mb-0.5">
+                <h2 class="text-[1.3rem] font-bold m-0 text-slate-900">{{ previewProfile.name || 'Someone' }}</h2>
+                <span v-if="previewProfile.age" class="text-[1rem] text-slate-700">{{ previewProfile.age }}</span>
               </div>
-              <p class="preview-body__location">{{ previewProfile.city || 'Nearby' }}</p>
-              <p class="preview-body__bio">
+              <p class="text-[0.78rem] text-slate-500 m-0 mb-2">{{ previewProfile.city || 'Nearby' }}</p>
+              <p class="text-[0.88rem] text-slate-700 leading-snug m-0 line-clamp-4">
                 {{ previewProfile.description || previewProfile.bio || 'No bio provided.' }}
               </p>
             </div>
 
-            <div class="preview-actions">
+            <div class="grid grid-cols-2 gap-2 px-4 pt-3 pb-4">
               <BaseButton variant="secondary" full :disabled="previewActionLoading" @click="handlePreviewAction(false)">
                 Pass
               </BaseButton>
@@ -270,281 +267,3 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped>
-.tabs {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.tab {
-  padding: 8px 18px;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--duration-fast), color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
-}
-
-.tab--active {
-  color: var(--color-accent);
-  border-color: rgba(14, 165, 233, 0.45);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05));
-  box-shadow: var(--shadow-md);
-}
-
-.section-panel {
-  padding: 18px;
-}
-
-.section-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.section-panel__label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.section-status {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.section-empty {
-  text-align: center;
-  color: var(--text-muted);
-  padding: 40px 0;
-}
-
-/* Connections grid */
-.connections-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-}
-
-.connection-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-sm);
-}
-
-.connection-card--clickable {
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  transition: transform var(--duration-fast), border-color var(--duration-fast), background var(--duration-fast), box-shadow var(--duration-fast);
-}
-
-.connection-card--clickable:hover {
-  transform: translateY(-2px);
-  border-color: rgba(14, 165, 233, 0.45);
-  background: rgba(14, 165, 233, 0.08);
-  box-shadow: var(--shadow-md);
-}
-
-.connection-card__avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05));
-  color: var(--color-accent);
-  font-weight: 700;
-  flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(14, 165, 233, 0.2);
-}
-
-.connection-card__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.connection-card__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.connection-card__name {
-  font-weight: 600;
-  margin: 0 0 2px;
-  font-size: 0.9rem;
-}
-
-.connection-card__age {
-  margin-left: 4px;
-  font-weight: 400;
-  color: var(--text-muted);
-}
-
-.connection-card__meta {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-/* Preview modal */
-.preview-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 220;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.preview-shell {
-  position: relative;
-  width: min(88vw, 380px);
-  max-height: min(78svh, 580px);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.preview-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  z-index: 2;
-}
-
-.preview-photo {
-  min-height: 200px;
-  max-height: 230px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(14, 165, 233, 0.05));
-}
-
-.preview-photo img,
-.preview-photo__fallback {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.preview-photo__fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: var(--color-accent);
-  background: var(--color-accent-muted);
-}
-
-.preview-body {
-  padding: 14px 16px 8px;
-}
-
-.preview-body__name-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 2px;
-}
-
-.preview-body__name {
-  font-size: 1.3rem;
-  font-weight: 800;
-  margin: 0;
-  color: var(--text-primary);
-}
-
-.preview-body__age {
-  font-size: 1rem;
-  color: var(--text-secondary);
-}
-
-.preview-body__location {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin: 0 0 8px;
-}
-
-.preview-body__bio {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.preview-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 12px 16px 16px;
-}
-
-.preview-loading {
-  min-height: 240px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-}
-
-.preview-pop-enter-active,
-.preview-pop-leave-active {
-  transition: opacity 180ms var(--ease-smooth);
-}
-
-.preview-pop-enter-from,
-.preview-pop-leave-to {
-  opacity: 0;
-}
-
-.preview-pop-enter-active .preview-shell,
-.preview-pop-leave-active .preview-shell {
-  transition: transform 180ms var(--ease-spring), opacity 180ms var(--ease-smooth);
-}
-
-.preview-pop-enter-from .preview-shell,
-.preview-pop-leave-to .preview-shell {
-  transform: translateY(8px) scale(0.97);
-  opacity: 0;
-}
-
-@media (max-width: 640px) {
-  .preview-shell {
-    width: min(92vw, 360px);
-  }
-}
-</style>

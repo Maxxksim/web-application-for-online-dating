@@ -147,17 +147,19 @@ const hideMatch = async () => {
 </script>
 
 <template>
-  <div class="page page--center page--discover">
-    <div class="discover-content">
-      <div v-if="locationError" class="chip">{{ locationError }}</div>
+  <div class="relative min-h-screen flex flex-col items-center justify-center px-6 pb-24 pt-9">
+    <div class="flex flex-col items-center gap-[14px] w-full">
+      <div v-if="locationError" class="inline-flex items-center gap-[6px] px-[10px] py-[4px] rounded-full border border-[rgba(226,232,240,0.75)] bg-white/75 text-[0.72rem] font-semibold text-slate-600">
+        {{ locationError }}
+      </div>
 
-      <div v-if="deckError" class="glass-panel discover-notice animate-fade-in-up">
-        <p class="discover-notice__title">Action needed</p>
-        <p class="discover-notice__text">{{ deckError.message }}</p>
-        <div v-if="missingFieldsLabel.length" class="discover-notice__text" style="margin-top: 8px">
+      <div v-if="deckError" class="max-w-[420px] p-6 text-center rounded-[32px] border border-[rgba(226,232,240,0.75)] bg-[rgba(255,255,255,0.72)] shadow-[0_4px_16px_rgba(15,23,42,0.06),0_1px_4px_rgba(15,23,42,0.04)] backdrop-blur-[20px] animate-fade-in-up">
+        <p class="font-semibold text-[1.05rem] text-slate-900 m-0 mb-1.5">Action needed</p>
+        <p class="text-[0.88rem] text-slate-700 m-0">{{ deckError.message }}</p>
+        <div v-if="missingFieldsLabel.length" class="text-[0.88rem] text-slate-700 m-0 mt-2">
           Missing: {{ missingFieldsLabel.join(', ') }}
         </div>
-        <div class="discover-notice__actions">
+        <div class="flex flex-col sm:flex-row gap-2.5 mt-[18px]">
           <BaseButton variant="primary" full @click="goToProfile">Complete Profile</BaseButton>
           <BaseButton v-if="deckError.status === 403" variant="secondary" full @click="enableProfile">
             Enable Profile
@@ -165,19 +167,19 @@ const hideMatch = async () => {
         </div>
       </div>
 
-      <div v-else-if="isLoading" class="glass-panel discover-notice animate-fade-in-up">
-        <p class="discover-notice__text">Loading profiles...</p>
+      <div v-else-if="isLoading" class="max-w-[420px] p-6 text-center rounded-[32px] border border-[rgba(226,232,240,0.75)] bg-[rgba(255,255,255,0.72)] shadow-[0_4px_16px_rgba(15,23,42,0.06),0_1px_4px_rgba(15,23,42,0.04)] backdrop-blur-[20px] animate-fade-in-up">
+        <p class="text-[0.88rem] text-slate-700 m-0">Loading profiles...</p>
       </div>
 
-      <div v-else-if="currentProfile" class="discover-stack animate-fade-in-up">
+      <div v-else-if="currentProfile" class="flex flex-col items-center gap-3 w-full max-w-[960px] animate-fade-in-up">
         <SwipeCard ref="cardRef" :profile="currentProfile" @swiped="handleSwipe" />
         <ActionButtons :show-undo="canUndo" @action="handleAction" @undo="handleUndo" style="align-self: center" />
       </div>
 
-      <div v-else class="glass-panel discover-notice animate-fade-in-up">
-        <p class="discover-notice__title">No more profiles found</p>
-        <p class="discover-notice__text">Try adjusting your discovery settings.</p>
-        <div v-if="canUndo" class="discover-notice__actions" style="justify-content: center; margin-top: 15px;">
+      <div v-else class="max-w-[420px] p-6 text-center rounded-[32px] border border-[rgba(226,232,240,0.75)] bg-[rgba(255,255,255,0.72)] shadow-[0_4px_16px_rgba(15,23,42,0.06),0_1px_4px_rgba(15,23,42,0.04)] backdrop-blur-[20px] animate-fade-in-up">
+        <p class="font-semibold text-[1.05rem] text-slate-900 m-0 mb-1.5">No more profiles found</p>
+        <p class="text-[0.88rem] text-slate-700 m-0">Try adjusting your discovery settings.</p>
+        <div v-if="canUndo" class="flex flex-col sm:flex-row gap-2.5 mt-[15px] justify-center">
           <BaseButton variant="secondary" @click="handleUndo">Undo Last Swipe</BaseButton>
         </div>
       </div>
@@ -187,53 +189,3 @@ const hideMatch = async () => {
   </div>
 </template>
 
-<style scoped>
-.discover-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-}
-
-.discover-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  max-width: 960px;
-}
-
-.discover-notice {
-  max-width: 420px;
-  padding: 24px;
-  text-align: center;
-}
-
-.discover-notice__title {
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: var(--text-primary);
-  margin: 0 0 6px;
-}
-
-.discover-notice__text {
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.discover-notice__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-@media (min-width: 640px) {
-  .discover-notice__actions {
-    flex-direction: row;
-  }
-}
-</style>

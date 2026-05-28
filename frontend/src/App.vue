@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-transparent text-slate-900">
+  <div class="min-h-screen">
     <AppLayout>
       <RouterView v-slot="{ Component }">
         <Transition name="page" mode="out-in">

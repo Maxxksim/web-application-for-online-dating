@@ -6,6 +6,8 @@ import { useToast } from '@/composables/useToast.js'
 import { SELECT_OPTIONS, INTEREST_OPTIONS } from '@/constants/profileOptions.js'
 import BaseInput from '@/components/BaseInput.vue'
 import BaseButton from '@/components/BaseButton.vue'
+import DualRangeSlider from '@/components/DualRangeSlider.vue'
+import GlassDropdown from '@/components/GlassDropdown.vue'
 
 const profileStore = useProfileStore()
 const subscriptionStore = useSubscriptionStore()
@@ -209,37 +211,17 @@ const save = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-transparent text-slate-900">
+  <div class="min-h-screen text-slate-900">
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p class="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-600">Filters</p>
-          <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Discovery settings</h1>
-        </div>
-        <div class="flex items-center gap-3">
-          <span class="text-sm font-semibold text-slate-600">Advanced</span>
-          <label class="relative inline-flex cursor-pointer items-center">
-            <input
-              type="checkbox"
-              class="peer sr-only"
-              v-model="enableAdvanced"
-              :disabled="!isPremium"
-            />
-            <div class="h-6 w-11 rounded-full border border-slate-300 bg-slate-200 transition duration-200 peer-checked:bg-cyan-600 peer-disabled:opacity-50"></div>
-            <div class="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition duration-200 peer-checked:translate-x-5"></div>
-          </label>
-        </div>
-      </div>
+
 
       <div class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <section class="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
+        <section class="glass-panel" style="padding: 24px;">
           <div class="mb-6 flex flex-col gap-3">
-            <span class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-600">Core discovery</span>
-            <h2 class="text-2xl font-semibold text-slate-950">Basics</h2>
-            <p class="max-w-xl text-sm leading-6 text-slate-600">Set the most important preferences that shape your discovery feed.</p>
+            <h2 class="text-2xl font-semibold text-slate-950">Basic filters</h2>
           </div>
           <div class="space-y-6">
-            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <div class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
               <div class="mb-3 flex items-center justify-between">
                 <span class="text-sm font-semibold text-slate-700">Maximum Distance</span>
                 <span class="text-sm font-semibold text-slate-900">{{ settings.distance }} km</span>
@@ -249,35 +231,40 @@ const save = async () => {
                 type="range"
                 min="1"
                 max="200"
-                class="w-full accent-cyan-500"
+                class="w-full accent-cyan-300"
               />
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-              <BaseInput v-model="settings.minAge" type="number" label="Min Age" />
-              <BaseInput v-model="settings.maxAge" type="number" label="Max Age" />
-            </div>
+            <DualRangeSlider
+              v-model:model-min="settings.minAge"
+              v-model:model-max="settings.maxAge"
+              :min="18"
+              :max="80"
+              label="Age"
+            />
 
             <div class="space-y-2">
               <label for="search-gender" class="text-sm font-semibold text-slate-700">Gender</label>
-              <select
-                id="search-gender"
+              <GlassDropdown
                 v-model="settings.gender"
-                class="form-select w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-              >
-                <option value="both">Everyone</option>
-                <option value="woman">Women</option>
-                <option value="man">Men</option>
-              </select>
+                :options="[{value:'both', label:'Everyone'}, {value:'woman', label:'Women'}, {value:'man', label:'Men'}]"
+                placeholder="Everyone"
+                :showEmpty="false"
+              />
+            </div>
+
+            <div class="pt-4 mt-4">
+              <BaseButton @click="save" variant="primary" full :loading="isSaving" :disabled="!showFiltersContent || isSaving">
+                Apply filters
+              </BaseButton>
             </div>
           </div>
         </section>
 
-        <section class="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
+        <section class="glass-panel" style="padding: 24px;">
           <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <span class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Premium filters</span>
-              <h2 class="mt-2 text-2xl font-semibold text-slate-950">Advanced discovery</h2>
+              <h2 class="text-2xl font-semibold text-slate-950">Premium filters</h2>
             </div>
             <div class="flex items-center gap-3">
               <span class="text-sm font-semibold text-slate-600">Enabled</span>
@@ -293,15 +280,11 @@ const save = async () => {
               </label>
             </div>
           </div>
-          <p class="mb-6 text-sm leading-6 text-slate-600">Unlock deeper matching with lifestyle, appearance, and interests filters.</p>
 
           <div class="space-y-6">
-            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-              <p class="text-sm leading-6 text-slate-600">Use premium filters to sharpen your match results. Lifestyle and appearance filters help you focus on the traits that matter most.</p>
-            </div>
 
             <fieldset :disabled="isAdvancedLocked" class="space-y-6">
-              <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <section class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
                 <div class="mb-4 flex items-center justify-between">
                   <h3 class="text-lg font-semibold text-slate-900">Lifestyle</h3>
                   <span class="text-sm text-slate-500">Optional</span>
@@ -309,52 +292,24 @@ const save = async () => {
                 <div class="grid gap-4 sm:grid-cols-2">
                   <div class="space-y-2">
                     <label for="dating-purpose" class="text-sm font-semibold text-slate-700">Dating purpose</label>
-                    <select
-                      id="dating-purpose"
-                      v-model="settings.datingPurpose"
-                      class="form-select w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                    >
-                      <option value="">Any</option>
-                      <option v-for="opt in selectOptions.datingPurpose" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                    </select>
+                    <GlassDropdown v-model="settings.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Any" empty-label="Any" />
                   </div>
                   <div class="space-y-2">
                     <label for="smoking" class="text-sm font-semibold text-slate-700">Smoking</label>
-                    <select
-                      id="smoking"
-                      v-model="settings.smoking"
-                      class="form-select w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                    >
-                      <option value="">Any</option>
-                      <option v-for="opt in selectOptions.smoking" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                    </select>
+                    <GlassDropdown v-model="settings.smoking" :options="selectOptions.smoking" placeholder="Any" empty-label="Any" />
                   </div>
                   <div class="space-y-2">
                     <label for="drinking" class="text-sm font-semibold text-slate-700">Drinking</label>
-                    <select
-                      id="drinking"
-                      v-model="settings.drinking"
-                      class="form-select w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                    >
-                      <option value="">Any</option>
-                      <option v-for="opt in selectOptions.drinking" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                    </select>
+                    <GlassDropdown v-model="settings.drinking" :options="selectOptions.drinking" placeholder="Any" empty-label="Any" />
                   </div>
                   <div class="space-y-2">
                     <label for="exercise" class="text-sm font-semibold text-slate-700">Exercise</label>
-                    <select
-                      id="exercise"
-                      v-model="settings.exercise"
-                      class="form-select w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                    >
-                      <option value="">Any</option>
-                      <option v-for="opt in selectOptions.exercise" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                    </select>
+                    <GlassDropdown v-model="settings.exercise" :options="selectOptions.exercise" placeholder="Any" empty-label="Any" />
                   </div>
                 </div>
               </section>
 
-              <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <section class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
                 <div class="mb-4 flex items-center justify-between">
                   <h3 class="text-lg font-semibold text-slate-900">Appearance</h3>
                   <span class="text-sm text-slate-500">Optional</span>
@@ -362,50 +317,37 @@ const save = async () => {
                 <div class="grid gap-4 sm:grid-cols-2">
                   <div class="space-y-2">
                     <label for="body-type" class="text-sm font-semibold text-slate-700">Body type</label>
-                    <select
-                      id="body-type"
-                      v-model="settings.bodyType"
-                      class="form-select w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                    >
-                      <option value="">Any</option>
-                      <option v-for="opt in selectOptions.bodyType" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                    </select>
+                    <GlassDropdown v-model="settings.bodyType" :options="selectOptions.bodyType" placeholder="Any" empty-label="Any" />
                   </div>
                   <div class="space-y-2">
                     <label for="eye-color" class="text-sm font-semibold text-slate-700">Eye color</label>
-                    <select
-                      id="eye-color"
-                      v-model="settings.eyeColor"
-                      class="form-select w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                    >
-                      <option value="">Any</option>
-                      <option v-for="opt in selectOptions.eyeColor" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                    </select>
+                    <GlassDropdown v-model="settings.eyeColor" :options="selectOptions.eyeColor" placeholder="Any" empty-label="Any" />
                   </div>
                   <div class="space-y-2">
                     <label for="hair-color" class="text-sm font-semibold text-slate-700">Hair color</label>
-                    <select
-                      id="hair-color"
-                      v-model="settings.hairColor"
-                      class="form-select w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-                    >
-                      <option value="">Any</option>
-                      <option v-for="opt in selectOptions.hairColor" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-                    </select>
+                    <GlassDropdown v-model="settings.hairColor" :options="selectOptions.hairColor" placeholder="Any" empty-label="Any" />
                   </div>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <BaseInput v-model="settings.minHeight" type="number" label="Min Height (cm)" />
-                  <BaseInput v-model="settings.maxHeight" type="number" label="Max Height (cm)" />
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <BaseInput v-model="settings.minWeight" type="number" label="Min Weight (kg)" />
-                  <BaseInput v-model="settings.maxWeight" type="number" label="Max Weight (kg)" />
-                </div>
+                <DualRangeSlider
+                  v-model:model-min="settings.minHeight"
+                  v-model:model-max="settings.maxHeight"
+                  :min="130"
+                  :max="250"
+                  label="Height"
+                  suffix=" cm"
+                />
+                <DualRangeSlider
+                  v-model:model-min="settings.minWeight"
+                  v-model:model-max="settings.maxWeight"
+                  :min="40"
+                  :max="150"
+                  label="Weight"
+                  suffix=" kg"
+                />
               </section>
 
-              <section class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <section class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
                 <div class="mb-4 flex items-center justify-between">
                   <h3 class="text-lg font-semibold text-slate-900">Interests</h3>
                   <span class="text-sm text-slate-500">{{ selectedInterests.length }}/10</span>
@@ -468,14 +410,7 @@ const save = async () => {
       </div>
     </div>
 
-    <div class="sticky bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/90 p-4 backdrop-blur-xl sm:px-6 lg:px-8">
-      <div class="mx-auto flex max-w-6xl justify-end">
-        <BaseButton @click="save" variant="primary" full :loading="isSaving" :disabled="!showFiltersContent || isSaving">
-          Apply filters
-        </BaseButton>
-      </div>
-    </div>
+
   </div>
 </template>
-
 

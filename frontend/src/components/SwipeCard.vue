@@ -1,48 +1,50 @@
 <template>
   <div
-    class="swipe-card"
-    :class="{ 'swipe-card--dragging': isDragging }"
+    class="relative overflow-hidden cursor-grab touch-none origin-bottom flex flex-col justify-end rounded-[20px] border border-slate-200/50 shadow-lg bg-white/50 transition-[transform,box-shadow] duration-[350ms] ease-out will-change-transform"
+    :class="{ 'cursor-grabbing': isDragging }"
     :style="cardStyle"
     v-on="handlers"
   >
     <!-- Photo Layer -->
-    <div class="swipe-card__photo">
+    <div class="absolute inset-0 pointer-events-none">
       <img
         v-if="coverPhoto"
         :src="coverPhoto"
         :alt="profile.name"
+        class="w-full h-full object-cover select-none"
+        style="-webkit-user-drag: none;"
       />
-      <div v-else class="swipe-card__photo-fallback" />
+      <div v-else class="w-full h-full bg-gradient-to-br from-indigo-100 to-indigo-50" />
     </div>
 
     <!-- Gradient Overlay -->
-    <div class="swipe-card__overlay" />
+    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent pointer-events-none z-10" />
 
     <!-- Stamps -->
-    <div class="swipe-card__stamps">
-      <div class="swipe-card__stamp swipe-card__stamp--like" :style="{ opacity: likeOpacity }">
+    <div class="absolute top-6 left-4 right-4 flex justify-between pointer-events-none z-20">
+      <div class="font-extrabold text-[1.8rem] uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border-[3px] border-solid border-emerald-500 text-emerald-500 bg-emerald-500/12 -rotate-12 transition-opacity duration-150" :style="{ opacity: likeOpacity }">
         LIKE
       </div>
-      <div class="swipe-card__stamp swipe-card__stamp--nope" :style="{ opacity: dislikeOpacity }">
+      <div class="font-extrabold text-[1.8rem] uppercase tracking-[0.15em] px-2 py-0.5 rounded-md border-[3px] border-solid border-rose-500 text-rose-500 bg-rose-500/12 rotate-12 transition-opacity duration-150" :style="{ opacity: dislikeOpacity }">
         NOPE
       </div>
     </div>
 
     <!-- Profile Info -->
-    <div class="swipe-card__info">
-      <div class="swipe-card__name-row">
-        <h2 class="swipe-card__name">{{ profile.name }}</h2>
-        <span v-if="profile.age" class="swipe-card__age">{{ profile.age }}</span>
+    <div class="relative z-20 text-white px-6 pt-5 pb-7 select-none pointer-events-none">
+      <div class="flex items-baseline gap-2 mb-1">
+        <h2 class="text-[1.8rem] font-extrabold m-0 leading-none drop-shadow-md">{{ profile.name }}</h2>
+        <span v-if="profile.age" class="text-[1.4rem] font-normal opacity-90">{{ profile.age }}</span>
       </div>
 
-      <div class="swipe-card__location">
+      <div class="flex items-center gap-1 text-[0.85rem] opacity-90 mb-1.5">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
         </svg>
         <span>{{ distanceText }}</span>
       </div>
 
-      <p v-if="profile.description || profile.bio" class="swipe-card__bio">
+      <p v-if="profile.description || profile.bio" class="text-[0.85rem] leading-[1.45] opacity-85 m-0 line-clamp-2">
         {{ profile.description || profile.bio }}
       </p>
     </div>
@@ -85,141 +87,3 @@ const distanceText = computed(() => {
 defineExpose({ triggerSwipe })
 </script>
 
-<style scoped>
-.swipe-card {
-  position: relative;
-  overflow: hidden;
-  cursor: grab;
-  touch-action: none;
-  transform-origin: bottom center;
-  will-change: transform;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  border-radius: 20px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-lg);
-  background: var(--color-surface);
-  transition: box-shadow 0.25s var(--ease-smooth);
-}
-
-.swipe-card--dragging {
-  cursor: grabbing;
-}
-
-.swipe-card__photo {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.swipe-card__photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.swipe-card__photo-fallback {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #e0e7ff, #f0f0ff);
-}
-
-.swipe-card__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.15) 50%, transparent 100%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.swipe-card__stamps {
-  position: absolute;
-  top: 24px;
-  left: 16px;
-  right: 16px;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.swipe-card__stamp {
-  font-weight: 800;
-  font-size: 1.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  padding: 2px 8px;
-  border-radius: 6px;
-  border-width: 3px;
-  border-style: solid;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.swipe-card__stamp--like {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
-  background: rgba(16, 185, 129, 0.12);
-  transform: rotate(-12deg);
-}
-
-.swipe-card__stamp--nope {
-  color: var(--color-rose);
-  border-color: var(--color-rose);
-  background: rgba(244, 63, 94, 0.12);
-  transform: rotate(12deg);
-}
-
-.swipe-card__info {
-  position: relative;
-  z-index: 2;
-  color: #fff;
-  padding: 20px 24px 28px;
-  user-select: none;
-  pointer-events: none;
-}
-
-.swipe-card__name-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.swipe-card__name {
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin: 0;
-  line-height: 1;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-
-.swipe-card__age {
-  font-size: 1.4rem;
-  font-weight: 400;
-  opacity: 0.9;
-}
-
-.swipe-card__location {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.85rem;
-  opacity: 0.9;
-  margin-bottom: 6px;
-}
-
-.swipe-card__bio {
-  font-size: 0.85rem;
-  line-height: 1.45;
-  opacity: 0.85;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-</style>

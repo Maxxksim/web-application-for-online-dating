@@ -9,23 +9,11 @@
       class="absolute inset-0 flex items-center justify-center"
       aria-hidden="true"
     >
-      <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-        <circle
-          class="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="3"
-        />
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M12 2a10 10 0 0 1 10 10h-3a7 7 0 1 0-7 7v3A10 10 0 0 1 12 2Z"
-        />
+      <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4 animate-[spin_0.8s_linear_infinite]">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
+        <path class="opacity-75" fill="currentColor" d="M12 2a10 10 0 0 1 10 10h-3a7 7 0 1 0-7 7v3A10 10 0 0 1 12 2Z" />
       </svg>
     </span>
-
     <span :class="{ 'opacity-0': loading }">
       <slot />
     </span>
@@ -38,33 +26,32 @@ import { computed } from 'vue'
 defineOptions({ inheritAttrs: false })
 
 const props = defineProps({
-  variant: { type: String, default: 'primary' },
-  size: { type: String, default: 'md' },
-  loading: { type: Boolean, default: false },
+  variant:  { type: String, default: 'primary' },
+  size:     { type: String, default: 'md' },
+  loading:  { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
-  full: { type: Boolean, default: false },
+  full:     { type: Boolean, default: false },
 })
 
 const variantClasses = {
-  primary: 'border border-cyan-500 bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20 hover:bg-cyan-400 hover:border-cyan-400',
-  secondary: 'border border-slate-200 bg-white text-slate-900 shadow-sm hover:border-cyan-400 hover:bg-cyan-50',
-  ghost: 'border border-slate-200 bg-transparent text-cyan-700 hover:border-cyan-400 hover:bg-cyan-50',
-  danger: 'border border-rose-500 bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:bg-rose-600 hover:border-rose-600',
+  primary:   'bg-[linear-gradient(135deg,#f0896c,#e06b8f)] text-white shadow-[0_4px_14px_rgba(224,107,143,0.25)] hover:not:disabled:-translate-y-px hover:not:disabled:shadow-[0_6px_20px_rgba(224,107,143,0.38)]',
+  secondary: 'bg-white/75 border-slate-300 text-slate-900 backdrop-blur-md hover:not:disabled:border-sky-400 hover:not:disabled:bg-white/90',
+  ghost:     'bg-transparent border-slate-200 text-teal-500 hover:not:disabled:bg-teal-500/10 hover:not:disabled:border-teal-500',
+  danger:    'bg-[linear-gradient(135deg,#f472b6,#fb7185)] text-white shadow-[0_4px_16px_rgba(244,114,182,0.3)] hover:not:disabled:-translate-y-px hover:not:disabled:shadow-[0_8px_24px_rgba(244,114,182,0.4)]',
 }
 
 const sizeClasses = {
-  sm: 'px-4 py-2 text-sm',
-  md: 'px-5 py-2.5 text-sm',
-  lg: 'px-6 py-3 text-base',
+  sm: 'px-[18px] py-[8px] text-[0.82rem]',
+  md: 'px-[22px] py-[10px] text-[0.88rem]',
+  lg: 'px-[28px] py-[13px] text-[0.95rem]',
 }
 
 const buttonClass = computed(() => [
-  'relative inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-tight transition duration-200 ease-out',
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50',
-  'disabled:cursor-not-allowed disabled:opacity-50',
-  'active:scale-[0.98]',
-  props.full ? 'w-full' : '',
+  'relative inline-flex items-center justify-center gap-2 rounded-full font-semibold font-base tracking-[-0.01em] cursor-pointer border border-transparent transition-all duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed active:not:disabled:scale-95',
   sizeClasses[props.size] || sizeClasses.md,
   variantClasses[props.variant] || variantClasses.primary,
+  props.full ? 'w-full' : '',
+  props.loading ? 'pointer-events-none' : '',
 ])
 </script>
+

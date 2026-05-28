@@ -8,6 +8,7 @@ import { useToast } from '@/composables/useToast.js'
 import { SELECT_OPTIONS, INTEREST_OPTIONS, formatLabel } from '@/constants/profileOptions.js'
 import BaseInput from '@/components/BaseInput.vue'
 import BaseButton from '@/components/BaseButton.vue'
+import GlassDropdown from '@/components/GlassDropdown.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -45,6 +46,31 @@ const maxInterests = 10
 const isPremium = computed(() => subscriptionStore.isPremium)
 const isSubscriptionLoading = computed(() => subscriptionStore.isLoading)
 const subscriptionError = computed(() => subscriptionStore.error)
+
+const bDay = ref('')
+const bMonth = ref('')
+const bYear = ref('')
+
+watch([bYear, bMonth, bDay], ([y, m, d]) => {
+  if (y && m && d) {
+    form.dateOfBirth = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  } else {
+    form.dateOfBirth = ''
+  }
+})
+
+const daysOptions = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: String(i + 1) }))
+const monthsOptions = [
+  { value: '01', label: 'January' }, { value: '02', label: 'February' }, { value: '03', label: 'March' },
+  { value: '04', label: 'April' }, { value: '05', label: 'May' }, { value: '06', label: 'June' },
+  { value: '07', label: 'July' }, { value: '08', label: 'August' }, { value: '09', label: 'September' },
+  { value: '10', label: 'October' }, { value: '11', label: 'November' }, { value: '12', label: 'December' }
+]
+const currentYear = new Date().getFullYear()
+const yearsOptions = Array.from({ length: 100 }, (_, i) => {
+  const y = String(currentYear - 18 - i)
+  return { value: y, label: y }
+})
 
 const fieldLabels = {
   name: 'Name',
@@ -107,7 +133,20 @@ const missingFieldLabels = computed(() =>
 watch(myProfile, (profile) => {
   if (!profile) return
   form.name = profile.name || ''
-  form.dateOfBirth = profile.date_of_birth || ''
+  
+  const dob = profile.date_of_birth || ''
+  form.dateOfBirth = dob
+  if (dob) {
+    const [y, m, d] = dob.split('-')
+    bYear.value = y
+    bMonth.value = m
+    bDay.value = d
+  } else {
+    bYear.value = ''
+    bMonth.value = ''
+    bDay.value = ''
+  }
+
   form.gender = profile.gender || ''
   form.description = profile.description || ''
   form.datingPurpose = profile.dating_purpose || ''
@@ -275,138 +314,116 @@ const cancelPremium = async () => {
 </script>
 
 <template>
-  <div class="page min-h-screen bg-transparent text-slate-900 px-4 py-6 sm:px-6 lg:px-8">
-    <div class="page-header max-w-6xl mx-auto mb-8">
-      <p class="eyebrow">Profile</p>
-      <h1 class="page-title">Your profile</h1>
-      <div class="profile-chips">
-        <span class="chip">Completion: {{ completionPct }}%</span>
-        <span class="chip">{{ isEnabled ? 'Enabled' : 'Disabled' }}</span>
-        <span v-if="myProfile?.age" class="chip">Age: {{ myProfile.age }}</span>
-        <span v-if="locationLabel" class="chip">{{ locationLabel }}</span>
-      </div>
-      <div class="profile-progress">
-        <div class="profile-progress__bar" :style="{ width: `${completionPct}%` }" />
-      </div>
+  <div class="page px-4 py-6 sm:px-6 lg:px-8">
+    <div class="page-header max-w-6xl mx-auto mb-2">
+      <!-- Progress bar moved to side panel for better context -->
     </div>
 
-    <div v-if="isLoading && !myProfile" class="glass-panel profile-loading">
+    <div v-if="isLoading && !myProfile" class="glass-panel p-5 text-sm text-slate-500">
       Loading profile...
     </div>
 
-    <div v-else class="profile-grid max-w-6xl mx-auto gap-8 lg:gap-10">
-      <div class="glass-panel profile-form-panel rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <form @submit.prevent="saveProfile" class="profile-form">
+    <div v-else class="grid gap-[18px] lg:grid-cols-[1.15fr_0.85fr] max-w-6xl mx-auto">
+      <div class="glass-panel p-6">
+        <form @submit.prevent="saveProfile" class="flex flex-col gap-4">
           <BaseInput v-model="form.name" type="text" label="Display Name" placeholder="Your name" required />
 
-          <div class="profile-form__row">
-            <BaseInput v-model="form.dateOfBirth" type="date" label="Birth Date" required />
-            <div class="profile-form__field">
-              <label class="profile-form__label" for="gender">Gender</label>
-              <select id="gender" v-model="form.gender" class="profile-form__select">
-                <option value="" disabled>Select</option>
-                <option value="woman">Woman</option>
-                <option value="man">Man</option>
-              </select>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex flex-col gap-[5px]">
+              <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Birth Date</label>
+              <div class="grid gap-2" style="grid-template-columns: 2fr 3fr 2fr;">
+                <GlassDropdown v-model="bDay" :options="daysOptions" placeholder="Day" empty-label="Day" center />
+                <GlassDropdown v-model="bMonth" :options="monthsOptions" placeholder="Month" empty-label="Month" center />
+                <GlassDropdown v-model="bYear" :options="yearsOptions" placeholder="Year" empty-label="Year" center />
+              </div>
+            </div>
+            <div class="flex flex-col gap-[5px]">
+              <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="gender">Gender</label>
+              <GlassDropdown 
+                v-model="form.gender" 
+                :options="[{value:'woman', label:'Woman'}, {value:'man', label:'Man'}]" 
+                placeholder="Select" 
+                empty-label="Select" 
+              />
             </div>
           </div>
 
-          <BaseInput v-model="form.description" type="textarea" rows="4" label="About Me" placeholder="Tell them about yourself..." />
+          <div class="flex flex-col gap-[5px]">
+            <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">About Me</label>
+            <div class="field__wrap">
+              <textarea
+                v-model="form.description"
+                class="w-full h-[200px] min-h-[200px] max-h-[200px] resize-none leading-[1.6] bg-white/65 backdrop-blur-md border border-slate-300/60 rounded-[14px] px-4 py-3.5 text-[0.9rem] text-slate-800 outline-none transition-[border-color,box-shadow,background-color] duration-[180ms] ease-out focus:border-cyan-300 focus:ring-[3px] focus:ring-cyan-400/15 focus:bg-white/90"
+                placeholder="Tell them about yourself..."
+                maxlength="1200"
+              ></textarea>
+            </div>
+            <span class="text-[0.75rem] font-medium text-slate-400 text-right">{{ (form.description || '').length }} / 1200</span>
+          </div>
 
-          <div class="profile-section">
-            <p class="profile-section__title">More about you</p>
-            <div class="profile-form__grid">
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="dating-purpose">Dating Purpose</label>
-                <select id="dating-purpose" v-model="form.datingPurpose" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.datingPurpose" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+          <div class="flex flex-col gap-3 py-1.5">
+            <p class="m-0 text-[0.75rem] font-bold uppercase tracking-[0.08em] text-slate-500">More about you</p>
+            <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="dating-purpose">Dating Purpose</label>
+                <GlassDropdown v-model="form.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Empty" />
               </div>
 
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="body-type">Body Type</label>
-                <select id="body-type" v-model="form.bodyType" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.bodyType" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="body-type">Body Type</label>
+                <GlassDropdown v-model="form.bodyType" :options="selectOptions.bodyType" placeholder="Empty" />
               </div>
 
-              <BaseInput v-model="form.height" type="number" label="Height (cm)" />
-              <BaseInput v-model="form.weight" type="number" label="Weight (kg)" />
-
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="eye-color">Eye Color</label>
-                <select id="eye-color" v-model="form.eyeColor" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.eyeColor" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+              <div class="sm:col-span-2 grid grid-cols-2 gap-6 items-center">
+                <div class="flex flex-col gap-[5px] m-0">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Height</label>
+                    <span class="text-[0.82rem] font-semibold text-slate-900">{{ form.height || 170 }} cm</span>
+                  </div>
+                  <input v-model="form.height" type="range" min="130" max="250" class="w-full accent-cyan-300" />
+                </div>
+                <div class="flex flex-col gap-[5px] m-0">
+                  <div class="flex items-center justify-between">
+                    <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Weight</label>
+                    <span class="text-[0.82rem] font-semibold text-slate-900">{{ form.weight || 70 }} kg</span>
+                  </div>
+                  <input v-model="form.weight" type="range" min="40" max="150" class="w-full accent-cyan-300" />
+                </div>
               </div>
 
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="hair-color">Hair Color</label>
-                <select id="hair-color" v-model="form.hairColor" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.hairColor" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="eye-color">Eye Color</label>
+                <GlassDropdown v-model="form.eyeColor" :options="selectOptions.eyeColor" placeholder="Empty" />
               </div>
 
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="smoking">Smoking</label>
-                <select id="smoking" v-model="form.smoking" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.smoking" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="hair-color">Hair Color</label>
+                <GlassDropdown v-model="form.hairColor" :options="selectOptions.hairColor" placeholder="Empty" />
               </div>
 
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="drinking">Drinking</label>
-                <select id="drinking" v-model="form.drinking" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.drinking" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="smoking">Smoking</label>
+                <GlassDropdown v-model="form.smoking" :options="selectOptions.smoking" placeholder="Empty" />
               </div>
 
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="children">Children</label>
-                <select id="children" v-model="form.children" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.children" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="drinking">Drinking</label>
+                <GlassDropdown v-model="form.drinking" :options="selectOptions.drinking" placeholder="Empty" />
               </div>
 
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="zodiac">Zodiac Sign</label>
-                <select id="zodiac" v-model="form.zodiacSign" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.zodiacSign" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="children">Children</label>
+                <GlassDropdown v-model="form.children" :options="selectOptions.children" placeholder="Empty" />
               </div>
 
-              <div class="profile-form__field">
-                <label class="profile-form__label" for="exercise">Exercise</label>
-                <select id="exercise" v-model="form.exercise" class="profile-form__select">
-                  <option value="">Empty</option>
-                  <option v-for="opt in selectOptions.exercise" :key="opt.value" :value="opt.value">
-                    {{ opt.label }}
-                  </option>
-                </select>
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="zodiac">Zodiac Sign</label>
+                <GlassDropdown v-model="form.zodiacSign" :options="selectOptions.zodiacSign" placeholder="Empty" />
+              </div>
+
+              <div class="flex flex-col gap-[5px]">
+                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="exercise">Exercise</label>
+                <GlassDropdown v-model="form.exercise" :options="selectOptions.exercise" placeholder="Empty" />
               </div>
             </div>
           </div>
@@ -417,72 +434,94 @@ const cancelPremium = async () => {
         </form>
       </div>
 
-      <div class="glass-panel profile-side-panel rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="profile-preview">
-          <div class="profile-preview__media">
-            <img v-if="previewPhoto" :src="previewPhoto" alt="Profile preview" />
-            <div v-else class="profile-preview__placeholder">Add a photo</div>
+      <div class="flex flex-col gap-6">
+        <!-- Progress bar moved to top of side panel -->
+        <div class="rounded-3xl border border-white/60 bg-white/50 p-5 shadow-sm backdrop-blur-xl">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-sm font-bold text-slate-700">Profile Completeness</span>
+            <span class="text-sm font-black text-cyan-600">{{ completionPct }}%</span>
           </div>
-          <div class="profile-preview__overlay">
-            <div class="profile-preview__name">
-              <span>{{ previewName }}</span>
-              <span v-if="previewAge" class="profile-preview__age">{{ previewAge }}</span>
-            </div>
-            <div class="profile-preview__meta">
-              <span>{{ previewLocation }}</span>
-              <span v-if="previewGender"> · {{ previewGender }}</span>
-            </div>
-            <p class="profile-preview__bio">{{ previewBio }}</p>
+          <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200/80 shadow-inner">
+            <div class="h-full rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 transition-all duration-700" :style="{ width: `${completionPct}%` }"></div>
           </div>
+
         </div>
+
+        <div class="glass-panel flex flex-col gap-4 p-6">
+          <div class="relative overflow-hidden rounded-3xl bg-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/60 group">
+            <div class="absolute right-3 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-md uppercase tracking-wider"
+                 :class="isEnabled ? 'bg-emerald-500/80' : 'bg-slate-800/60'">
+              {{ isEnabled ? 'Visible in discovery' : 'Hidden' }}
+            </div>
+            <div class="h-[420px] w-full bg-gradient-to-br from-cyan-100 to-slate-100">
+              <img v-if="previewPhoto" :src="previewPhoto" alt="Profile preview" class="h-full w-full object-cover" />
+              <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-cyan-200">
+                No Photo
+              </div>
+            </div>
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 text-white transition-opacity">
+              <div class="flex items-baseline gap-2">
+                <h2 class="text-2xl font-bold text-white">{{ previewName }}</h2>
+                <span v-if="previewAge" class="text-xl font-light text-white/90">{{ previewAge }}</span>
+              </div>
+              <div class="mt-1 flex items-center gap-2 text-sm font-medium text-white/80">
+                <span v-if="previewLocation" class="flex items-center gap-1">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                  {{ previewLocation }}
+                </span>
+                <span v-if="previewGender">· {{ previewGender }}</span>
+              </div>
+              <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-white/90">{{ previewBio }}</p>
+            </div>
+          </div>
 
         <div class="divider-glow" />
 
-        <div class="profile-photos-header">
+        <div class="flex items-center justify-between">
           <div>
-            <p class="profile-photos-header__title">Photos</p>
+            <p class="m-0 text-[0.95rem] font-semibold text-slate-900">Photos</p>
           </div>
-          <label class="profile-upload-btn">
+          <label class="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-slate-200/75 bg-[#f0f9ff] px-3.5 py-1.5 text-[0.8rem] font-semibold text-slate-900 transition hover:border-cyan-500 hover:bg-cyan-50">
             <input type="file" class="sr-only" multiple accept="image/*" @change="handleUpload" />
             {{ isUploading ? 'Uploading...' : 'Add Photos' }}
           </label>
         </div>
 
-        <div v-if="photos.length" class="profile-photos-grid">
-          <div v-for="photo in photos" :key="photo.id" class="profile-photo-card">
-            <img :src="photo.url" alt="Profile photo" />
-            <button type="button" class="profile-photo-card__delete" @click="deletePhoto(photo.id)">
+        <div v-if="photos.length" class="grid grid-cols-2 gap-2.5">
+          <div v-for="photo in photos" :key="photo.id" class="relative overflow-hidden rounded-2xl border border-slate-200/75">
+            <img :src="photo.url" alt="Profile photo" class="block h-[130px] w-full object-cover" />
+            <button type="button" class="absolute right-1.5 top-1.5 rounded-full border-none bg-black/60 px-2 py-0.5 text-[0.7rem] text-white cursor-pointer" @click="deletePhoto(photo.id)">
               Delete
             </button>
           </div>
         </div>
-        <div v-else class="profile-photos-empty">
+        <div v-else class="text-[0.85rem] text-slate-500">
           Add at least one photo to enable discovery.
         </div>
 
         <div class="divider-glow" />
 
-        <div class="profile-interests">
-          <div class="profile-interests__header">
-            <p class="profile-interests__label">Interests</p>
-            <p class="profile-interests__meta">{{ profileInterests.length }}/{{ maxInterests }} selected</p>
+        <div class="flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <p class="m-0 text-[0.78rem] font-bold uppercase tracking-[0.08em] text-slate-500">Interests</p>
+            <p class="m-0 text-[0.78rem] text-slate-500">{{ profileInterests.length }}/{{ maxInterests }} selected</p>
           </div>
 
-          <div v-if="!profileInterests.length" class="profile-interests__empty">
+          <div v-if="!profileInterests.length" class="text-[0.85rem] text-slate-500">
             Add a few interests to help with better matches.
           </div>
 
-          <div v-else class="profile-interests__list">
+          <div v-else class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
             <button
               v-for="interest in profileInterests"
               :key="interest.id"
               type="button"
-              class="interest-card interest-card--selected"
+              class="flex items-center justify-between gap-2 rounded-xl border border-pink-500/60 bg-pink-500/15 px-2.5 py-2 text-[0.8rem] font-semibold text-pink-600 transition hover:border-pink-500/60 hover:bg-pink-500/15 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="isUpdatingInterests"
               @click="removeInterest(interest.id)"
             >
               <span>{{ interestLabel(interest.interest) }}</span>
-              <span class="interest-card__icon">×</span>
+              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-pink-500/25 text-[0.9rem] font-bold text-pink-600">×</span>
             </button>
           </div>
 
@@ -493,36 +532,36 @@ const cancelPremium = async () => {
             placeholder="Type to search"
           />
 
-          <div class="profile-interests__grid scrollable-grid">
+          <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2 max-h-[250px] overflow-y-auto content-start pr-1">
             <button
               v-for="opt in filteredInterestOptions"
               :key="opt.value"
               type="button"
-              class="interest-card"
+              class="flex items-center justify-between gap-2 rounded-xl border border-slate-200/75 bg-[#f0f9ff] px-2.5 py-2 text-[0.8rem] font-semibold text-slate-900 transition hover:border-cyan-500 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="remainingInterestSlots === 0 || isUpdatingInterests"
               @click="addInterest(opt.value)"
             >
               <span>{{ opt.label }}</span>
-              <span class="interest-card__icon">+</span>
+              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-cyan-50 text-[0.9rem] font-bold text-cyan-500">+</span>
             </button>
           </div>
-          <p v-if="!filteredInterestOptions.length" class="profile-interests__hint">No matching interests.</p>
-          <p class="profile-interests__hint">
+          <p v-if="!filteredInterestOptions.length" class="m-0 text-[0.75rem] text-slate-500">No matching interests.</p>
+          <p class="m-0 text-[0.75rem] text-slate-500">
             Choose up to {{ remainingInterestSlots }} more interest{{ remainingInterestSlots === 1 ? '' : 's' }}.
           </p>
         </div>
 
         <div class="divider-glow" />
 
-        <div class="profile-premium">
-          <div class="profile-premium__header">
+        <div class="flex flex-col gap-2.5 rounded-2xl border border-dashed border-cyan-500/45 bg-gradient-to-br from-cyan-500/10 to-green-500/5 p-3.5">
+          <div class="flex items-start justify-between gap-2.5">
             <div>
-              <p class="profile-premium__eyebrow">Premium</p>
-              <h3 class="profile-premium__title">Upgrade your discovery</h3>
+              <p class="m-0 mb-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-slate-500">Premium</p>
+              <h3 class="m-0 text-base font-bold text-slate-900">Upgrade your discovery</h3>
             </div>
             <span class="chip">{{ isPremium ? 'Active' : 'Locked' }}</span>
           </div>
-          <p class="profile-premium__text">
+          <p class="m-0 text-[0.85rem] text-slate-700">
             Get advanced filters and deeper matches with Premium membership.
           </p>
           <BaseButton
@@ -543,17 +582,17 @@ const cancelPremium = async () => {
           >
             Cancel Subscription
           </BaseButton>
-          <p v-if="subscriptionError" class="profile-premium__error">{{ subscriptionError }}</p>
+          <p v-if="subscriptionError" class="m-0 text-[0.78rem] text-rose-500">{{ subscriptionError }}</p>
         </div>
 
         <div class="divider-glow" />
 
-        <div class="profile-actions">
+        <div class="flex flex-col gap-2">
           <BaseButton variant="secondary" full @click="toggleVisibility">
             {{ isEnabled ? 'Disable Profile' : 'Enable Profile' }}
           </BaseButton>
-          <p v-if="enableError" class="profile-actions__error">{{ enableError }}</p>
-          <p v-if="missingFieldLabels.length" class="profile-actions__missing">
+          <p v-if="enableError" class="m-0 text-[0.85rem] text-rose-500">{{ enableError }}</p>
+          <p v-if="missingFieldLabels.length" class="m-0 text-[0.78rem] text-slate-500">
             Missing fields: {{ missingFieldLabels.join(', ') }}
           </p>
         </div>
@@ -564,450 +603,8 @@ const cancelPremium = async () => {
           Log Out
         </BaseButton>
       </div>
+      </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.profile-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.profile-progress {
-  width: 100%;
-  max-width: 480px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--border-color);
-  margin-top: 10px;
-  overflow: hidden;
-}
-
-.profile-progress__bar {
-  height: 100%;
-  border-radius: 999px;
-  background: var(--gradient-primary);
-  transition: width 0.4s var(--ease-smooth);
-}
-
-.profile-loading {
-  padding: 20px 24px;
-  font-size: 0.88rem;
-  color: var(--text-muted);
-}
-
-.profile-grid {
-  display: grid;
-  gap: 18px;
-}
-
-@media (min-width: 1024px) {
-  .profile-grid {
-    grid-template-columns: 1.15fr 0.85fr;
-  }
-}
-
-.profile-form-panel {
-  padding: 24px;
-}
-
-.profile-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.profile-form__row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.profile-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 6px 0;
-}
-
-.profile-section__title {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-}
-
-.profile-form__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.profile-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.profile-form__label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.02em;
-}
-
-.profile-form__select {
-  width: 100%;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 11px 14px;
-  font-size: 0.92rem;
-  color: var(--text-primary);
-}
-
-.profile-form__select:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
-}
-
-.profile-side-panel {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* Preview card */
-.profile-preview {
-  position: relative;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  background: var(--color-bg);
-}
-
-.profile-preview__media {
-  height: 200px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(14, 165, 233, 0.05));
-}
-
-.profile-preview__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-preview__placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 0.88rem;
-}
-
-.profile-preview__overlay {
-  position: absolute;
-  inset: auto 0 0 0;
-  padding: 16px;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.65), transparent);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.profile-preview__name {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.profile-preview__age {
-  font-weight: 400;
-  opacity: 0.85;
-}
-
-.profile-preview__meta {
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-
-.profile-preview__bio {
-  font-size: 0.8rem;
-  opacity: 0.85;
-  line-height: 1.4;
-  margin: 0;
-}
-
-/* Photos */
-.profile-photos-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.profile-photos-header__label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin: 0 0 2px;
-}
-
-.profile-photos-header__title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.profile-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: 1px solid var(--border-color);
-  background: var(--color-bg);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background var(--duration-fast), border-color var(--duration-fast);
-}
-
-.profile-upload-btn:hover {
-  background: var(--color-accent-muted);
-  border-color: var(--color-accent);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.profile-photos-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.profile-photo-card {
-  position: relative;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-}
-
-.profile-photo-card img {
-  width: 100%;
-  height: 130px;
-  object-fit: cover;
-  display: block;
-}
-
-.profile-photo-card__delete {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.profile-photos-empty {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* Interests */
-.profile-interests {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.profile-interests__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.profile-interests__label {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-}
-
-.profile-interests__meta {
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-.profile-interests__empty {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.profile-interests__list,
-.profile-interests__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 8px;
-}
-
-.scrollable-grid {
-  max-height: 250px;
-  overflow-y: auto;
-  align-content: flex-start;
-  padding-right: 4px;
-}
-
-.interest-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  background: var(--color-bg);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: border-color var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
-}
-
-.interest-card:hover:not(:disabled) {
-  border-color: var(--color-accent);
-  background: var(--color-accent-muted);
-  transform: translateY(-1px);
-}
-
-.interest-card:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.interest-card--selected {
-  border-color: rgba(244, 63, 94, 0.3);
-  background: rgba(244, 63, 94, 0.08);
-}
-
-.interest-card__icon {
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: var(--color-accent-muted);
-  color: var(--color-accent);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.interest-card--selected .interest-card__icon {
-  background: rgba(244, 63, 94, 0.15);
-  color: var(--color-rose);
-}
-
-.profile-interests__hint {
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-/* Premium */
-.profile-premium {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px;
-  border-radius: var(--radius-md);
-  border: 1px dashed rgba(14, 165, 233, 0.45);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(34, 197, 94, 0.05));
-}
-
-.profile-premium__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.profile-premium__eyebrow {
-  margin: 0 0 4px;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.profile-premium__title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.profile-premium__text {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.profile-premium__error {
-  margin: 0;
-  font-size: 0.78rem;
-  color: var(--color-rose);
-}
-
-.profile-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.profile-actions__error {
-  font-size: 0.85rem;
-  color: var(--color-rose);
-  margin: 0;
-}
-
-.profile-actions__missing {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin: 0;
-}
-</style>

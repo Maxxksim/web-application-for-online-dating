@@ -49,21 +49,21 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="page subscription-page">
-    <div class="glass-panel subscription-panel">
-      <div class="subscription-panel__header">
+  <div class="page items-center">
+    <div class="glass-panel w-[min(520px,100%)] p-7 flex flex-col gap-3">
+      <div class="flex justify-between items-center">
         <span class="chip">{{ plan }}</span>
-        <p class="subscription-panel__status">{{ isSuccess ? 'Success' : 'Cancelled' }}</p>
+        <p class="m-0 text-[0.8rem] uppercase tracking-[0.14em] text-slate-500 font-bold">{{ isSuccess ? 'Success' : 'Cancelled' }}</p>
       </div>
 
-      <h1 class="subscription-panel__title">{{ title }}</h1>
-      <p class="subscription-panel__text">
+      <h1 class="m-0 text-[1.6rem] font-bold text-slate-900">{{ title }}</h1>
+      <p class="m-0 text-[0.95rem] text-slate-700">
         {{ description }}
       </p>
 
-      <div v-if="isLoading" class="subscription-panel__loading">Checking status...</div>
+      <div v-if="isLoading" class="text-[0.85rem] text-slate-500">Checking status...</div>
 
-      <div class="subscription-panel__actions">
+      <div class="grid gap-2.5 mt-2.5">
         <BaseButton
           v-if="isSuccess"
           variant="primary"
@@ -84,55 +84,3 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped>
-.subscription-page {
-  align-items: center;
-}
-
-.subscription-panel {
-  width: min(520px, 100%);
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.subscription-panel__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.subscription-panel__status {
-  margin: 0;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.subscription-panel__title {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.subscription-panel__text {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-}
-
-.subscription-panel__loading {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.subscription-panel__actions {
-  display: grid;
-  gap: 10px;
-  margin-top: 10px;
-}
-</style>

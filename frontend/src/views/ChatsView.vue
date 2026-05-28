@@ -293,375 +293,148 @@ watch(() => [route.query.chat, route.query.user, route.query.profile], selectFro
 </script>
 
 <template>
-  <div class="page min-h-screen bg-transparent text-slate-900 px-4 py-6 sm:px-6 lg:px-8">
-    <div class="page-header max-w-6xl mx-auto mb-8">
-      <p class="eyebrow">Chats</p>
-      <h1 class="page-title">Messages</h1>
-    </div>
-
-    <div class="chat-layout max-w-6xl mx-auto" :class="{ 'chat-layout--has-active': activeChat }">
-      <aside class="chat-list glass-panel rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="chat-list__header">
-          <p>Inbox</p>
+  <div class="page px-4 py-4 sm:px-6 lg:px-8">
+    <div 
+      class="mx-auto flex h-[calc(100vh-140px)] w-full max-w-6xl overflow-hidden rounded-3xl border border-white/60 bg-white/40 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-xl"
+      :class="{ 'max-md:flex-col': true }"
+    >
+      <!-- Chat List (Sidebar) -->
+      <aside 
+        class="flex w-full flex-col border-r border-slate-200/50 bg-white/60 md:w-80 lg:w-96"
+        :class="{ 'hidden md:flex': activeChat }"
+      >
+        <div class="flex h-16 shrink-0 items-center px-6 border-b border-slate-200/50">
+          <h2 class="text-xl font-bold tracking-tight text-slate-900">Inbox</h2>
         </div>
 
-        <div v-if="hasLoadedChats && !chats.length" class="chat-list__empty">No chats yet.</div>
+        <div v-if="hasLoadedChats && !chats.length" class="flex flex-1 items-center justify-center p-6 text-center text-sm text-slate-500">
+          No conversations yet. Start matching!
+        </div>
 
-        <ul v-else class="chat-list__items">
+        <ul v-else class="flex-1 overflow-y-auto p-3 space-y-1">
           <li
             v-for="chat in chats"
             :key="chat.id"
-            class="chat-list__item"
-            :class="{ 'chat-list__item--active': activeChat?.id === chat.id }"
+            class="group relative flex cursor-pointer items-center gap-3 rounded-2xl p-3 transition-all duration-200"
+            :class="activeChat?.id === chat.id ? 'bg-cyan-50/80 shadow-sm border border-cyan-100/50' : 'hover:bg-white border border-transparent'"
             @click="selectChat(chat)"
           >
-            <div class="chat-list__avatar">
-              {{ chatLabel(chat).charAt(0) }}
+            <div class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
+              <span class="text-lg font-bold">{{ chatLabel(chat).charAt(0) }}</span>
+              <div v-if="chat.unread_count" class="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm">
+                {{ chat.unread_count }}
+              </div>
             </div>
-            <div class="chat-list__body">
-              <p class="chat-list__title">{{ chatLabel(chat) }}</p>
-              <p class="chat-list__meta">{{ chatPreview(chat) }}</p>
+            <div class="flex min-w-0 flex-1 flex-col">
+              <div class="flex items-center justify-between">
+                <p class="truncate text-sm font-bold text-slate-900" :class="{ 'text-cyan-900': activeChat?.id === chat.id }">
+                  {{ chatLabel(chat) }}
+                </p>
+                <!-- Add time if available in chat data, currently missing so omitting or adding logic -->
+              </div>
+              <p class="truncate text-[13px] text-slate-500" :class="{ 'font-semibold text-slate-700': chat.unread_count }">
+                {{ chatPreview(chat) }}
+              </p>
             </div>
-            <span v-if="chat.unread_count" class="chat-list__badge">{{ chat.unread_count }}</span>
           </li>
         </ul>
       </aside>
 
-      <section class="chat-thread glass-panel rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div v-if="!activeChat" class="chat-empty">
-          <p>Select a chat to start messaging.</p>
+      <!-- Chat Thread -->
+      <section 
+        class="flex flex-1 flex-col bg-slate-50/50"
+        :class="{ 'hidden md:flex': !activeChat }"
+      >
+        <div v-if="!activeChat" class="hidden flex-1 flex-col items-center justify-center md:flex">
+          <div class="flex h-24 w-24 items-center justify-center rounded-full bg-cyan-100/50 text-cyan-500 mb-6 shadow-sm">
+            <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800">Your Messages</h3>
+          <p class="mt-2 text-sm text-slate-500 max-w-xs text-center">Select a conversation from the list to start chatting.</p>
         </div>
 
-        <div v-else class="chat-thread__inner">
-          <div class="chat-thread__header">
-            <div class="chat-thread__header-left">
-              <button class="chat-back-btn" @click="activeChat = null" aria-label="Back to chats">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="19" y1="12" x2="5" y2="12"></line>
-                  <polyline points="12 19 5 12 12 5"></polyline>
+        <div v-else class="flex h-full flex-col overflow-hidden">
+          <!-- Chat Header -->
+          <div class="flex h-16 shrink-0 items-center justify-between border-b border-slate-200/50 bg-white/60 px-4 backdrop-blur-md sm:px-6">
+            <div class="flex items-center gap-3">
+              <button class="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 md:hidden" @click="activeChat = null">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <div>
-                <p class="chat-thread__title">{{ chatLabel(activeChat) }}</p>
-                <p v-if="!activeChat.id" class="chat-thread__meta">Send a message to start the conversation</p>
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
+                  <span class="text-base font-bold">{{ chatLabel(activeChat).charAt(0) }}</span>
+                </div>
+                <div>
+                  <h2 class="text-base font-bold text-slate-900">{{ chatLabel(activeChat) }}</h2>
+                  <p v-if="!activeChat.id" class="text-xs text-slate-500">New conversation</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div ref="messagesContainer" class="chat-thread__messages">
-            <div v-if="hasLoadedMessages && !messages.length" class="chat-thread__status">No messages yet.</div>
-            <div v-else-if="messages.length" class="chat-thread__stack">
+          <!-- Messages Area -->
+          <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 sm:p-6 scroll-smooth">
+            <div v-if="hasLoadedMessages && !messages.length" class="flex h-full items-center justify-center text-sm text-slate-500">
+              No messages yet. Send a message to start!
+            </div>
+            
+            <div v-else-if="messages.length" class="flex flex-col gap-4">
               <div
-                v-for="message in messages"
+                v-for="(message, idx) in messages"
                 :key="message.id"
-                class="chat-bubble"
-                :class="{ 'chat-bubble--me': Number(messageSenderId(message)) === Number(currentUserId) }"
+                class="flex w-full"
+                :class="Number(messageSenderId(message)) === Number(currentUserId) ? 'justify-end' : 'justify-start'"
               >
-                <p class="chat-bubble__text">{{ message.text }}</p>
-                <span class="chat-bubble__meta">
-                  {{ formatTime(message.created_at) }}
-                </span>
+                <div 
+                  class="relative max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm sm:max-w-[65%]"
+                  :class="Number(messageSenderId(message)) === Number(currentUserId) 
+                    ? 'rounded-br-sm bg-gradient-to-br from-cyan-500 to-cyan-600 text-white' 
+                    : 'rounded-bl-sm bg-white border border-slate-100 text-slate-800'"
+                >
+                  <p class="text-[15px] leading-relaxed">{{ message.text }}</p>
+                  <div 
+                    class="mt-1 text-right text-[10px] font-medium opacity-70"
+                    :class="Number(messageSenderId(message)) === Number(currentUserId) ? 'text-cyan-100' : 'text-slate-400'"
+                  >
+                    {{ formatTime(message.created_at) }}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <form class="chat-thread__composer" @submit.prevent="sendMessage">
-            <input
-              v-model="draft"
-              type="text"
-              class="chat-thread__input"
-              placeholder="Type a message..."
-            />
-            <BaseButton type="submit" size="sm" variant="primary" :loading="isSending">
-              Send
-            </BaseButton>
-          </form>
+          <!-- Composer -->
+          <div class="shrink-0 border-t border-slate-200/50 bg-white/80 p-3 sm:p-4 backdrop-blur-md">
+            <form class="mx-auto flex max-w-4xl items-center gap-3" @submit.prevent="sendMessage">
+              <div class="relative flex-1">
+                <input
+                  v-model="draft"
+                  type="text"
+                  class="w-full rounded-full border border-slate-200 bg-white px-5 py-3 pr-12 text-sm text-slate-900 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10"
+                  placeholder="Type your message..."
+                />
+              </div>
+              <button 
+                type="submit" 
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-white shadow-md transition-transform hover:scale-105 hover:bg-cyan-500 disabled:opacity-50 disabled:hover:scale-100"
+                :disabled="isSending || !draft.trim()"
+              >
+                <svg v-if="!isSending" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                <svg v-else class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </button>
+            </form>
+          </div>
         </div>
       </section>
     </div>
   </div>
 </template>
-
-<style scoped>
-.chat-layout {
-  display: grid;
-  grid-template-columns: minmax(220px, 300px) 1fr;
-  gap: 16px;
-}
-
-.chat-back-btn {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  padding: 8px;
-  margin-right: 8px;
-  margin-left: -8px;
-  cursor: pointer;
-}
-
-.chat-thread__header-left {
-  display: flex;
-  align-items: center;
-}
-
-.chat-list {
-  padding: 14px 0 6px;
-  display: flex;
-  flex-direction: column;
-  max-height: min(620px, 70vh);
-  overflow: hidden;
-}
-
-.chat-list__header {
-  padding: 0 16px 10px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.chat-list__empty {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  padding: 0 16px 14px;
-}
-
-.chat-list__items {
-  list-style: none;
-  margin: 0;
-  padding: 0 6px 6px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.chat-list__item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.7);
-  transition: background var(--duration-fast) var(--ease-smooth),
-              border-color var(--duration-fast) var(--ease-smooth),
-              transform var(--duration-fast) var(--ease-smooth),
-              box-shadow var(--duration-fast) var(--ease-smooth);
-}
-
-.chat-list__item:hover {
-  background: rgba(14, 165, 233, 0.08);
-  border-color: rgba(14, 165, 233, 0.35);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
-}
-
-.chat-list__item--active {
-  background: rgba(14, 165, 233, 0.14);
-  border-color: rgba(14, 165, 233, 0.6);
-  box-shadow: var(--shadow-md);
-}
-
-.chat-list__avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-accent-muted);
-  color: var(--color-accent);
-  font-weight: 700;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-}
-
-.chat-list__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.chat-list__title {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.chat-list__meta {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin: 2px 0 0;
-}
-
-.chat-list__badge {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--color-rose);
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-/* ── Chat thread ── */
-.chat-thread {
-  display: flex;
-  flex-direction: column;
-  max-height: min(620px, 70vh);
-  min-height: 400px;
-  overflow: hidden;
-}
-
-.chat-empty {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.chat-thread__inner {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.chat-thread__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(10px);
-}
-
-.chat-thread__title {
-  font-weight: 600;
-  font-size: 1rem;
-  margin: 0;
-}
-
-.chat-thread__meta {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin: 2px 0 0;
-}
-
-.chat-thread__messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 14px 18px;
-  min-height: 0;
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.9) 0%, rgba(248, 250, 252, 0.4) 100%);
-}
-
-.chat-thread__status {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.chat-thread__stack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.chat-bubble {
-  max-width: 72%;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: var(--color-bg);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-}
-
-.chat-bubble--me {
-  align-self: flex-end;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(14, 165, 233, 0.05));
-  border-color: rgba(14, 165, 233, 0.25);
-}
-
-.chat-bubble__text {
-  margin: 0 0 4px;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  color: var(--text-primary);
-}
-
-.chat-bubble__meta {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-}
-
-.chat-thread__composer {
-  display: flex;
-  gap: 8px;
-  padding: 12px 18px;
-  border-top: 1px solid var(--border-color);
-  flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(10px);
-}
-
-.chat-thread__input {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--border-color);
-  border-radius: 999px;
-  padding: 9px 16px;
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  outline: none;
-  transition: border-color var(--duration-fast) var(--ease-smooth);
-}
-
-.chat-thread__input:focus {
-  border-color: var(--color-accent);
-}
-
-.chat-thread__input::placeholder {
-  color: var(--text-muted);
-}
-
-@media (max-width: 900px) {
-  .chat-layout {
-    display: flex;
-    flex-direction: column;
-    height: calc(100svh - 170px);
-  }
-  .chat-layout--has-active .chat-list {
-    display: none;
-  }
-  .chat-layout:not(.chat-layout--has-active) .chat-thread {
-    display: none;
-  }
-  .chat-back-btn {
-    display: flex;
-  }
-  .chat-list {
-    max-height: none;
-    height: 100%;
-    flex: 1;
-  }
-  .chat-thread {
-    max-height: none;
-    height: 100%;
-    flex: 1;
-  }
-}
-</style>

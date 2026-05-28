@@ -1,14 +1,18 @@
 <template>
-  <div class="flex flex-col gap-1.5">
-    <label v-if="label" :for="inputId" class="text-sm font-medium text-slate-600">
+  <div class="flex flex-col gap-[6px]">
+    <label v-if="label" :for="inputId" class="text-[0.82rem] font-semibold text-slate-700">
       {{ label }}
     </label>
 
     <div
-      class="relative flex items-center rounded-2xl border bg-white transition focus-within:ring-2 focus-within:ring-cyan-500 focus-within:ring-offset-2 focus-within:ring-offset-slate-50"
-      :class="error ? 'border-rose-500' : 'border-slate-200'"
+      class="relative flex items-center rounded-[14px] border bg-white/65 backdrop-blur-md transition-[border-color,box-shadow] duration-150"
+      :class="[
+        error 
+          ? 'border-rose-500 focus-within:ring-[3px] focus-within:ring-rose-500/10' 
+          : 'border-slate-300/90 focus-within:border-cyan-500 focus-within:ring-[3px] focus-within:ring-cyan-500/10'
+      ]"
     >
-      <span v-if="$slots.prefix" class="pointer-events-none absolute left-3 flex items-center text-slate-400">
+      <span v-if="$slots.prefix" class="absolute left-3 flex items-center text-slate-500 pointer-events-none">
         <slot name="prefix" />
       </span>
 
@@ -23,26 +27,22 @@
         spellcheck="false"
         :value="modelValue"
         :rows="type === 'textarea' ? rows : undefined"
-        class="w-full resize-y rounded-2xl border-0 bg-transparent px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:outline-none"
+        class="w-full border-none bg-transparent px-[14px] py-[11px] text-[0.9rem] text-slate-900 outline-none rounded-[14px] placeholder:text-slate-500"
         :class="[
-          $slots.prefix ? 'pl-10' : '',
-          $slots.suffix ? 'pr-10' : '',
-          type === 'textarea' ? 'min-h-28' : '',
+          $slots.prefix ? 'pl-9' : '',
+          $slots.suffix ? 'pr-9' : '',
+          type === 'textarea' ? 'resize-y min-h-[100px]' : '',
         ]"
         @input="$emit('update:modelValue', $event.target.value)"
       />
 
-      <span v-if="$slots.suffix" class="pointer-events-none absolute right-3 flex items-center text-slate-400">
+      <span v-if="$slots.suffix" class="absolute right-3 flex items-center text-slate-500 pointer-events-none">
         <slot name="suffix" />
       </span>
     </div>
 
-    <p v-if="error" class="mt-0.5 text-sm text-rose-500">
-      {{ error }}
-    </p>
-    <p v-else-if="hint" class="mt-0.5 text-sm text-slate-500">
-      {{ hint }}
-    </p>
+    <p v-if="error" class="m-0 text-[0.8rem] text-rose-500">{{ error }}</p>
+    <p v-else-if="hint" class="m-0 text-[0.8rem] text-slate-500">{{ hint }}</p>
   </div>
 </template>
 
@@ -53,15 +53,16 @@ defineOptions({ inheritAttrs: false })
 
 defineProps({
   modelValue: { type: [String, Number], default: '' },
-  label: { type: String, default: '' },
-  type: { type: String, default: 'text' },
-  rows: { type: Number, default: 4 },
+  label:      { type: String, default: '' },
+  type:       { type: String, default: 'text' },
+  rows:       { type: Number, default: 4 },
   autocomplete: { type: String, default: 'off' },
-  error: { type: String, default: '' },
-  hint: { type: String, default: '' },
+  error:      { type: String, default: '' },
+  hint:       { type: String, default: '' },
 })
 
 defineEmits(['update:modelValue'])
 
 const inputId = computed(() => `field-${Math.random().toString(36).slice(2)}`)
 </script>
+
