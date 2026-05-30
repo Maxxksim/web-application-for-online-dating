@@ -16,7 +16,10 @@ class ChatService
     public function getUserChats(User $user): Collection
     {
         return $user->chats()
-            ->with(['users' => fn($q) => $q->where('users.id', '!=', $user->id)->with('profile')])
+            ->with([
+                'users' => fn($q) => $q->where('users.id', '!=', $user->id)->with('profile.photos'),
+                'lastMessage',
+            ])
             ->withCount([
                 'messages as unread_count' => fn($q) => $q
                     ->whereNull('read_at')

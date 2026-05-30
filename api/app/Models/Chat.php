@@ -12,6 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 #[Fillable(['last_message_at'])]
 class Chat extends Model
 {
+    public function lastMessage(): HasOne
+    {
+        return $this->hasOne(Message::class)->latestOfMany('created_at');
+    }
+
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);

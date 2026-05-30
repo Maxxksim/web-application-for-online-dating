@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\MessageRead;
 use App\Events\MessageSent;
 use App\Models\Chat;
 use App\Models\Message;
@@ -20,10 +21,26 @@ class MessageService
 
     public function markAsRead(Chat $chat, int $userId): void
     {
-        $chat->messages()
+        $unreadMessages = $chat->messages()
             ->where('recipient_id', $userId)
             ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->get(['id', 'sender_id']);
+
+        if ($unreadMessages->isEmpty()) {
+            return;
+        }
+
+        $readAt = now();
+
+        $chat->messages()
+            ->whereIn('id', $unreadMessages->pluck('id'))
+            ->update(['read_at' => $readAt]);
+
+        $unreadMessages->pluck('sender_id')
+            ->unique()
+            ->each(function (int $senderId) use ($chat, $userId, $readAt) {
+                MessageRead::dispatch($chat->id, $userId, $senderId, $readAt->toIso8601String());
+            });
     }
 
     public function sendMessage(User $sender, User $recipient, $text): void
