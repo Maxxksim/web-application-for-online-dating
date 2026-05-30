@@ -18,11 +18,12 @@ class MessageService
 
     }
 
-    public function markAsRead(Message $message): void
+    public function markAsRead(Chat $chat, int $userId): void
     {
-        if (!$message->isRead()) {
-            $message->update(['read_at' => now()]);
-        }
+        $chat->messages()
+            ->where('recipient_id', $userId)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
     }
 
     public function sendMessage(User $sender, User $recipient, $text): void

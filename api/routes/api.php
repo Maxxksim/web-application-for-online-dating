@@ -72,7 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/chats', [ChatController::class, 'getChats']);
     Route::get('/chats/{chat}/messages', [MessageController::class, 'getMessages']);
-
+    Route::patch('chats/{chat}/messages', [MessageController::class, 'markAsRead']);
     Route::post('/chats/{recipient}/messages', [MessageController::class, 'sendMessage']);
 
     Route::prefix('subscription')->controller(SubscriptionController::class)->group(function () {
