@@ -5,11 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\MessageRequest;
 use App\Models\Chat;
 use App\Models\User;
-use App\Services\ChatService;
 use App\Services\MessageService;
-use App\Services\SwipeService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Response;
 
 class MessageController extends Controller
 {
@@ -18,18 +17,25 @@ class MessageController extends Controller
 
     }
 
-    public function getMessages(Chat $chat)
+    public function getMessages(Chat $chat): JsonResponse
     {
         $messages = $this->messageService->getMessages($chat);
 
         return response()->json(['messages' => $messages->toResourceCollection()], Response::HTTP_OK);
     }
 
-    public function sendMessage(MessageRequest $request, User $recipient): Response
+    public function sendMessage(MessageRequest $request, User $recipient): JsonResponse
     {
 
         $this->messageService->sendMessage($request->user(), $recipient, $request->validated('text'));
 
         return response()->json(['message' => 'Message has been sent.'], Response::HTTP_CREATED);
+    }
+
+    public function markAsRead(Request $request, Chat $chat): Response
+    {
+        $this->messageService->markAsRead($chat, $request->user()->id);
+
+        return response()->noContent();
     }
 }

@@ -80,7 +80,7 @@ class SwipeService
 
         $swipedUser->notifications()
             ->where('type', LikeNotification::class)
-            ->whereJsonContains('data->user_id', $swiperId)
+            ->whereRaw("(data::jsonb->>'user_id')::integer = ?", [$swiperId])
             ->delete();
     }
 }

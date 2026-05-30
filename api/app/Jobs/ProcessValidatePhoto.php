@@ -38,6 +38,7 @@ class ProcessValidatePhoto implements ShouldQueue
                 Storage::disk('public')->delete('profile_photos/' . $namePhoto);
             }
         }
+        $profileService->enableIfReady($this->profile);
     }
 
     public function failed(\Throwable $exception): void

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SearchSettingsRequest;
 use App\Http\Requests\UpdateSearchFilters;
 use App\Http\Resources\SearchFiltersResource;
 use App\Services\ProfileService;

@@ -20,6 +20,7 @@ class ProfileController extends Controller
     public function updateProfile(UpdateProfileRequest $request): JsonResponse
     {
         $request->user()->profile->update($request->validated());
+        $this->profileService->enableIfReady($request->user()->profile);
 
         return response()->json(['message' => 'Profile updated successfully.'], Response::HTTP_OK);
     }
@@ -32,8 +33,7 @@ class ProfileController extends Controller
     public function getMyProfile(Request $request): JsonResponse
     {
         $this->profileService->updateCompletionPercentage($request->user()->profile);
-        $this->profileService->enableIfReady($request->user()->profile);
-        
+
         return response()->json(['profile' => new ProfileResource($request->user()->profile->loadMissing('photos'))], Response::HTTP_OK);
     }
 

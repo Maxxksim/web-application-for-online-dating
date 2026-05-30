@@ -20,7 +20,7 @@ class UpdateProfileRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'date_of_birth' => ['sometimes', 'date'],
             'gender' => ['sometimes', 'in:man,woman'],
-            'description' => ['sometimes', 'string', 'max:500'],
+            'description' => ['sometimes', 'string', 'max:1200'],
             'dating_purpose' => ['sometimes', 'string', Rule::enum(DatingPurpose::class)],
             'height' => ['sometimes', 'numeric', 'min:50', 'max:250'],
             'weight' => ['sometimes', 'numeric', 'min:20', 'max:300'],
