@@ -21,4 +21,7 @@ export const subscriptionApi = {
   cancel(plan = DEFAULT_PLAN) {
     return apiClient.delete('/subscription/cancel', { data: { plan } })
   },
+  resume(plan = DEFAULT_PLAN) {
+    return apiClient.post('/subscription/resume', { plan })
+  }
 }

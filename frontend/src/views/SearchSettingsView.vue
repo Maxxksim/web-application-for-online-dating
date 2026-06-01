@@ -307,10 +307,10 @@ const save = async () => {
                   <GlassDropdown v-model="settings.hairColor" :options="selectOptions.hairColor" placeholder="Any" empty-label="Any" />
                 </div>
                 <div class="pt-3 border-t border-slate-200/50 mt-1">
-                  <DualRangeSlider v-model:model-min="settings.minHeight" v-model:model-max="settings.maxHeight" :min="130" :max="250" label="Height" suffix=" cm" />
+                  <DualRangeSlider v-model:model-min="settings.minHeight" v-model:model-max="settings.maxHeight" :min="70" :max="250" label="Height" suffix=" cm" />
                 </div>
                 <div class="pt-1">
-                  <DualRangeSlider v-model:model-min="settings.minWeight" v-model:model-max="settings.maxWeight" :min="40" :max="150" label="Weight" suffix=" kg" />
+                  <DualRangeSlider v-model:model-min="settings.minWeight" v-model:model-max="settings.maxWeight" :min="20" :max="200" label="Weight" suffix=" kg" />
                 </div>
               </div>
             </section>

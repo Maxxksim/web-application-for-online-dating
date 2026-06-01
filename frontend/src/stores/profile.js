@@ -1,42 +1,26 @@
-/**
- * stores/profile.js — User profile state (Pinia)
- *
- * Manages own profile data, photo management, search filters,
- * and the discovery deck of other profiles.
- */
-
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { profilesApi } from '@/api/profiles.js'
-import { searchApi }   from '@/api/search.js'
-import { swipesApi }   from '@/api/swipes.js'
+import { searchApi } from '@/api/search.js'
+import { swipesApi } from '@/api/swipes.js'
 
 export const useProfileStore = defineStore('profile', () => {
-  // ── Own Profile ──
-  const myProfile      = ref(null)
+  const myProfile = ref(null)
   const isLoadingProfile = ref(false)
-  const profileError   = ref(null)
-
-  // ── Discovery Deck ──
-  const deck           = ref([])           // array of profile objects
-  const deckMeta       = ref(null)         // pagination meta
-  const deckPage       = ref(1)
-  const isLoadingDeck  = ref(false)
+  const profileError = ref(null)
+  const deck = ref([])
+  const deckMeta = ref(null)
+  const deckPage = ref(1)
+  const isLoadingDeck = ref(false)
   const hydratedProfileIds = ref(new Set())
   const hydrationInFlight = new Set()
-  const lastSwipedId   = ref(null)
-
-  // ── Search Filters ──
-  const filters        = ref(null)
+  const lastSwipedId = ref(null)
+  const filters = ref(null)
   const isLoadingFilters = ref(false)
   const useAdditionalFilters = ref(false)
-
-  // ── Getters ──
   const currentCard = computed(() => deck.value[0] || null)
-  const hasCards    = computed(() => deck.value.length > 0)
+  const hasCards = computed(() => deck.value.length > 0)
   const completionPct = computed(() => myProfile.value?.completion_percentage ?? 0)
-
-  // ── Own Profile Actions ──
 
   async function fetchMyProfile() {
     isLoadingProfile.value = true
@@ -93,10 +77,9 @@ export const useProfileStore = defineStore('profile', () => {
   async function uploadPhotos(files) {
     try {
       await profilesApi.uploadPhotos(files)
-      // Refetch after short delay (async job validation)
       setTimeout(fetchMyProfile, 2000)
       return { success: true }
-    } catch (err) {
+    } catch {
       return { success: false, message: 'Unable to upload photos.' }
     }
   }
@@ -108,12 +91,10 @@ export const useProfileStore = defineStore('profile', () => {
         myProfile.value.photos = myProfile.value.photos.filter(p => p.id !== photoId)
       }
       return { success: true }
-    } catch (err) {
+    } catch {
       return { success: false }
     }
   }
-
-  // ── Discovery Deck Actions ──
 
   async function fetchDeck(reset = false) {
     if (isLoadingDeck.value) return
@@ -132,11 +113,9 @@ export const useProfileStore = defineStore('profile', () => {
       deck.value.push(...data.profiles.data)
       deckMeta.value = data.profiles.meta
       deckPage.value++
-      // Ensure the top card has photos before rendering to avoid empty cards
       if (deck.value.length && (!deck.value[0].photos || deck.value[0].photos.length === 0)) {
         await hydrateDeckProfiles([deck.value[0]])
       }
-      // Hydrate remaining profiles in background
       void hydrateDeckProfiles(data.profiles.data)
       return { success: true }
     } catch (err) {
@@ -192,21 +171,16 @@ export const useProfileStore = defineStore('profile', () => {
       console.error('Swipe failed: invalid user id', userId)
       return false
     }
-
-    // Optimistically remove top card
     const [swiped] = deck.value.splice(0, 1)
 
     try {
       await swipesApi.swipe(swipedId, isLiked)
       lastSwipedId.value = swipedId
     } catch (err) {
-      // Restore card on failure
       deck.value.unshift(swiped)
       console.error('Swipe failed', err)
       return false
     }
-
-    // Preload more cards when deck is running low
     if (deck.value.length < 3) {
       fetchDeck()
     }
@@ -219,7 +193,7 @@ export const useProfileStore = defineStore('profile', () => {
     try {
       await swipesApi.rollbackSwipe(lastSwipedId.value)
       lastSwipedId.value = null
-      await fetchDeck(true) // Reload deck to potentially bring back the swiped card
+      await fetchDeck(true)
       return { success: true }
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to undo swipe.'
@@ -262,8 +236,6 @@ export const useProfileStore = defineStore('profile', () => {
     )
   }
 
-  // ── Filters Actions ──
-
   async function fetchFilters() {
     isLoadingFilters.value = true
     try {
@@ -283,7 +255,6 @@ export const useProfileStore = defineStore('profile', () => {
     try {
       await searchApi.updateFilters(payload)
       filters.value = { ...filters.value, ...payload }
-      // Refresh deck with new filters
       await fetchDeck(true)
       return { success: true }
     } catch (err) {
@@ -304,13 +275,10 @@ export const useProfileStore = defineStore('profile', () => {
   }
 
   return {
-    // State
     myProfile, isLoadingProfile, profileError,
     deck, deckMeta, isLoadingDeck, lastSwipedId,
     filters, isLoadingFilters, useAdditionalFilters,
-    // Getters
     currentCard, hasCards, completionPct,
-    // Actions
     fetchMyProfile, updateMyProfile, toggleProfileVisibility,
     uploadPhotos, deletePhoto,
     addInterest, deleteInterest,

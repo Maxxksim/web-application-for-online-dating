@@ -1,8 +1,3 @@
-/**
- * composables/useGeolocation.js
- * Requests browser geolocation and syncs with backend via searchApi.
- */
-
 import { ref } from 'vue'
 import { searchApi } from '@/api/search.js'
 
@@ -24,7 +19,7 @@ export function useGeolocation() {
         async ({ coords }) => {
           try {
             await searchApi.updateLocation({
-              latitude:  coords.latitude,
+              latitude: coords.latitude,
               longitude: coords.longitude,
             })
           } catch (err) {
@@ -34,7 +29,7 @@ export function useGeolocation() {
             resolve()
           }
         },
-        (err) => {
+        (_err) => {
           locationError.value = 'Unable to retrieve your location.'
           isLocating.value = false
           resolve()

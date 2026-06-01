@@ -97,7 +97,7 @@ const openProfilePreview = async (item, kind = 'like') => {
 
   try {
     const { data } = await profilesApi.getById(profileId)
-    previewProfile.value = { ...(data?.profile || {}), ...item, profile_id: profileId }
+    previewProfile.value = { ...data?.profile, ...item, profile_id: profileId }
   } catch {
     previewProfile.value = { ...item, profile_id: profileId }
   } finally {

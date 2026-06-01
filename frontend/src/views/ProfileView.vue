@@ -47,6 +47,8 @@ const maxInterests = 10
 const isPremium = computed(() => subscriptionStore.isPremium)
 const isSubscriptionLoading = computed(() => subscriptionStore.isLoading)
 const subscriptionError = computed(() => subscriptionStore.error)
+const isCanceled = computed(() => subscriptionStore.isCanceled)
+const endsAt = computed(() => subscriptionStore.endsAt)
 
 const bDay = ref('')
 const bMonth = ref('')
@@ -312,19 +314,25 @@ const cancelPremium = async () => {
     toast.error(subscriptionError.value || 'Unable to cancel subscription.')
   }
 }
+
+const resumePremium = async () => {
+  const result = await subscriptionStore.resume()
+  if (result.success) {
+    toast.success('Subscription resumed.')
+  } else {
+    toast.error(subscriptionStore.error || 'Unable to resume subscription.')
+  }
+}
 </script>
 
 <template>
   <div class="page px-4 py-6 sm:px-6 lg:px-8">
-    <div class="page-header max-w-6xl mx-auto mb-2">
-      <!-- Progress bar moved to side panel for better context -->
-    </div>
+    <div class="page-header max-w-6xl mx-auto mb-2"></div>
 
     <div v-if="isLoading && !myProfile" class="glass-panel p-5 text-sm text-slate-500">
       Loading profile...
     </div>
 
-    <!-- ↓ левая колонка теперь flex flex-col чтобы interests растягивался -->
     <div v-else class="grid gap-[18px] lg:grid-cols-[1.15fr_0.85fr] max-w-6xl mx-auto lg:items-start">
       <div class="glass-panel p-6 flex flex-col">
         <form id="profile-form" @submit.prevent="saveProfile" class="flex flex-col gap-4">
@@ -341,11 +349,11 @@ const cancelPremium = async () => {
             </div>
             <div class="flex flex-col gap-[5px]">
               <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="gender">Gender</label>
-              <GlassDropdown 
-                v-model="form.gender" 
-                :options="[{value:'woman', label:'Woman'}, {value:'man', label:'Man'}]" 
-                placeholder="Select" 
-                empty-label="Select" 
+              <GlassDropdown
+                v-model="form.gender"
+                :options="[{value:'woman', label:'Woman'}, {value:'man', label:'Man'}]"
+                placeholder="Select"
+                empty-label="Select"
               />
             </div>
           </div>
@@ -367,89 +375,63 @@ const cancelPremium = async () => {
             <p class="m-0 text-[0.75rem] font-bold uppercase tracking-[0.08em] text-slate-500">More about you</p>
             <div class="flex flex-col gap-4">
               <div class="grid gap-6 sm:grid-cols-2">
-                <SingleRangeSlider
-                  v-model="form.height"
-                  :min="130"
-                  :max="250"
-                  :fallback="170"
-                  label="Height"
-                  suffix=" cm"
-                />
-                <SingleRangeSlider
-                  v-model="form.weight"
-                  :min="40"
-                  :max="150"
-                  :fallback="70"
-                  label="Weight"
-                  suffix=" kg"
-                />
+                <SingleRangeSlider v-model="form.height" :min="130" :max="250" :fallback="170" label="Height" suffix=" cm" />
+                <SingleRangeSlider v-model="form.weight" :min="40" :max="150" :fallback="70" label="Weight" suffix=" kg" />
               </div>
 
               <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="dating-purpose">Dating Purpose</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Dating Purpose</label>
                   <GlassDropdown v-model="form.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Empty" />
                 </div>
-
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="body-type">Body Type</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Body Type</label>
                   <GlassDropdown v-model="form.bodyType" :options="selectOptions.bodyType" placeholder="Empty" />
                 </div>
-
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="eye-color">Eye Color</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Eye Color</label>
                   <GlassDropdown v-model="form.eyeColor" :options="selectOptions.eyeColor" placeholder="Empty" />
                 </div>
-
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="hair-color">Hair Color</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Hair Color</label>
                   <GlassDropdown v-model="form.hairColor" :options="selectOptions.hairColor" placeholder="Empty" />
                 </div>
-
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="smoking">Smoking</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Smoking</label>
                   <GlassDropdown v-model="form.smoking" :options="selectOptions.smoking" placeholder="Empty" />
                 </div>
-
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="drinking">Drinking</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Drinking</label>
                   <GlassDropdown v-model="form.drinking" :options="selectOptions.drinking" placeholder="Empty" />
                 </div>
-
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="children">Children</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Children</label>
                   <GlassDropdown v-model="form.children" :options="selectOptions.children" placeholder="Empty" />
                 </div>
-
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="zodiac">Zodiac Sign</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Zodiac Sign</label>
                   <GlassDropdown v-model="form.zodiacSign" :options="selectOptions.zodiacSign" placeholder="Empty" />
                 </div>
-
                 <div class="flex flex-col gap-[5px]">
-                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="exercise">Exercise</label>
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Exercise</label>
                   <GlassDropdown v-model="form.exercise" :options="selectOptions.exercise" placeholder="Empty" />
                 </div>
               </div>
             </div>
           </div>
-
         </form>
 
-        <!-- ↓ mt-auto толкает блок в самый низ левой колонки -->
         <div class="mt-4 flex flex-col gap-2.5 rounded-2xl border border-slate-200/60 bg-white/45 p-4">
           <div class="flex items-center justify-between">
             <p class="m-0 text-[0.78rem] font-bold uppercase tracking-[0.08em] text-slate-500">Interests</p>
             <p class="m-0 text-[0.78rem] text-slate-500">{{ profileInterests.length }}/{{ maxInterests }} selected</p>
           </div>
 
-          <!-- Выбранные интересы -->
           <div v-if="!profileInterests.length" class="text-[0.85rem] text-slate-500">
             Add a few interests to help with better matches.
           </div>
 
           <div v-else class="flex flex-col gap-2">
-            <!-- ↓ визуальный разделитель над выбранными -->
             <div class="flex items-center gap-3">
               <span class="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-pink-400">Selected</span>
               <div class="flex-1 h-px bg-pink-200/70"></div>
@@ -469,7 +451,6 @@ const cancelPremium = async () => {
             </div>
           </div>
 
-          <!-- ↓ разделитель перед доступными интересами -->
           <div class="flex items-center gap-3 pt-1">
             <span class="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-slate-400">Add interests</span>
             <div class="flex-1 h-px bg-slate-200/80"></div>
@@ -496,7 +477,6 @@ const cancelPremium = async () => {
       </div>
 
       <div class="flex flex-col gap-6">
-        <!-- Progress bar -->
         <div class="rounded-3xl border border-white/60 bg-white/50 p-5 shadow-sm backdrop-blur-xl">
           <div class="mb-2 flex items-center justify-between">
             <span class="text-sm font-bold text-slate-700">Profile Completeness</span>
@@ -509,8 +489,10 @@ const cancelPremium = async () => {
 
         <div class="glass-panel flex flex-col gap-4 p-6">
           <div class="relative overflow-hidden rounded-3xl bg-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/60">
-            <div class="absolute right-3 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-md uppercase tracking-wider"
-                 :class="isEnabled ? 'bg-emerald-500/80' : 'bg-slate-800/60'">
+            <div
+              class="absolute right-3 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-md uppercase tracking-wider"
+              :class="isEnabled ? 'bg-emerald-500/80' : 'bg-slate-800/60'"
+            >
               {{ isEnabled ? 'Visible in discovery' : 'Hidden' }}
             </div>
             <div class="h-[360px] w-full bg-slate-100">
@@ -526,7 +508,10 @@ const cancelPremium = async () => {
               </div>
               <div class="mt-1 flex items-center gap-2 text-sm font-medium text-slate-600">
                 <span v-if="previewLocation" class="flex items-center gap-1">
-                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
                   {{ previewLocation }}
                 </span>
                 <span v-if="previewGender">· {{ previewGender }}</span>
@@ -538,9 +523,7 @@ const cancelPremium = async () => {
           <div class="divider-glow" />
 
           <div class="flex items-center justify-between">
-            <div>
-              <p class="m-0 text-[0.95rem] font-semibold text-slate-900">Photos</p>
-            </div>
+            <p class="m-0 text-[0.95rem] font-semibold text-slate-900">Photos</p>
             <label class="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-slate-200/75 bg-[#f0f9ff] px-3.5 py-1.5 text-[0.8rem] font-semibold text-slate-900 transition hover:border-cyan-500 hover:bg-cyan-50">
               <input type="file" class="sr-only" multiple accept="image/*" @change="handleUpload" />
               {{ isUploading ? 'Uploading...' : 'Add Photos' }}
@@ -567,29 +550,31 @@ const cancelPremium = async () => {
                 <p class="m-0 mb-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-slate-500">Premium</p>
                 <h3 class="m-0 text-base font-bold text-slate-900">Upgrade your discovery</h3>
               </div>
-              <span class="chip">{{ isPremium ? 'Active' : 'Locked' }}</span>
+              <span class="chip">{{ isCanceled ? 'Cancelled' : isPremium ? 'Active' : 'Locked' }}</span>
             </div>
             <p class="m-0 text-[0.85rem] text-slate-700">
-              Get advanced filters and deeper matches with Premium membership.
-            </p>
-            <BaseButton
-              v-if="!isPremium"
-              variant="primary"
-              full
-              :loading="isSubscriptionLoading"
-              @click="goPremium"
-            >
-              Get Premium
-            </BaseButton>
-            <BaseButton
-              v-else
-              variant="secondary"
-              full
-              :loading="isSubscriptionLoading"
-              @click="cancelPremium"
-            >
-              Cancel Subscription
-            </BaseButton>
+  Get advanced filters, profile boost in discovery, swipe rollback, and deeper matches with Premium membership.
+</p>
+
+            <template v-if="isCanceled">
+              <p class="m-0 text-[0.85rem] text-slate-500">
+                Premium active until {{ endsAt ?? '...' }}
+              </p>
+                <BaseButton variant="primary" full :loading="isSubscriptionLoading" @click="resumePremium">
+                    Resume Premium
+  </BaseButton>
+            </template>
+            <template v-else-if="isPremium">
+              <BaseButton variant="secondary" full :loading="isSubscriptionLoading" @click="cancelPremium">
+                Cancel Premium
+              </BaseButton>
+            </template>
+            <template v-else>
+              <BaseButton variant="primary" full :loading="isSubscriptionLoading" @click="goPremium">
+                Get Premium
+              </BaseButton>
+            </template>
+
             <p v-if="subscriptionError" class="m-0 text-[0.78rem] text-rose-500">{{ subscriptionError }}</p>
           </div>
 
@@ -612,7 +597,6 @@ const cancelPremium = async () => {
               Log Out
             </BaseButton>
           </div>
-
         </div>
       </div>
     </div>
