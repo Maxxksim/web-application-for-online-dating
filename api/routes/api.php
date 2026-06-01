@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/checkout', 'checkout');
         Route::get('/status', 'status');
         Route::delete('/cancel', 'cancel');
+        Route::post('/resume', 'resume');
     });
 });
 
