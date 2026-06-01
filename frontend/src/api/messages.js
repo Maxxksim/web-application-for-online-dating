@@ -26,4 +26,13 @@ export const messagesApi = {
   send(recipientUserId, text) {
     return apiClient.post(`/chats/${recipientUserId}/messages`, { text })
   },
+
+  /**
+   * Mark all messages in a chat as read for the current user
+   * PATCH /api/chats/{chat}/messages
+   * @param {number} chatId
+   */
+  markAsRead(chatId) {
+    return apiClient.patch(`/chats/${chatId}/messages`)
+  },
 }

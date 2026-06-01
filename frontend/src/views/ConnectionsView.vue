@@ -8,11 +8,13 @@ import { profilesApi } from '@/api/profiles.js'
 import { swipesApi } from '@/api/swipes.js'
 import { useToast } from '@/composables/useToast.js'
 import { useProfileStore } from '@/stores/profile.js'
+import { useNotificationsStore } from '@/stores/notifications.js'
 import BaseButton from '@/components/BaseButton.vue'
 
 const router = useRouter()
 const { toast } = useToast()
 const profileStore = useProfileStore()
+const notificationsStore = useNotificationsStore()
 
 const activeTab = ref('likes')
 
@@ -32,6 +34,9 @@ const previewActionLoading = ref(false)
 const getProfileId = (p) => p?.profile_id || p?.id || p?.profileId || null
 const getProfileUserId = (p) => p?.user_id || p?.userId || p?.user?.id || null
 const getMatchUserId = (m) => m?.user_id || m?.userId || m?.user?.id || null
+
+const isUnreadLike = (like) => !!notificationsStore.findUnreadProfileNotification('LikeNotification', getProfileId(like))
+const isUnreadMatch = (match) => !!notificationsStore.findUnreadProfileNotification('MatchNotification', getProfileId(match))
 
 const loadLikes = async () => {
   isLoadingLikes.value = true
@@ -77,21 +82,24 @@ const loadMatches = async () => {
   }
 }
 
-const openLikePreview = async (like) => {
-  const profileId = getProfileId(like)
+const openProfilePreview = async (item, kind = 'like') => {
+  const profileId = getProfileId(item)
   if (!profileId) {
     toast.error('This profile cannot be opened right now.')
     return
   }
+
+  const typeName = kind === 'match' ? 'MatchNotification' : 'LikeNotification'
+  await notificationsStore.markProfileNotificationAsRead(typeName, profileId)
 
   previewLoading.value = true
   previewProfile.value = null
 
   try {
     const { data } = await profilesApi.getById(profileId)
-    previewProfile.value = { ...(data?.profile || {}), ...like, profile_id: profileId }
+    previewProfile.value = { ...(data?.profile || {}), ...item, profile_id: profileId }
   } catch {
-    previewProfile.value = { ...like, profile_id: profileId }
+    previewProfile.value = { ...item, profile_id: profileId }
   } finally {
     previewLoading.value = false
   }
@@ -101,6 +109,11 @@ const closePreview = () => {
   if (previewActionLoading.value) return
   previewProfile.value = null
 }
+
+const tabBadgeClass = 'absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm'
+const unreadCardClass = (kind) => kind === 'match'
+  ? 'border-violet-500/45 bg-violet-500/10 shadow-md'
+  : 'border-sky-500/45 bg-sky-500/10 shadow-md'
 
 const refreshAll = async () => {
   await Promise.allSettled([loadLikes(), loadMatches()])
@@ -172,8 +185,18 @@ onMounted(async () => {
 
 
     <div class="flex flex-wrap gap-[10px] mb-6 max-w-6xl mx-auto">
-      <button class="px-[18px] py-[8px] rounded-full border border-slate-200 bg-white/85 text-slate-700 text-[0.85rem] font-semibold cursor-pointer shadow-sm transition-all duration-[160ms]" :class="activeTab === 'likes' ? 'text-cyan-500 border-sky-500/45 bg-gradient-to-br from-sky-500/15 to-sky-500/5 shadow-md' : ''" @click="activeTab = 'likes'">Likes</button>
-      <button class="px-[18px] py-[8px] rounded-full border border-slate-200 bg-white/85 text-slate-700 text-[0.85rem] font-semibold cursor-pointer shadow-sm transition-all duration-[160ms]" :class="activeTab === 'matches' ? 'text-cyan-500 border-sky-500/45 bg-gradient-to-br from-sky-500/15 to-sky-500/5 shadow-md' : ''" @click="activeTab = 'matches'">Matches</button>
+      <button class="relative px-[18px] py-[8px] rounded-full border border-slate-200 bg-white/85 text-slate-700 text-[0.85rem] font-semibold cursor-pointer shadow-sm transition-all duration-[160ms]" :class="activeTab === 'likes' ? 'text-cyan-500 border-sky-500/45 bg-gradient-to-br from-sky-500/15 to-sky-500/5 shadow-md' : ''" @click="activeTab = 'likes'">
+        Likes
+        <span v-if="notificationsStore.likeCount" :class="tabBadgeClass">
+          {{ notificationsStore.likeCount > 9 ? '9+' : notificationsStore.likeCount }}
+        </span>
+      </button>
+      <button class="relative px-[18px] py-[8px] rounded-full border border-slate-200 bg-white/85 text-slate-700 text-[0.85rem] font-semibold cursor-pointer shadow-sm transition-all duration-[160ms]" :class="activeTab === 'matches' ? 'text-cyan-500 border-sky-500/45 bg-gradient-to-br from-sky-500/15 to-sky-500/5 shadow-md' : ''" @click="activeTab = 'matches'">
+        Matches
+        <span v-if="notificationsStore.matchCount" :class="tabBadgeClass">
+          {{ notificationsStore.matchCount > 9 ? '9+' : notificationsStore.matchCount }}
+        </span>
+      </button>
     </div>
 
     <!-- Likes -->
@@ -184,9 +207,11 @@ onMounted(async () => {
           v-for="(like, i) in likes"
           :key="like.profile_id || like.id || like.user_id || like.userId || i"
           type="button"
-          class="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-slate-200/50 bg-white/50 w-full text-left cursor-pointer transition-all duration-[160ms] hover:-translate-y-0.5 hover:border-sky-500/45 hover:bg-sky-500/10 hover:shadow-md"
-          @click="openLikePreview(like)"
+          class="relative flex items-center gap-3 px-4 py-3.5 rounded-2xl border w-full text-left cursor-pointer transition-all duration-[160ms] hover:-translate-y-0.5 hover:shadow-md"
+          :class="isUnreadLike(like) ? unreadCardClass('like') : 'border-slate-200/50 bg-white/50 hover:border-sky-500/45 hover:bg-sky-500/10'"
+          @click="openProfilePreview(like, 'like')"
         >
+          <span v-if="isUnreadLike(like)" class="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-rose-500 shadow-sm"></span>
           <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-sky-500/15 to-sky-500/5 text-cyan-500 font-bold shrink-0 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.2)]">
             <img v-if="like.photos?.[0]?.url" :src="like.photos[0].url" alt="Profile" class="w-full h-full object-cover" />
             <span v-else>{{ like.name?.[0] || 'M' }}</span>
@@ -206,7 +231,14 @@ onMounted(async () => {
     <section v-else-if="activeTab === 'matches'" class="glass-panel p-[18px]">
       <div v-if="hasLoadedMatches && !matches.length" class="text-[0.85rem] text-slate-500">No matches yet.</div>
       <div v-else class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[14px]">
-        <div v-for="(match, i) in matches" :key="match.id || match.user_id || match.userId || i" class="flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-slate-200/50 bg-white/50">
+        <div
+          v-for="(match, i) in matches"
+          :key="match.id || match.user_id || match.userId || i"
+          class="relative flex items-center gap-3 px-4 py-3.5 rounded-2xl border cursor-pointer transition-all duration-[160ms] hover:-translate-y-0.5 hover:shadow-md"
+          :class="isUnreadMatch(match) ? unreadCardClass('match') : 'border-slate-200/50 bg-white/50 hover:border-violet-500/45 hover:bg-violet-500/10'"
+          @click="openProfilePreview(match, 'match')"
+        >
+          <span v-if="isUnreadMatch(match)" class="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-rose-500 shadow-sm"></span>
           <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-sky-500/15 to-sky-500/5 text-cyan-500 font-bold shrink-0 shadow-[inset_0_0_0_1px_rgba(14,165,233,0.2)]">
             <img v-if="match.photos?.[0]?.url" :src="match.photos[0].url" alt="Profile" class="w-full h-full object-cover" />
             <span v-else>{{ match.name?.[0] || 'M' }}</span>
@@ -218,8 +250,11 @@ onMounted(async () => {
             </p>
             <p class="text-[0.78rem] text-slate-500 m-0">{{ match.city || 'Nearby' }}</p>
           </div>
-          <BaseButton size="sm" variant="secondary" :disabled="!getMatchUserId(match)" @click="startChat(match)">
+          <BaseButton size="sm" variant="secondary" :disabled="!getMatchUserId(match)" @click.stop="startChat(match)">
             Chat
+          </BaseButton>
+          <BaseButton size="sm" variant="primary" :disabled="!getProfileId(match)" @click.stop="openProfilePreview(match, 'match')">
+            View
           </BaseButton>
         </div>
       </div>

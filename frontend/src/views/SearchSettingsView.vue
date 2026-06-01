@@ -7,6 +7,7 @@ import { SELECT_OPTIONS, INTEREST_OPTIONS } from '@/constants/profileOptions.js'
 import BaseInput from '@/components/BaseInput.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import DualRangeSlider from '@/components/DualRangeSlider.vue'
+import SingleRangeSlider from '@/components/SingleRangeSlider.vue'
 import GlassDropdown from '@/components/GlassDropdown.vue'
 
 const profileStore = useProfileStore()
@@ -215,23 +216,19 @@ const save = async () => {
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
 
 
-      <div class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div :class="isPremium ? 'grid gap-6 lg:grid-cols-[1.2fr_0.8fr]' : 'flex flex-col gap-6'">
         <section class="glass-panel" style="padding: 24px;">
           <div class="mb-6 flex flex-col gap-3">
             <h2 class="text-2xl font-semibold text-slate-950">Basic filters</h2>
           </div>
           <div class="space-y-6">
             <div class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
-              <div class="mb-3 flex items-center justify-between">
-                <span class="text-sm font-semibold text-slate-700">Maximum Distance</span>
-                <span class="text-sm font-semibold text-slate-900">{{ settings.distance }} km</span>
-              </div>
-              <input
+              <SingleRangeSlider
                 v-model="settings.distance"
-                type="range"
-                min="1"
-                max="200"
-                class="w-full accent-cyan-300"
+                :min="1"
+                :max="200"
+                label="Maximum Distance"
+                suffix=" km"
               />
             </div>
 
@@ -261,7 +258,7 @@ const save = async () => {
           </div>
         </section>
 
-        <section class="glass-panel" style="padding: 24px;">
+        <section v-if="isPremium" class="glass-panel" style="padding: 24px;">
           <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 class="text-2xl font-semibold text-slate-950">Premium filters</h2>
@@ -273,79 +270,83 @@ const save = async () => {
                   type="checkbox"
                   class="peer sr-only"
                   v-model="enableAdvanced"
-                  :disabled="!isPremium"
                 />
-                <div class="h-6 w-11 rounded-full border border-slate-300 bg-slate-200 transition duration-200 peer-checked:bg-cyan-600 peer-disabled:opacity-50"></div>
+                <div class="h-6 w-11 rounded-full border border-slate-300 bg-slate-200 transition duration-200 peer-checked:bg-cyan-600"></div>
                 <div class="pointer-events-none absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow transition duration-200 peer-checked:translate-x-5"></div>
               </label>
             </div>
           </div>
 
           <div class="space-y-6">
-
             <fieldset :disabled="isAdvancedLocked" class="space-y-6">
-              <section class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
-                <div class="mb-4 flex items-center justify-between">
-                  <h3 class="text-lg font-semibold text-slate-900">Lifestyle</h3>
-                  <span class="text-sm text-slate-500">Optional</span>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <div class="space-y-2">
-                    <label for="dating-purpose" class="text-sm font-semibold text-slate-700">Dating purpose</label>
-                    <GlassDropdown v-model="settings.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Any" empty-label="Any" />
+              <div class="grid gap-6 lg:grid-cols-2">
+                <section class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
+                  <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-slate-900">Lifestyle</h3>
+                    <span class="text-sm text-slate-500">Optional</span>
                   </div>
-                  <div class="space-y-2">
-                    <label for="smoking" class="text-sm font-semibold text-slate-700">Smoking</label>
-                    <GlassDropdown v-model="settings.smoking" :options="selectOptions.smoking" placeholder="Any" empty-label="Any" />
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="space-y-2">
+                      <label for="dating-purpose" class="text-sm font-semibold text-slate-700">Dating purpose</label>
+                      <GlassDropdown v-model="settings.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Any" empty-label="Any" />
+                    </div>
+                    <div class="space-y-2">
+                      <label for="smoking" class="text-sm font-semibold text-slate-700">Smoking</label>
+                      <GlassDropdown v-model="settings.smoking" :options="selectOptions.smoking" placeholder="Any" empty-label="Any" />
+                    </div>
+                    <div class="space-y-2">
+                      <label for="drinking" class="text-sm font-semibold text-slate-700">Drinking</label>
+                      <GlassDropdown v-model="settings.drinking" :options="selectOptions.drinking" placeholder="Any" empty-label="Any" />
+                    </div>
+                    <div class="space-y-2">
+                      <label for="exercise" class="text-sm font-semibold text-slate-700">Exercise</label>
+                      <GlassDropdown v-model="settings.exercise" :options="selectOptions.exercise" placeholder="Any" empty-label="Any" />
+                    </div>
+                    <div class="space-y-2">
+                      <label for="zodiac-sign" class="text-sm font-semibold text-slate-700">Zodiac sign</label>
+                      <GlassDropdown v-model="settings.zodiacSign" :options="selectOptions.zodiacSign" placeholder="Any" empty-label="Any" />
+                    </div>
                   </div>
-                  <div class="space-y-2">
-                    <label for="drinking" class="text-sm font-semibold text-slate-700">Drinking</label>
-                    <GlassDropdown v-model="settings.drinking" :options="selectOptions.drinking" placeholder="Any" empty-label="Any" />
-                  </div>
-                  <div class="space-y-2">
-                    <label for="exercise" class="text-sm font-semibold text-slate-700">Exercise</label>
-                    <GlassDropdown v-model="settings.exercise" :options="selectOptions.exercise" placeholder="Any" empty-label="Any" />
-                  </div>
-                </div>
-              </section>
+                </section>
 
-              <section class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
-                <div class="mb-4 flex items-center justify-between">
-                  <h3 class="text-lg font-semibold text-slate-900">Appearance</h3>
-                  <span class="text-sm text-slate-500">Optional</span>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <div class="space-y-2">
-                    <label for="body-type" class="text-sm font-semibold text-slate-700">Body type</label>
-                    <GlassDropdown v-model="settings.bodyType" :options="selectOptions.bodyType" placeholder="Any" empty-label="Any" />
+                <section class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
+                  <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-slate-900">Appearance</h3>
+                    <span class="text-sm text-slate-500">Optional</span>
                   </div>
-                  <div class="space-y-2">
-                    <label for="eye-color" class="text-sm font-semibold text-slate-700">Eye color</label>
-                    <GlassDropdown v-model="settings.eyeColor" :options="selectOptions.eyeColor" placeholder="Any" empty-label="Any" />
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="space-y-2">
+                      <label for="body-type" class="text-sm font-semibold text-slate-700">Body type</label>
+                      <GlassDropdown v-model="settings.bodyType" :options="selectOptions.bodyType" placeholder="Any" empty-label="Any" />
+                    </div>
+                    <div class="space-y-2">
+                      <label for="eye-color" class="text-sm font-semibold text-slate-700">Eye color</label>
+                      <GlassDropdown v-model="settings.eyeColor" :options="selectOptions.eyeColor" placeholder="Any" empty-label="Any" />
+                    </div>
+                    <div class="space-y-2">
+                      <label for="hair-color" class="text-sm font-semibold text-slate-700">Hair color</label>
+                      <GlassDropdown v-model="settings.hairColor" :options="selectOptions.hairColor" placeholder="Any" empty-label="Any" />
+                    </div>
                   </div>
-                  <div class="space-y-2">
-                    <label for="hair-color" class="text-sm font-semibold text-slate-700">Hair color</label>
-                    <GlassDropdown v-model="settings.hairColor" :options="selectOptions.hairColor" placeholder="Any" empty-label="Any" />
-                  </div>
-                </div>
 
-                <DualRangeSlider
-                  v-model:model-min="settings.minHeight"
-                  v-model:model-max="settings.maxHeight"
-                  :min="130"
-                  :max="250"
-                  label="Height"
-                  suffix=" cm"
-                />
-                <DualRangeSlider
-                  v-model:model-min="settings.minWeight"
-                  v-model:model-max="settings.maxWeight"
-                  :min="40"
-                  :max="150"
-                  label="Weight"
-                  suffix=" kg"
-                />
-              </section>
+                  <DualRangeSlider
+                    v-model:model-min="settings.minHeight"
+                    v-model:model-max="settings.maxHeight"
+                    :min="130"
+                    :max="250"
+                    label="Height"
+                    suffix=" cm"
+                  />
+                  <DualRangeSlider
+                    v-model:model-min="settings.minWeight"
+                    v-model:model-max="settings.maxWeight"
+                    :min="40"
+                    :max="150"
+                    label="Weight"
+                    suffix=" kg"
+                  />
+                </section>
+              </div>
 
               <section class="p-[18px] rounded-2xl bg-white/45 border border-slate-200/60">
                 <div class="mb-4 flex items-center justify-between">
@@ -391,19 +392,38 @@ const save = async () => {
             </fieldset>
 
             <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-600">
-              <p v-if="!isPremium">Premium membership is required to use advanced filters.</p>
-              <p v-else-if="!enableAdvanced">Enable advanced filters to start filtering by lifestyle, appearance, and interests.</p>
+              <p v-if="!enableAdvanced">Enable advanced filters to start filtering by lifestyle, appearance, and interests.</p>
               <p v-else>Advanced filters are active. Continue refining your search.</p>
               <div class="mt-4">
                 <BaseButton
-                  :variant="isPremium ? 'secondary' : 'primary'"
+                  variant="secondary"
                   full
                   :loading="isSubscriptionLoading"
-                  @click="isPremium ? (enableAdvanced = true) : goPremium"
+                  @click="enableAdvanced = true"
                 >
-                  {{ isPremium ? (enableAdvanced ? 'Advanced filters enabled' : 'Enable advanced filters') : 'Get Premium' }}
+                  {{ enableAdvanced ? 'Advanced filters enabled' : 'Enable advanced filters' }}
                 </BaseButton>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section v-else class="glass-panel" style="padding: 24px;">
+          <div class="mb-6">
+            <h2 class="text-2xl font-semibold text-slate-950">Premium filters</h2>
+            <p class="mt-2 text-sm text-slate-600">Unlock lifestyle, appearance, and interests filters with Premium.</p>
+          </div>
+          <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-600">
+            <p>Premium membership is required to use advanced filters.</p>
+            <div class="mt-4">
+              <BaseButton
+                variant="primary"
+                full
+                :loading="isSubscriptionLoading"
+                @click="goPremium"
+              >
+                Get Premium
+              </BaseButton>
             </div>
           </div>
         </section>

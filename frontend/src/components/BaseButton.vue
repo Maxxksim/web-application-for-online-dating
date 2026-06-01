@@ -34,10 +34,12 @@ const props = defineProps({
 })
 
 const variantClasses = {
-  primary:   'bg-[linear-gradient(135deg,#f0896c,#e06b8f)] text-white shadow-[0_4px_14px_rgba(224,107,143,0.25)] hover:not:disabled:-translate-y-px hover:not:disabled:shadow-[0_6px_20px_rgba(224,107,143,0.38)]',
-  secondary: 'bg-white/75 border-slate-300 text-slate-900 backdrop-blur-md hover:not:disabled:border-sky-400 hover:not:disabled:bg-white/90',
-  ghost:     'bg-transparent border-slate-200 text-teal-500 hover:not:disabled:bg-teal-500/10 hover:not:disabled:border-teal-500',
-  danger:    'bg-[linear-gradient(135deg,#f472b6,#fb7185)] text-white shadow-[0_4px_16px_rgba(244,114,182,0.3)] hover:not:disabled:-translate-y-px hover:not:disabled:shadow-[0_8px_24px_rgba(244,114,182,0.4)]',
+  primary:   'bg-[linear-gradient(135deg,#f0896c,#e06b8f)] text-white shadow-[0_4px_14px_rgba(224,107,143,0.25)] hover:not:disabled:-translate-y-1 hover:not:disabled:shadow-[0_10px_26px_rgba(224,107,143,0.45)] hover:not:disabled:brightness-105 hover:not:disabled:saturate-125',
+  secondary: 'bg-white/75 border-slate-300 text-slate-900 backdrop-blur-md hover:not:disabled:-translate-y-0.5 hover:not:disabled:shadow-[0_10px_20px_rgba(15,23,42,0.12)] hover:not:disabled:border-sky-400 hover:not:disabled:bg-white hover:not:disabled:ring-2 hover:not:disabled:ring-cyan-200/60',
+  ghost:     'bg-transparent border-slate-200 text-teal-500 hover:not:disabled:-translate-y-0.5 hover:not:disabled:bg-teal-500/15 hover:not:disabled:border-teal-500 hover:not:disabled:text-teal-600 hover:not:disabled:shadow-[0_8px_18px_rgba(20,184,166,0.25)]',
+  outline:   'bg-white/80 border-cyan-300 text-cyan-700 shadow-[0_4px_14px_rgba(14,165,233,0.15)] hover:not:disabled:-translate-y-0.5 hover:not:disabled:bg-cyan-50 hover:not:disabled:border-cyan-400 hover:not:disabled:text-cyan-800 hover:not:disabled:shadow-[0_8px_24px_rgba(14,165,233,0.25)]',
+  danger:    'bg-[linear-gradient(135deg,#f472b6,#fb7185)] text-white shadow-[0_4px_16px_rgba(244,114,182,0.3)] hover:not:disabled:-translate-y-1 hover:not:disabled:shadow-[0_10px_26px_rgba(244,114,182,0.45)] hover:not:disabled:brightness-105 hover:not:disabled:saturate-125',
+  'danger-outline': 'bg-white/80 border-rose-300 text-rose-600 shadow-[0_4px_14px_rgba(244,63,94,0.12)] hover:not:disabled:-translate-y-0.5 hover:not:disabled:bg-rose-50 hover:not:disabled:border-rose-400 hover:not:disabled:text-rose-700 hover:not:disabled:shadow-[0_8px_24px_rgba(244,63,94,0.22)]',
 }
 
 const sizeClasses = {

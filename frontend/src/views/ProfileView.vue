@@ -9,6 +9,7 @@ import { SELECT_OPTIONS, INTEREST_OPTIONS, formatLabel } from '@/constants/profi
 import BaseInput from '@/components/BaseInput.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import GlassDropdown from '@/components/GlassDropdown.vue'
+import SingleRangeSlider from '@/components/SingleRangeSlider.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -323,9 +324,10 @@ const cancelPremium = async () => {
       Loading profile...
     </div>
 
-    <div v-else class="grid gap-[18px] lg:grid-cols-[1.15fr_0.85fr] max-w-6xl mx-auto">
-      <div class="glass-panel p-6">
-        <form @submit.prevent="saveProfile" class="flex flex-col gap-4">
+    <!-- ↓ левая колонка теперь flex flex-col чтобы interests растягивался -->
+    <div v-else class="grid gap-[18px] lg:grid-cols-[1.15fr_0.85fr] max-w-6xl mx-auto lg:items-start">
+      <div class="glass-panel p-6 flex flex-col">
+        <form id="profile-form" @submit.prevent="saveProfile" class="flex flex-col gap-4">
           <BaseInput v-model="form.name" type="text" label="Display Name" placeholder="Your name" required />
 
           <div class="grid grid-cols-2 gap-3">
@@ -363,176 +365,117 @@ const cancelPremium = async () => {
 
           <div class="flex flex-col gap-3 py-1.5">
             <p class="m-0 text-[0.75rem] font-bold uppercase tracking-[0.08em] text-slate-500">More about you</p>
-            <div class="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="dating-purpose">Dating Purpose</label>
-                <GlassDropdown v-model="form.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Empty" />
+            <div class="flex flex-col gap-4">
+              <div class="grid gap-6 sm:grid-cols-2">
+                <SingleRangeSlider
+                  v-model="form.height"
+                  :min="130"
+                  :max="250"
+                  :fallback="170"
+                  label="Height"
+                  suffix=" cm"
+                />
+                <SingleRangeSlider
+                  v-model="form.weight"
+                  :min="40"
+                  :max="150"
+                  :fallback="70"
+                  label="Weight"
+                  suffix=" kg"
+                />
               </div>
 
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="body-type">Body Type</label>
-                <GlassDropdown v-model="form.bodyType" :options="selectOptions.bodyType" placeholder="Empty" />
-              </div>
-
-              <div class="sm:col-span-2 grid grid-cols-2 gap-6 items-center">
-                <div class="flex flex-col gap-[5px] m-0">
-                  <div class="flex items-center justify-between">
-                    <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Height</label>
-                    <span class="text-[0.82rem] font-semibold text-slate-900">{{ form.height || 170 }} cm</span>
-                  </div>
-                  <input v-model="form.height" type="range" min="130" max="250" class="w-full accent-cyan-300" />
+              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="dating-purpose">Dating Purpose</label>
+                  <GlassDropdown v-model="form.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Empty" />
                 </div>
-                <div class="flex flex-col gap-[5px] m-0">
-                  <div class="flex items-center justify-between">
-                    <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Weight</label>
-                    <span class="text-[0.82rem] font-semibold text-slate-900">{{ form.weight || 70 }} kg</span>
-                  </div>
-                  <input v-model="form.weight" type="range" min="40" max="150" class="w-full accent-cyan-300" />
+
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="body-type">Body Type</label>
+                  <GlassDropdown v-model="form.bodyType" :options="selectOptions.bodyType" placeholder="Empty" />
                 </div>
-              </div>
 
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="eye-color">Eye Color</label>
-                <GlassDropdown v-model="form.eyeColor" :options="selectOptions.eyeColor" placeholder="Empty" />
-              </div>
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="eye-color">Eye Color</label>
+                  <GlassDropdown v-model="form.eyeColor" :options="selectOptions.eyeColor" placeholder="Empty" />
+                </div>
 
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="hair-color">Hair Color</label>
-                <GlassDropdown v-model="form.hairColor" :options="selectOptions.hairColor" placeholder="Empty" />
-              </div>
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="hair-color">Hair Color</label>
+                  <GlassDropdown v-model="form.hairColor" :options="selectOptions.hairColor" placeholder="Empty" />
+                </div>
 
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="smoking">Smoking</label>
-                <GlassDropdown v-model="form.smoking" :options="selectOptions.smoking" placeholder="Empty" />
-              </div>
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="smoking">Smoking</label>
+                  <GlassDropdown v-model="form.smoking" :options="selectOptions.smoking" placeholder="Empty" />
+                </div>
 
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="drinking">Drinking</label>
-                <GlassDropdown v-model="form.drinking" :options="selectOptions.drinking" placeholder="Empty" />
-              </div>
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="drinking">Drinking</label>
+                  <GlassDropdown v-model="form.drinking" :options="selectOptions.drinking" placeholder="Empty" />
+                </div>
 
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="children">Children</label>
-                <GlassDropdown v-model="form.children" :options="selectOptions.children" placeholder="Empty" />
-              </div>
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="children">Children</label>
+                  <GlassDropdown v-model="form.children" :options="selectOptions.children" placeholder="Empty" />
+                </div>
 
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="zodiac">Zodiac Sign</label>
-                <GlassDropdown v-model="form.zodiacSign" :options="selectOptions.zodiacSign" placeholder="Empty" />
-              </div>
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="zodiac">Zodiac Sign</label>
+                  <GlassDropdown v-model="form.zodiacSign" :options="selectOptions.zodiacSign" placeholder="Empty" />
+                </div>
 
-              <div class="flex flex-col gap-[5px]">
-                <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="exercise">Exercise</label>
-                <GlassDropdown v-model="form.exercise" :options="selectOptions.exercise" placeholder="Empty" />
+                <div class="flex flex-col gap-[5px]">
+                  <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]" for="exercise">Exercise</label>
+                  <GlassDropdown v-model="form.exercise" :options="selectOptions.exercise" placeholder="Empty" />
+                </div>
               </div>
             </div>
           </div>
 
-          <BaseButton type="submit" variant="primary" full :loading="isSaving">
-            Save Changes
-          </BaseButton>
         </form>
-      </div>
 
-      <div class="flex flex-col gap-6">
-        <!-- Progress bar moved to top of side panel -->
-        <div class="rounded-3xl border border-white/60 bg-white/50 p-5 shadow-sm backdrop-blur-xl">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="text-sm font-bold text-slate-700">Profile Completeness</span>
-            <span class="text-sm font-black text-cyan-600">{{ completionPct }}%</span>
-          </div>
-          <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200/80 shadow-inner">
-            <div class="h-full rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 transition-all duration-700" :style="{ width: `${completionPct}%` }"></div>
-          </div>
-
-        </div>
-
-        <div class="glass-panel flex flex-col gap-4 p-6">
-          <div class="relative overflow-hidden rounded-3xl bg-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/60 group">
-            <div class="absolute right-3 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-md uppercase tracking-wider"
-                 :class="isEnabled ? 'bg-emerald-500/80' : 'bg-slate-800/60'">
-              {{ isEnabled ? 'Visible in discovery' : 'Hidden' }}
-            </div>
-            <div class="h-[420px] w-full bg-gradient-to-br from-cyan-100 to-slate-100">
-              <img v-if="previewPhoto" :src="previewPhoto" alt="Profile preview" class="h-full w-full object-cover" />
-              <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-cyan-200">
-                No Photo
-              </div>
-            </div>
-            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-5 text-white transition-opacity">
-              <div class="flex items-baseline gap-2">
-                <h2 class="text-2xl font-bold text-white">{{ previewName }}</h2>
-                <span v-if="previewAge" class="text-xl font-light text-white/90">{{ previewAge }}</span>
-              </div>
-              <div class="mt-1 flex items-center gap-2 text-sm font-medium text-white/80">
-                <span v-if="previewLocation" class="flex items-center gap-1">
-                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                  {{ previewLocation }}
-                </span>
-                <span v-if="previewGender">· {{ previewGender }}</span>
-              </div>
-              <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-white/90">{{ previewBio }}</p>
-            </div>
-          </div>
-
-        <div class="divider-glow" />
-
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="m-0 text-[0.95rem] font-semibold text-slate-900">Photos</p>
-          </div>
-          <label class="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-slate-200/75 bg-[#f0f9ff] px-3.5 py-1.5 text-[0.8rem] font-semibold text-slate-900 transition hover:border-cyan-500 hover:bg-cyan-50">
-            <input type="file" class="sr-only" multiple accept="image/*" @change="handleUpload" />
-            {{ isUploading ? 'Uploading...' : 'Add Photos' }}
-          </label>
-        </div>
-
-        <div v-if="photos.length" class="grid grid-cols-2 gap-2.5">
-          <div v-for="photo in photos" :key="photo.id" class="relative overflow-hidden rounded-2xl border border-slate-200/75">
-            <img :src="photo.url" alt="Profile photo" class="block h-[130px] w-full object-cover" />
-            <button type="button" class="absolute right-1.5 top-1.5 rounded-full border-none bg-black/60 px-2 py-0.5 text-[0.7rem] text-white cursor-pointer" @click="deletePhoto(photo.id)">
-              Delete
-            </button>
-          </div>
-        </div>
-        <div v-else class="text-[0.85rem] text-slate-500">
-          Add at least one photo to enable discovery.
-        </div>
-
-        <div class="divider-glow" />
-
-        <div class="flex flex-col gap-2.5">
+        <!-- ↓ mt-auto толкает блок в самый низ левой колонки -->
+        <div class="mt-4 flex flex-col gap-2.5 rounded-2xl border border-slate-200/60 bg-white/45 p-4">
           <div class="flex items-center justify-between">
             <p class="m-0 text-[0.78rem] font-bold uppercase tracking-[0.08em] text-slate-500">Interests</p>
             <p class="m-0 text-[0.78rem] text-slate-500">{{ profileInterests.length }}/{{ maxInterests }} selected</p>
           </div>
 
+          <!-- Выбранные интересы -->
           <div v-if="!profileInterests.length" class="text-[0.85rem] text-slate-500">
             Add a few interests to help with better matches.
           </div>
 
-          <div v-else class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
-            <button
-              v-for="interest in profileInterests"
-              :key="interest.id"
-              type="button"
-              class="flex items-center justify-between gap-2 rounded-xl border border-pink-500/60 bg-pink-500/15 px-2.5 py-2 text-[0.8rem] font-semibold text-pink-600 transition hover:border-pink-500/60 hover:bg-pink-500/15 disabled:cursor-not-allowed disabled:opacity-60"
-              :disabled="isUpdatingInterests"
-              @click="removeInterest(interest.id)"
-            >
-              <span>{{ interestLabel(interest.interest) }}</span>
-              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-pink-500/25 text-[0.9rem] font-bold text-pink-600">×</span>
-            </button>
+          <div v-else class="flex flex-col gap-2">
+            <!-- ↓ визуальный разделитель над выбранными -->
+            <div class="flex items-center gap-3">
+              <span class="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-pink-400">Selected</span>
+              <div class="flex-1 h-px bg-pink-200/70"></div>
+            </div>
+            <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
+              <button
+                v-for="interest in profileInterests"
+                :key="interest.id"
+                type="button"
+                class="flex items-center justify-between gap-2 rounded-xl border border-pink-500/60 bg-pink-500/15 px-2.5 py-2 text-[0.8rem] font-semibold text-pink-600 shadow-sm transition hover:border-pink-500/80 hover:bg-pink-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                :disabled="isUpdatingInterests"
+                @click="removeInterest(interest.id)"
+              >
+                <span>{{ interestLabel(interest.interest) }}</span>
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-pink-500/25 text-[0.9rem] font-bold text-pink-600">×</span>
+              </button>
+            </div>
           </div>
 
-          <BaseInput
-            v-model="interestQuery"
-            type="text"
-            label="Find interests"
-            placeholder="Type to search"
-          />
+          <!-- ↓ разделитель перед доступными интересами -->
+          <div class="flex items-center gap-3 pt-1">
+            <span class="text-[0.72rem] font-bold uppercase tracking-[0.08em] text-slate-400">Add interests</span>
+            <div class="flex-1 h-px bg-slate-200/80"></div>
+          </div>
 
-          <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2 max-h-[250px] overflow-y-auto content-start pr-1">
+          <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2 overflow-y-auto content-start pr-1 max-h-[320px]">
             <button
               v-for="opt in filteredInterestOptions"
               :key="opt.value"
@@ -550,61 +493,134 @@ const cancelPremium = async () => {
             Choose up to {{ remainingInterestSlots }} more interest{{ remainingInterestSlots === 1 ? '' : 's' }}.
           </p>
         </div>
+      </div>
 
-        <div class="divider-glow" />
-
-        <div class="flex flex-col gap-2.5 rounded-2xl border border-dashed border-cyan-500/45 bg-gradient-to-br from-cyan-500/10 to-green-500/5 p-3.5">
-          <div class="flex items-start justify-between gap-2.5">
-            <div>
-              <p class="m-0 mb-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-slate-500">Premium</p>
-              <h3 class="m-0 text-base font-bold text-slate-900">Upgrade your discovery</h3>
-            </div>
-            <span class="chip">{{ isPremium ? 'Active' : 'Locked' }}</span>
+      <div class="flex flex-col gap-6">
+        <!-- Progress bar -->
+        <div class="rounded-3xl border border-white/60 bg-white/50 p-5 shadow-sm backdrop-blur-xl">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-sm font-bold text-slate-700">Profile Completeness</span>
+            <span class="text-sm font-black text-cyan-600">{{ completionPct }}%</span>
           </div>
-          <p class="m-0 text-[0.85rem] text-slate-700">
-            Get advanced filters and deeper matches with Premium membership.
-          </p>
-          <BaseButton
-            v-if="!isPremium"
-            variant="primary"
-            full
-            :loading="isSubscriptionLoading"
-            @click="goPremium"
-          >
-            Get Premium
-          </BaseButton>
-          <BaseButton
-            v-else
-            variant="secondary"
-            full
-            :loading="isSubscriptionLoading"
-            @click="cancelPremium"
-          >
-            Cancel Subscription
-          </BaseButton>
-          <p v-if="subscriptionError" class="m-0 text-[0.78rem] text-rose-500">{{ subscriptionError }}</p>
+          <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200/80 shadow-inner">
+            <div class="h-full rounded-full bg-gradient-to-r from-cyan-400 to-cyan-500 transition-all duration-700" :style="{ width: `${completionPct}%` }"></div>
+          </div>
         </div>
 
-        <div class="divider-glow" />
+        <div class="glass-panel flex flex-col gap-4 p-6">
+          <div class="relative overflow-hidden rounded-3xl bg-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/60">
+            <div class="absolute right-3 top-3 z-10 rounded-full px-3 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-md uppercase tracking-wider"
+                 :class="isEnabled ? 'bg-emerald-500/80' : 'bg-slate-800/60'">
+              {{ isEnabled ? 'Visible in discovery' : 'Hidden' }}
+            </div>
+            <div class="h-[360px] w-full bg-slate-100">
+              <img v-if="previewPhoto" :src="previewPhoto" alt="Profile preview" class="h-full w-full object-contain" />
+              <div v-else class="flex h-full w-full items-center justify-center text-4xl font-black text-cyan-200">
+                No Photo
+              </div>
+            </div>
+            <div class="border-t border-white/70 bg-white/90 p-4">
+              <div class="flex items-baseline gap-2">
+                <h2 class="text-xl font-bold text-slate-900">{{ previewName }}</h2>
+                <span v-if="previewAge" class="text-base font-semibold text-slate-700">{{ previewAge }}</span>
+              </div>
+              <div class="mt-1 flex items-center gap-2 text-sm font-medium text-slate-600">
+                <span v-if="previewLocation" class="flex items-center gap-1">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                  {{ previewLocation }}
+                </span>
+                <span v-if="previewGender">· {{ previewGender }}</span>
+              </div>
+              <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">{{ previewBio }}</p>
+            </div>
+          </div>
 
-        <div class="flex flex-col gap-2">
-          <BaseButton variant="secondary" full @click="toggleVisibility">
-            {{ isEnabled ? 'Disable Profile' : 'Enable Profile' }}
-          </BaseButton>
-          <p v-if="enableError" class="m-0 text-[0.85rem] text-rose-500">{{ enableError }}</p>
-          <p v-if="missingFieldLabels.length" class="m-0 text-[0.78rem] text-slate-500">
-            Missing fields: {{ missingFieldLabels.join(', ') }}
-          </p>
+          <div class="divider-glow" />
+
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="m-0 text-[0.95rem] font-semibold text-slate-900">Photos</p>
+            </div>
+            <label class="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-slate-200/75 bg-[#f0f9ff] px-3.5 py-1.5 text-[0.8rem] font-semibold text-slate-900 transition hover:border-cyan-500 hover:bg-cyan-50">
+              <input type="file" class="sr-only" multiple accept="image/*" @change="handleUpload" />
+              {{ isUploading ? 'Uploading...' : 'Add Photos' }}
+            </label>
+          </div>
+
+          <div v-if="photos.length" class="grid grid-cols-2 gap-4">
+            <div v-for="photo in photos" :key="photo.id" class="relative overflow-hidden rounded-2xl border border-slate-200/75 bg-white/80 shadow-sm">
+              <img :src="photo.url" alt="Profile photo" class="block h-[180px] w-full object-cover sm:h-[200px] lg:h-[220px]" />
+              <button type="button" class="absolute right-1.5 top-1.5 rounded-full border-none bg-black/60 px-2 py-0.5 text-[0.7rem] text-white cursor-pointer" @click="deletePhoto(photo.id)">
+                Delete
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-[0.85rem] text-slate-500">
+            Add at least one photo to enable discovery.
+          </div>
+
+          <div class="divider-glow" />
+
+          <div class="flex flex-col gap-2.5 rounded-2xl border border-dashed border-cyan-500/45 bg-gradient-to-br from-cyan-500/10 to-green-500/5 p-3.5">
+            <div class="flex items-start justify-between gap-2.5">
+              <div>
+                <p class="m-0 mb-1 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-slate-500">Premium</p>
+                <h3 class="m-0 text-base font-bold text-slate-900">Upgrade your discovery</h3>
+              </div>
+              <span class="chip">{{ isPremium ? 'Active' : 'Locked' }}</span>
+            </div>
+            <p class="m-0 text-[0.85rem] text-slate-700">
+              Get advanced filters and deeper matches with Premium membership.
+            </p>
+            <BaseButton
+              v-if="!isPremium"
+              variant="primary"
+              full
+              :loading="isSubscriptionLoading"
+              @click="goPremium"
+            >
+              Get Premium
+            </BaseButton>
+            <BaseButton
+              v-else
+              variant="secondary"
+              full
+              :loading="isSubscriptionLoading"
+              @click="cancelPremium"
+            >
+              Cancel Subscription
+            </BaseButton>
+            <p v-if="subscriptionError" class="m-0 text-[0.78rem] text-rose-500">{{ subscriptionError }}</p>
+          </div>
+
+          <div class="divider-glow" />
+
+          <div class="flex flex-col gap-2">
+            <BaseButton variant="outline" full @click="toggleVisibility">
+              {{ isEnabled ? 'Disable Profile' : 'Enable Profile' }}
+            </BaseButton>
+            <p v-if="enableError" class="m-0 text-[0.85rem] text-rose-500">{{ enableError }}</p>
+            <p v-if="missingFieldLabels.length" class="m-0 text-[0.78rem] text-slate-500">
+              Missing fields: {{ missingFieldLabels.join(', ') }}
+            </p>
+          </div>
+
+          <div class="divider-glow" />
+
+          <div class="glass-panel p-4">
+            <BaseButton variant="danger-outline" full @click="handleLogout">
+              Log Out
+            </BaseButton>
+          </div>
+
         </div>
-
-        <div class="divider-glow" />
-
-        <BaseButton variant="danger" full @click="handleLogout">
-          Log Out
-        </BaseButton>
       </div>
-      </div>
+    </div>
+
+    <div class="mt-4 max-w-6xl mx-auto">
+      <BaseButton form="profile-form" type="submit" variant="primary" full :loading="isSaving">
+        Save Changes
+      </BaseButton>
     </div>
   </div>
 </template>
-

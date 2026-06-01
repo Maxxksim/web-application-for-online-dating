@@ -32,16 +32,24 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   // Reactive ref: last message received via realtime (watched by ChatsView)
   const lastRealtimeMessage = ref(null)
+  const lastReadReceipt = ref(null)
 
   // ── Getters ──
+  const countByType = (typeName) =>
+    notifications.value.filter(n => n.type?.includes(typeName)).length
+
   const likeCount = computed(() =>
-    notifications.value.filter(n => n.type?.includes('LikeNotification')).length
+    countByType('LikeNotification')
   )
   const matchCount = computed(() =>
-    notifications.value.filter(n => n.type?.includes('MatchNotification')).length
+    countByType('MatchNotification')
   )
   const messageCount = computed(() =>
-    notifications.value.filter(n => n.type?.includes('MessageNotification')).length
+    notifications.value.filter((notification) => {
+      if (!notification.type?.includes('MessageNotification')) return false
+      if (!activeChatId.value) return true
+      return Number(notification.data?.chat_id) !== Number(activeChatId.value)
+    }).length
   )
   const activityCount = computed(() => likeCount.value + matchCount.value)
   const unreadCount   = computed(() => notifications.value.length)
@@ -96,6 +104,22 @@ export const useNotificationsStore = defineStore('notifications', () => {
     notifications.value = []
   }
 
+  function findUnreadProfileNotification(typeName, profileId) {
+    if (!profileId) return null
+    return notifications.value.find((notification) => (
+      notification.type?.includes(typeName)
+      && Number(notification.data?.profile_id) === Number(profileId)
+    )) || null
+  }
+
+  async function markProfileNotificationAsRead(typeName, profileId) {
+    const notification = findUnreadProfileNotification(typeName, profileId)
+    if (!notification) return false
+
+    await markAsRead(notification.id)
+    return true
+  }
+
   // ── Realtime event handlers ──
   function handleLikeEvent() {
     addPopup({ label: 'Like', message: 'Someone liked you!', type: 'like' })
@@ -126,6 +150,11 @@ export const useNotificationsStore = defineStore('notifications', () => {
     fetchAll()
   }
 
+  function handleMessageReadEvent(payload) {
+    console.debug('[notifications] message.read event', payload)
+    lastReadReceipt.value = { ...payload, _ts: Date.now() }
+  }
+
   /** Private channel chats.{userId} — only the authenticated user may listen. */
   function subscribeToChatChannel(echo, userId) {
     const channelName = `chats.${userId}`
@@ -133,7 +162,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
     echo.private(channelName)
       .listen('.message.sent', handleMessageEvent)
-
+      .listen('.message.read', handleMessageReadEvent)
     realtimeState.value.chatChannelSubscribed = true
   }
 
@@ -195,7 +224,9 @@ export const useNotificationsStore = defineStore('notifications', () => {
     popups, addPopup, removePopup,
     activeChatId, setActiveChatId,
     lastRealtimeMessage,
+    lastReadReceipt,
     fetchAll, markAsRead, markAllAsRead,
+    findUnreadProfileNotification, markProfileNotificationAsRead,
     startRealtime, stopRealtime,
   }
 })
