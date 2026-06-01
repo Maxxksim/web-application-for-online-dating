@@ -30,7 +30,7 @@ class SwipeController extends Controller
 
     public function rollbackSwipe(Request $request, int $swiped_id): JsonResponse
     {
-        if ($this->subscriptionService->isActive($request->user(), 'premium')) {
+        if (!$this->subscriptionService->isActive($request->user(), 'premium')) {
             return response()->json(['messages' => 'You must be a premium subscriber.'], Response::HTTP_FORBIDDEN);
         }
 

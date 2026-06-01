@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Profile;
 use App\Models\SearchFilters;
 use App\Models\User;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -34,7 +34,7 @@ class SearchService
                 $query->where('profiles.gender', $user->searchFilter->gender);
             })
             ->whereIn('search_filters.gender', ['both', $user->profile->gender])
-            ->where('is_enabled', true)
+            ->where('profiles.is_enabled', true)
             ->select('profiles.*')
             ->selectRaw("ST_Distance(geolocations.geo_point::geography, {$userGeoPoint}) / 1000 as distance", [
                 $user->id
@@ -50,7 +50,7 @@ class SearchService
 
     }
 
-    private function applyAdditionalFilters(Builder $query, array $filters): void
+    private function applyAdditionalFilters(Builder $query, SearchFilters $filters): void
     {
         $interests = $filters['interests'] ?? null;
         $rangeFields = [
@@ -60,11 +60,21 @@ class SearchService
             'max_weight' => ['profiles.weight', '<='],
         ];
 
-        foreach ($filters as $field => $value) {
+        $ignoredFields = [
+            'id', 'user_id', 'interests', 'gender', 'distance',
+            'min_age', 'max_age', 'use_advanced_filters',
+            'created_at', 'updated_at',
+        ];
+
+        foreach ($filters->getAttributes() as $field => $value) {
+            if ($value === null) {
+                continue;
+            }
+
             if (isset($rangeFields[$field])) {
                 [$column, $operator] = $rangeFields[$field];
                 $query->where($column, $operator, $value);
-            } elseif ($field !== 'interests') {
+            } elseif (!in_array($field, $ignoredFields)) {
                 $query->where("profiles.{$field}", $value);
             }
         }
