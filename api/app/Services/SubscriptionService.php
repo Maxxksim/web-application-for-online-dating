@@ -26,7 +26,13 @@ class SubscriptionService
 
     public function isActive(User $user, string $planName): bool
     {
-        return $user->subscribed($planName);
+        $subscription = $user->subscription($planName);
+
+        if (!$subscription) {
+            return false;
+        }
+
+        return $subscription->active();
     }
 
     public function priceId(string $planName): string
