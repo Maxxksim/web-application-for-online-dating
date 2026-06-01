@@ -9,7 +9,7 @@ use App\Models\Enums\EyeColor;
 use App\Models\Enums\Habit;
 use App\Models\Enums\HairColor;
 use App\Models\Enums\ZodiacSign;
-use App\Models\Interest;
+use App\Models\Enums\Interest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

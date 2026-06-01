@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Casts\AsCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['min_age', 'max_age', 'gender', 'distance', 'interests', 'dating_purpose', 'body_type', 'eye_color', 'hair_color', 'smoking', 'drinking', 'children', 'zodiac_sign', 'exercise', 'min_height', 'max_height', 'min_weight', 'max_weight'])]
+#[Fillable(['min_age', 'max_age', 'gender', 'distance', 'interests', 'dating_purpose', 'body_type', 'eye_color', 'hair_color', 'smoking', 'drinking', 'children', 'zodiac_sign', 'exercise', 'min_height', 'max_height', 'min_weight', 'max_weight', 'use_advanced_filters'])]
 class SearchFilters extends Model
 {
     public function user(): BelongsTo
@@ -25,7 +25,7 @@ class SearchFilters extends Model
     protected function casts(): array
     {
         return [
-            'interests' => AsCollection::class,
+            'interests' => 'array',
             'dating_purpose' => DatingPurpose::class,
             'body_type' => BodyType::class,
             'eye_color' => EyeColor::class,
@@ -35,6 +35,7 @@ class SearchFilters extends Model
             'children' => ChildrenStatus::class,
             'zodiac_sign' => ZodiacSign::class,
             'exercise' => Habit::class,
+            'use_advanced_filters' => 'boolean',
         ];
     }
 }
