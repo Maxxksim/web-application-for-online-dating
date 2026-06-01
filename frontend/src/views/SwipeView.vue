@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProfileStore } from '@/stores/profile.js'
+import { useSubscriptionStore } from '@/stores/subscription.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
 import { useGeolocation } from '@/composables/useGeolocation.js'
 import { profilesApi } from '@/api/profiles.js'
@@ -13,6 +14,7 @@ import BaseButton from '@/components/BaseButton.vue'
 
 const router = useRouter()
 const profileStore = useProfileStore()
+const subscriptionStore = useSubscriptionStore()
 const notificationsStore = useNotificationsStore()
 const { toast } = useToast()
 const { syncLocation, locationError } = useGeolocation()
@@ -23,10 +25,12 @@ const deckError = ref(null)
 const isMatch = ref(false)
 const matchData = ref(null)
 const pendingMatchId = ref(null)
+const showPremiumModal = ref(false)
 
 const currentProfile = computed(() => profileStore.currentCard)
 const isLoading = computed(() => profileStore.isLoadingDeck)
 const myProfile = computed(() => profileStore.myProfile)
+const isPremium = computed(() => subscriptionStore.isPremium)
 
 const getProfileUserId = (profile) =>
   profile?.user_id || profile?.userId || profile?.user?.id || null
@@ -89,7 +93,10 @@ const checkForMatch = async () => {
 
 onMounted(async () => {
   await syncLocation()
-  await profileStore.fetchMyProfile()
+  await Promise.all([
+    profileStore.fetchMyProfile(),
+    subscriptionStore.fetchStatus(),
+  ])
   await loadDeck()
 })
 
@@ -116,12 +123,25 @@ const handleAction = (action) => {
 const canUndo = computed(() => !!profileStore.lastSwipedId)
 
 const handleUndo = async () => {
+  if (!isPremium.value) {
+    showPremiumModal.value = true
+    return
+  }
   const result = await profileStore.rollbackSwipe()
   if (result.success) {
     toast.success('Swipe undone.')
   } else {
     toast.error(result.message || 'Unable to undo swipe.')
   }
+}
+
+const closePremiumModal = () => {
+  showPremiumModal.value = false
+}
+
+const goPremium = async () => {
+  showPremiumModal.value = false
+  await subscriptionStore.startCheckout()
 }
 
 const goToProfile = () => router.push({ name: 'profile' })
@@ -186,6 +206,65 @@ const hideMatch = async () => {
     </div>
 
     <MatchModal v-if="isMatch" :match-data="matchData" @close="hideMatch" />
+
+    <!-- Premium Upsell Modal -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="showPremiumModal" class="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 sm:p-6" style="pointer-events: auto;">
+          <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="closePremiumModal"></div>
+          
+          <div class="relative w-full max-w-[340px] rounded-[32px] border border-white/60 bg-white/90 p-6 shadow-[0_24px_64px_rgba(15,23,42,0.2),0_8px_24px_rgba(15,23,42,0.08)] backdrop-blur-2xl animate-fade-in-up overflow-hidden mb-8 sm:mb-0">
+            <!-- Decorative blur -->
+            <div class="pointer-events-none absolute -top-16 -right-16 h-32 w-32 rounded-full bg-gradient-to-bl from-amber-400/30 to-yellow-500/10 blur-2xl"></div>
+            
+            <button @click="closePremiumModal" class="absolute top-4 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100/80 text-slate-500 transition hover:bg-slate-200">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+
+            <div class="relative z-10 flex flex-col items-center gap-4 text-center mt-2">
+              <div class="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 shadow-lg shadow-amber-200/60 ring-4 ring-amber-50">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7v6h6" />
+                  <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+                </svg>
+              </div>
+              
+              <div>
+                <h3 class="m-0 text-[1.15rem] font-bold text-slate-900">Undo your last swipe</h3>
+                <p class="m-0 mt-2 text-[0.88rem] leading-relaxed text-slate-600">
+                  Made a mistake? Upgrade to Premium to get a second chance and undo your swipes.
+                </p>
+              </div>
+              
+              <div class="mt-2 w-full flex flex-col gap-2.5">
+                <button @click="goPremium" :disabled="subscriptionStore.isLoading" class="relative flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 py-3.5 px-4 text-[0.9rem] font-bold text-white shadow-md transition hover:from-slate-800 hover:to-slate-700 active:scale-[0.98]">
+                  <span>Get Premium</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+.modal-fade-enter-active .relative,
+.modal-fade-leave-active .relative {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+.modal-fade-enter-from .relative {
+  transform: scale(0.95) translateY(8px);
+}
+</style>
+
 

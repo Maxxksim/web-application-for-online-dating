@@ -24,6 +24,12 @@
             >
               {{ item.badge > 9 ? '9+' : item.badge }}
             </span>
+            <span
+              v-if="item.premium"
+              class="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-1 text-[10px] font-bold leading-none text-white shadow-sm ring-2 ring-white/80"
+            >
+              ★
+            </span>
           </div>
           <span 
             class="text-[9px] font-bold uppercase tracking-wider transition-opacity" 
@@ -41,6 +47,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNotificationsStore } from '@/stores/notifications.js'
+import { useSubscriptionStore } from '@/stores/subscription.js'
 
 import IconDiscover from '@/components/icons/IconDiscover.vue'
 import IconProfile from '@/components/icons/IconProfile.vue'
@@ -50,12 +57,14 @@ import IconConnections from '@/components/icons/IconConnections.vue'
 
 const route = useRoute()
 const notificationsStore = useNotificationsStore()
+const subscriptionStore = useSubscriptionStore()
 
 const navItems = computed(() => [
   { name: 'discover',       label: 'Discover',to: '/discover',        icon: IconDiscover    },
-  { name: 'search-settings',label: 'Filters', to: '/search-settings', icon: IconSearch      },
+  { name: 'search-settings',label: 'Filters', to: '/search-settings', icon: IconSearch,      premium: subscriptionStore.isPremium },
   { name: 'chats',          label: 'Chats',   to: '/chats',           icon: IconChat,       badge: notificationsStore.messageCount },
   { name: 'connections',    label: 'Connect', to: '/connections',     icon: IconConnections,badge: notificationsStore.activityCount },
   { name: 'profile',        label: 'Profile', to: '/profile',         icon: IconProfile     },
 ])
 </script>
+

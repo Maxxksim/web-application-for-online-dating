@@ -2,11 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSubscriptionStore } from '@/stores/subscription.js'
+import { useProfileStore } from '@/stores/profile.js'
 import BaseButton from '@/components/BaseButton.vue'
 
 const route = useRoute()
 const router = useRouter()
 const subscriptionStore = useSubscriptionStore()
+const profileStore = useProfileStore()
 
 const isLoading = ref(true)
 
@@ -44,6 +46,8 @@ onMounted(async () => {
   }
 
   await subscriptionStore.fetchStatus(plan.value)
+  // Sync filters state so useAdditionalFilters and premium indicators are up to date
+  await profileStore.fetchFilters()
   isLoading.value = false
 })
 </script>

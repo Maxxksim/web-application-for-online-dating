@@ -15,7 +15,7 @@
     </div>
 
     <Transition name="dropdown-fade">
-      <div v-if="isOpen" class="absolute top-[calc(100%+6px)] left-0 w-full z-50 bg-white/85 backdrop-blur-xl backdrop-saturate-200 border border-slate-300/70 rounded-2xl shadow-[0_12px_40px_rgba(15,23,42,0.12)] p-[6px]">
+      <div v-if="isOpen" class="absolute top-[calc(100%+6px)] left-0 w-full z-[9999] bg-white/85 backdrop-blur-xl backdrop-saturate-200 border border-slate-300/70 rounded-2xl shadow-[0_12px_40px_rgba(15,23,42,0.12)] p-[6px]">
         <div class="max-h-[220px] overflow-y-auto flex flex-col gap-[2px] dropdown-scroll">
           <div 
             v-if="showEmpty"
