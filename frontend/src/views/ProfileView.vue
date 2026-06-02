@@ -10,12 +10,15 @@ import BaseInput from '@/components/BaseInput.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import GlassDropdown from '@/components/GlassDropdown.vue'
 import SingleRangeSlider from '@/components/SingleRangeSlider.vue'
+import { useGeolocation } from '@/composables/useGeolocation.js'
+  
 
 const router = useRouter()
 const authStore = useAuthStore()
 const profileStore = useProfileStore()
 const subscriptionStore = useSubscriptionStore()
 const { toast } = useToast()
+const { syncLocation, isLocating, locationError: geoError } = useGeolocation()
 
 const form = reactive({
   name: '',
@@ -323,6 +326,18 @@ const resumePremium = async () => {
     toast.error(subscriptionStore.error || 'Unable to resume subscription.')
   }
 }
+
+
+ 
+  const updateLocation = async () => {
+    await syncLocation()
+    if (!geoError.value) {
+      await profileStore.fetchMyProfile()
+      toast.success('Location updated.')
+    } else {
+      toast.error(geoError.value)
+    }
+  }
 </script>
 
 <template>
@@ -506,16 +521,37 @@ const resumePremium = async () => {
                 <h2 class="text-xl font-bold text-slate-900">{{ previewName }}</h2>
                 <span v-if="previewAge" class="text-base font-semibold text-slate-700">{{ previewAge }}</span>
               </div>
-              <div class="mt-1 flex items-center gap-2 text-sm font-medium text-slate-600">
-                <span v-if="previewLocation" class="flex items-center gap-1">
-                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {{ previewLocation }}
-                </span>
-                <span v-if="previewGender">· {{ previewGender }}</span>
-              </div>
+              <div class="mt-1 flex items-center justify-between gap-2 text-sm font-medium text-slate-600">
+  <div class="flex items-center gap-2 flex-wrap">
+    <span v-if="previewLocation" class="flex items-center gap-1">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      {{ previewLocation }}
+    </span>
+    <span v-else class="text-slate-400 text-[0.8rem]">No location set</span>
+    <span v-if="previewGender">· {{ previewGender }}</span>
+  </div>
+ 
+  <button
+    type="button"
+    class="flex items-center gap-1 rounded-full border border-slate-200/80 bg-white/70 px-2.5 py-1 text-[0.72rem] font-semibold text-slate-600 hover:border-cyan-400 hover:text-cyan-600 hover:bg-cyan-50 transition disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+    :disabled="isLocating"
+    @click="updateLocation"
+    :title="previewLocation ? 'Update location' : 'Set location'"
+  >
+    <svg v-if="!isLocating" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+    </svg>
+    <svg v-else class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+    </svg>
+    {{ isLocating ? 'Locating...' : previewLocation ? 'Update' : 'Set location' }}
+  </button>
+</div>
               <p class="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">{{ previewBio }}</p>
             </div>
           </div>

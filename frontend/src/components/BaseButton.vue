@@ -14,9 +14,9 @@
         <path class="opacity-75" fill="currentColor" d="M12 2a10 10 0 0 1 10 10h-3a7 7 0 1 0-7 7v3A10 10 0 0 1 12 2Z" />
       </svg>
     </span>
-    <span :class="{ 'opacity-0': loading }">
-      <slot />
-    </span>
+<span :class="['inline-flex items-center gap-1.5', { 'opacity-0': loading }]">
+  <slot />
+</span>
   </button>
 </template>
 
