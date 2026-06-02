@@ -7,8 +7,22 @@ use App\Models\Profile;
 class ProfileService
 {
     private const array REQUIRED_FIELDS = ['name', 'date_of_birth', 'gender', 'country'];
-    private const array OPTIONAL_FIELDS = ['description'];
+    private const array OPTIONAL_FIELDS = [
+        'description',
+        'dating_purpose',
+        'height',
+        'weight',
+        'body_type',
+        'eye_color',
+        'hair_color',
+        'smoking',
+        'drinking',
+        'children',
+        'zodiac_sign',
+        'exercise',
+    ];
     private const int MAX_PHOTOS = 3;
+    private const int MAX_INTERESTS = 10;
     private const int DAILY_SEARCH_RELEVANCE_BONUS = 3;
     private const int RELEVANCE_BONUS_MULTIPLIER = 2;
 
@@ -17,10 +31,14 @@ class ProfileService
         $countPhotos = $profile->photos()->count();
         $countFilled = collect($profile->only(array_merge(self::REQUIRED_FIELDS, self::OPTIONAL_FIELDS)))->filter(fn($value) => $value !== null)->count();
 
-        $total = count(array_merge(self::REQUIRED_FIELDS, self::OPTIONAL_FIELDS)) + self::MAX_PHOTOS;
+        $countInterests = $profile->interests()->count();
+
+        $total = count(self::REQUIRED_FIELDS) + count(self::OPTIONAL_FIELDS) + self::MAX_PHOTOS + self::MAX_INTERESTS;
 
         $profile->update([
-            'completion_percentage' => (int)(($countPhotos + $countFilled) / $total * 100)
+            'completion_percentage' => (int)(
+                ($countPhotos + $countFilled + $countInterests) / $total * 100
+            ),
         ]);
     }
 
