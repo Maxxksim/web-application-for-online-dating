@@ -221,9 +221,18 @@ export const useProfileStore = defineStore('profile', () => {
 
           if (details) {
             if (Array.isArray(details.photos)) profile.photos = details.photos
-            if (!profile.description && details.description) profile.description = details.description
-            if (!profile.name && details.name) profile.name = details.name
-            if (profile.age == null && details.age != null) profile.age = details.age
+            
+            const fields = [
+              'name', 'age', 'description', 'interests', 'height', 'weight', 
+              'body_type', 'eye_color', 'hair_color', 'zodiac_sign', 'children', 
+              'smoking', 'drinking', 'exercise', 'dating_purpose'
+            ]
+            
+            for (const f of fields) {
+              if (details[f] !== undefined && (profile[f] === undefined || profile[f] === null || (Array.isArray(profile[f]) && profile[f].length === 0))) {
+                profile[f] = details[f]
+              }
+            }
           }
 
           hydratedProfileIds.value.add(profile.id)

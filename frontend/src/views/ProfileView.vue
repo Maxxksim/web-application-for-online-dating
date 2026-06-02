@@ -1,3 +1,12 @@
+Проблема заключается в классе `grid-cols-2`, который жестко делит строку на две колонки даже на самых узких экранах мобильных телефонов.
+
+Из-за этого в левой колонке («Birth Date») сразу три выпадающих списка (`Day`, `Month`, `Year`) пытаются втиснуться в 50% ширины экрана, ломая верстку, сжимаясь и перекашивая стоящий рядом селект выбора гендера.
+
+**Решение:** изменить этот контейнер на `grid-cols-1 sm:grid-cols-2`. Тогда на мобильных устройствах блоки встанут аккуратно друг под другом на всю ширину экрана, а на планшетах и десктопах (`sm:`) снова выстроятся в красивый ряд.
+
+Вот исправленный код компонента:
+
+```vue
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -155,16 +164,16 @@ watch(myProfile, (profile) => {
 
   form.gender = profile.gender || ''
   form.description = profile.description || ''
-  form.datingPurpose = profile.dating_purpose || ''
-  form.height = profile.height ?? ''
-  form.weight = profile.weight ?? ''
-  form.bodyType = profile.body_type || ''
-  form.eyeColor = profile.eye_color || ''
-  form.hairColor = profile.hair_color || ''
+  form.datingPurpose = profile.datingPurpose || ''
+  form.height = profile.height === 0 ? '' : (profile.height ?? '')
+  form.weight = profile.weight === 0 ? '' : (profile.weight ?? '')
+  form.bodyType = profile.bodyType || ''
+  form.eyeColor = profile.eyeColor || ''
+  form.hairColor = profile.hairColor || ''
   form.smoking = profile.smoking || ''
   form.drinking = profile.drinking || ''
   form.children = profile.children || ''
-  form.zodiacSign = profile.zodiac_sign || ''
+  form.zodiacSign = profile.zodiacSign || ''
   form.exercise = profile.exercise || ''
 }, { immediate: true })
 
@@ -353,7 +362,8 @@ const resumePremium = async () => {
         <form id="profile-form" @submit.prevent="saveProfile" class="flex flex-col gap-4">
           <BaseInput v-model="form.name" type="text" label="Display Name" placeholder="Your name" required />
 
-          <div class="grid grid-cols-2 gap-3">
+          <!-- ИСПРАВЛЕНО: Добавлена адаптивность grid-cols-1 sm:grid-cols-2 и увеличен gap на мобильных -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="flex flex-col gap-[5px]">
               <label class="text-[0.78rem] font-semibold text-slate-700 tracking-[0.02em]">Birth Date</label>
               <div class="grid gap-2" style="grid-template-columns: 2fr 3fr 2fr;">
@@ -560,7 +570,7 @@ const resumePremium = async () => {
 
           <div class="flex items-center justify-between">
             <p class="m-0 text-[0.95rem] font-semibold text-slate-900">Photos</p>
-            <label class="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-slate-200/75 bg-[#f0f9ff] px-3.5 py-1.5 text-[0.8rem] font-semibold text-slate-900 transition hover:border-cyan-500 hover:bg-cyan-50">
+            <label v-if="photos.length < 3" class="inline-flex cursor-pointer items-center justify-center gap-1 rounded-full border border-slate-200/75 bg-[#f0f9ff] px-3.5 py-1.5 text-[0.8rem] font-semibold text-slate-900 transition hover:border-cyan-500 hover:bg-cyan-50">
               <input type="file" class="sr-only" multiple accept="image/*" @change="handleUpload" />
               {{ isUploading ? 'Uploading...' : 'Add Photos' }}
             </label>
@@ -589,16 +599,16 @@ const resumePremium = async () => {
               <span class="chip">{{ isCanceled ? 'Cancelled' : isPremium ? 'Active' : 'Locked' }}</span>
             </div>
             <p class="m-0 text-[0.85rem] text-slate-700">
-  Get advanced filters, profile boost in discovery, swipe rollback, and deeper matches with Premium membership.
-</p>
+              Get advanced filters, profile boost in discovery, swipe rollback, and deeper matches with Premium membership.
+            </p>
 
             <template v-if="isCanceled">
               <p class="m-0 text-[0.85rem] text-slate-500">
                 Premium active until {{ endsAt ?? '...' }}
               </p>
-                <BaseButton variant="primary" full :loading="isSubscriptionLoading" @click="resumePremium">
-                    Resume Premium
-  </BaseButton>
+              <BaseButton variant="primary" full :loading="isSubscriptionLoading" @click="resumePremium">
+                Resume Premium
+              </BaseButton>
             </template>
             <template v-else-if="isPremium">
               <BaseButton variant="secondary" full :loading="isSubscriptionLoading" @click="cancelPremium">
@@ -644,3 +654,23 @@ const resumePremium = async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.tag-info {
+  @apply px-2.5 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white text-[0.73rem] font-medium border border-white/15 transition-colors hover:bg-white/20;
+}
+.tag-interest {
+  @apply px-2.5 py-1.5 rounded-full bg-cyan-400/20 backdrop-blur-sm text-white text-[0.73rem] font-medium border border-cyan-300/25;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+</style>
+

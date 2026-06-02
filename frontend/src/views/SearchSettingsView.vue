@@ -220,7 +220,7 @@ const save = async () => {
           <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div class="flex flex-col gap-6 md:col-span-2">
               <div class="p-6 rounded-[24px] bg-white/50 border border-slate-200/60 shadow-sm">
-                <SingleRangeSlider v-model="settings.distance" :min="1" :max="200" label="Maximum Distance" suffix=" km" />
+                <SingleRangeSlider v-model="settings.distance" :min="1" :max="2000" label="Maximum Distance" suffix=" km" />
               </div>
 
               <div class="p-6 rounded-[24px] bg-white/50 border border-slate-200/60 shadow-sm">

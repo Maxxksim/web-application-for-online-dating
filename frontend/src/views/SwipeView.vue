@@ -173,10 +173,9 @@ const hideMatch = async () => {
 </script>
 
 <template>
-  <div class="relative min-h-screen flex flex-col items-center justify-center px-4 pb-24 pt-6">
+  <div class="relative min-h-screen flex flex-col items-center justify-center px-4 pb-32 md:pb-24 pt-4 md:pt-6">
     <div class="flex flex-col items-center gap-3 w-full">
 
-      <!-- Location error -->
       <div v-if="locationError" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-200/80 bg-amber-50/80 text-[0.72rem] font-semibold text-amber-700">
         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
@@ -184,7 +183,6 @@ const hideMatch = async () => {
         {{ locationError }}
       </div>
 
-      <!-- Error state -->
       <div v-if="deckError" class="max-w-[380px] p-6 text-center rounded-[28px] border border-slate-200/75 bg-white/72 shadow-md backdrop-blur-xl animate-fade-in-up">
         <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-3">
           <svg class="w-6 h-6 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,22 +202,18 @@ const hideMatch = async () => {
         </div>
       </div>
 
-      <!-- Loading -->
       <div v-else-if="isLoading" class="flex flex-col items-center gap-3">
-        <div class="w-[min(92vw,420px)] rounded-[24px] bg-white/60 border border-slate-200/50 animate-pulse" style="height: clamp(520px, calc(100svh - 220px), 680px);" />
+        <div class="w-[min(92vw,420px)] rounded-[24px] bg-white/60 border border-slate-200/50 animate-pulse" style="height: clamp(440px, calc(100svh - 260px), 620px);" />
         <p class="text-[0.82rem] text-slate-400">Finding people nearby...</p>
       </div>
 
-      <!-- Card -->
       <div v-else-if="currentProfile" class="flex flex-col items-center gap-4 w-full animate-fade-in-up">
         <SwipeCard ref="cardRef" :profile="currentProfile" @swiped="handleSwipe" />
         <ActionButtons :show-undo="canUndo" @action="handleAction" @undo="handleUndo" />
       </div>
 
-      <!-- Empty state -->
       <div v-else class="max-w-[380px] w-full animate-fade-in-up">
         <div class="rounded-[28px] border border-slate-200/60 bg-white/75 backdrop-blur-xl shadow-md overflow-hidden">
-          <!-- Illustration -->
           <div class="relative h-48 bg-gradient-to-br from-cyan-400/20 via-blue-300/15 to-pink-300/20 flex items-center justify-center">
             <div class="absolute inset-0 flex items-center justify-center gap-3 opacity-60">
               <div class="w-16 h-20 rounded-2xl bg-gradient-to-b from-pink-300/60 to-pink-400/40 border border-pink-300/40 -rotate-6 shadow-sm" />
@@ -236,7 +230,7 @@ const hideMatch = async () => {
           <div class="p-6 flex flex-col gap-3 text-center">
             <div>
               <p class="font-bold text-[1.05rem] text-slate-900 m-0">No more profiles</p>
-              <p class="text-[0.85rem] text-slate-500 m-0 mt-1">You've seen everyone nearby. Try adjusting your filters or search again.</p>
+              <p class="text-[0.85rem] text-slate-500 m-0 mt-1">You've seen everyone nearby. Try changing your filters or search again.</p>
             </div>
 
             <div class="flex flex-col gap-2 mt-1">
@@ -247,7 +241,7 @@ const hideMatch = async () => {
                 Search Again
               </BaseButton>
               <BaseButton variant="secondary" full @click="goToFilters">
-                Adjust Filters
+                Change Filters
               </BaseButton>
               <BaseButton v-if="canUndo" variant="outline" full @click="handleUndo">
                 Undo Last Swipe
@@ -261,7 +255,6 @@ const hideMatch = async () => {
 
     <MatchModal v-if="isMatch" :match-data="matchData" @close="hideMatch" />
 
-    <!-- Premium Modal -->
     <Teleport to="body">
       <Transition name="modal-fade">
         <div v-if="showPremiumModal" class="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4 sm:p-6">

@@ -61,18 +61,20 @@ button {
   transition:
     transform var(--duration-fast) var(--ease-smooth),
     box-shadow var(--duration-fast) var(--ease-smooth),
-    filter var(--duration-fast) var(--ease-smooth);
+    filter var(--duration-fast) var(--ease-smooth),
+    background-color 150ms;
 }
 
-button:hover:not(:disabled) {
+button:not(.no-lift):hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
   filter: saturate(1.05);
 }
 
-button:active:not(:disabled) {
+button:not(.no-lift):active:not(:disabled) {
   transform: translateY(0);
 }
+
 
 /* ── Page helpers ── */
 .page {
