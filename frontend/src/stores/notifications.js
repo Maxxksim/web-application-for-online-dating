@@ -151,7 +151,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
     echo.private(`notifications.${normalizedUserId}`)
       .subscribed(() => {
-        console.log('subscribed to notifications channel')
+        
       })
       .listenToAll((event, data) => {
         console.log('raw event:', event, data)

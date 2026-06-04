@@ -202,9 +202,16 @@ const hideMatch = async () => {
         </div>
       </div>
 
-      <div v-else-if="isLoading" class="flex flex-col items-center gap-3">
-        <div class="w-[min(92vw,420px)] rounded-[24px] bg-white/60 border border-slate-200/50 animate-pulse" style="height: clamp(440px, calc(100svh - 260px), 620px);" />
-        <p class="text-[0.82rem] text-slate-400">Finding people nearby...</p>
+      <div v-else-if="isLoading" class="flex flex-col items-center gap-6">
+        <div class="w-[min(92vw,420px)] rounded-[24px] bg-slate-200/50 border border-slate-200/50 animate-pulse" style="height: clamp(440px, calc(100svh - 260px), 620px);" />
+        <div class="flex flex-col items-center gap-3">
+          <div class="flex gap-1.5">
+            <div class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay: 0ms"></div>
+            <div class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay: 150ms"></div>
+            <div class="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style="animation-delay: 300ms"></div>
+          </div>
+          <p class="text-[0.82rem] font-medium text-slate-500 animate-pulse">Searching for people nearby...</p>
+        </div>
       </div>
 
       <div v-else-if="currentProfile" class="flex flex-col items-center gap-4 w-full animate-fade-in-up">
