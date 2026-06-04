@@ -18,6 +18,9 @@ const isReady = ref(false)
 let _saveTimer = null
 
 const isDraggingSlider = ref(false)
+let _initialDistance = null
+let _initialMinAge = null
+let _initialMaxAge = null
 
 const settings = ref({
   minAge: 18,
@@ -43,7 +46,6 @@ const settings = ref({
 const selectOptions = SELECT_OPTIONS
 const interestOptions = INTEREST_OPTIONS
 
-const showFiltersContent = computed(() => Boolean(profileStore.filters))
 const isPremium = computed(() => subscriptionStore.isPremium)
 const isSubscriptionLoading = computed(() => subscriptionStore.isLoading)
 
@@ -91,13 +93,29 @@ const syncForm = () => {
     interests: Array.isArray(f.interests) ? [...f.interests] : [],
   }
 
+  _initialDistance = settings.value.distance
+  _initialMinAge = settings.value.minAge
+  _initialMaxAge = settings.value.maxAge
+
   setTimeout(() => { isReady.value = true }, 0)
 }
 
 const handlePointerUp = () => {
   if (isDraggingSlider.value) {
     isDraggingSlider.value = false
-    if (isReady.value) debouncedSave()
+    if (isReady.value) {
+      if (
+        settings.value.distance === _initialDistance &&
+        settings.value.minAge === _initialMinAge &&
+        settings.value.maxAge === _initialMaxAge
+      ) {
+        return
+      }
+      _initialDistance = settings.value.distance
+      _initialMinAge = settings.value.minAge
+      _initialMaxAge = settings.value.maxAge
+      debouncedSave()
+    }
   }
 }
 
@@ -228,7 +246,9 @@ const save = async () => {
   isSaving.value = true
   try {
     const result = await profileStore.updateFilters(payload)
-    if (!result.success) {
+    if (result.success) {
+      toast.success('Filters updated successfully!')
+    } else {
       toast.error(result.message || 'Unable to update filters.')
     }
   } finally {
@@ -242,46 +262,30 @@ const save = async () => {
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
       <div class="flex flex-col gap-8">
 
-        <section class="glass-panel" style="padding: 28px;">
+        <section class="glass-panel relative z-20" style="padding: 28px;">
           <div class="mb-8 flex flex-col gap-2 border-b border-slate-200/50 pb-5">
-            <h2 class="text-2xl font-bold text-slate-950">Discovery Settings</h2>
+            <h2 class="text-2xl font-bold text-slate-950">Basic Filters</h2>
             <p class="text-[0.9rem] text-slate-500">Set your basic preferences for who you want to see.</p>
           </div>
 
-          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div class="flex flex-col gap-6 md:col-span-2">
-              <div 
-                class="p-6 rounded-[24px] bg-white/50 border border-slate-200/60 shadow-sm"
-                @pointerdown="isDraggingSlider = true" 
-                @touchstart="isDraggingSlider = true"
-              >
-                <SingleRangeSlider
-                  v-model="settings.distance"
-                  :min="1"
-                  :max="2000"
-                  label="Maximum Distance"
-                  suffix=" km"
-                />
-              </div>
-
-              <div 
-                class="p-6 rounded-[24px] bg-white/50 border border-slate-200/60 shadow-sm"
-                @pointerdown="isDraggingSlider = true" 
-                @touchstart="isDraggingSlider = true"
-              >
-                <DualRangeSlider
-                  v-model:model-min="settings.minAge"
-                  v-model:model-max="settings.maxAge"
-                  :min="18"
-                  :max="100"
-                  label="Age Range"
-                />
-              </div>
+          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div 
+              class="p-6 rounded-[24px] bg-white/50 border border-slate-200/60 shadow-sm md:col-span-2 lg:col-span-2"
+              @pointerdown="isDraggingSlider = true" 
+              @touchstart="isDraggingSlider = true"
+            >
+              <SingleRangeSlider
+                v-model="settings.distance"
+                :min="1"
+                :max="2000"
+                label="Maximum Distance"
+                suffix=" km"
+              />
             </div>
 
-            <div class="flex flex-col gap-6 p-6 rounded-[24px] bg-white/50 border border-slate-200/60 shadow-sm">
-              <div class="space-y-3">
-                <label class="text-[0.95rem] font-bold text-slate-800">Show Me</label>
+            <div class="relative z-30 flex flex-col justify-center p-6 rounded-[24px] bg-white/50 border border-slate-200/60 shadow-sm md:col-span-1 lg:col-span-1">
+              <div class="space-y-3 w-full">
+                <label class="text-[0.95rem] font-bold text-slate-800 flex justify-center">Show Me</label>
                 <GlassDropdown
                   v-model="settings.gender"
                   :options="[
@@ -291,13 +295,28 @@ const save = async () => {
                   ]"
                   placeholder="Everyone"
                   :showEmpty="false"
+                  class="w-full text-base sm:text-lg mobile-opaque-dropdown"
                 />
               </div>
+            </div>
+
+            <div 
+              class="p-6 rounded-[24px] bg-white/50 border border-slate-200/60 shadow-sm md:col-span-1 lg:col-span-1"
+              @pointerdown="isDraggingSlider = true" 
+              @touchstart="isDraggingSlider = true"
+            >
+              <DualRangeSlider
+                v-model:model-min="settings.minAge"
+                v-model:model-max="settings.maxAge"
+                :min="18"
+                :max="100"
+                label="Age Range"
+              />
             </div>
           </div>
         </section>
 
-        <section v-if="isPremium" class="glass-panel" style="padding: 28px;">
+        <section v-if="isPremium" class="glass-panel relative z-10" style="padding: 28px;">
           <div
             class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             :class="{ 'mb-8 border-b border-slate-200/50 pb-5': enableAdvanced }"
@@ -325,23 +344,23 @@ const save = async () => {
               <div class="flex flex-col gap-4">
                 <div class="space-y-1.5">
                   <label class="text-[0.85rem] font-semibold text-slate-700">Dating purpose</label>
-                  <GlassDropdown v-model="settings.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Any" empty-label="Any" />
+                  <GlassDropdown v-model="settings.datingPurpose" :options="selectOptions.datingPurpose" placeholder="Any" empty-label="Any" class="mobile-opaque-dropdown" />
                 </div>
                 <div class="space-y-1.5">
                   <label class="text-[0.85rem] font-semibold text-slate-700">Smoking</label>
-                  <GlassDropdown v-model="settings.smoking" :options="selectOptions.smoking" placeholder="Any" empty-label="Any" />
+                  <GlassDropdown v-model="settings.smoking" :options="selectOptions.smoking" placeholder="Any" empty-label="Any" class="mobile-opaque-dropdown" />
                 </div>
                 <div class="space-y-1.5">
                   <label class="text-[0.85rem] font-semibold text-slate-700">Drinking</label>
-                  <GlassDropdown v-model="settings.drinking" :options="selectOptions.drinking" placeholder="Any" empty-label="Any" />
+                  <GlassDropdown v-model="settings.drinking" :options="selectOptions.drinking" placeholder="Any" empty-label="Any" class="mobile-opaque-dropdown" />
                 </div>
                 <div class="space-y-1.5">
                   <label class="text-[0.85rem] font-semibold text-slate-700">Exercise</label>
-                  <GlassDropdown v-model="settings.exercise" :options="selectOptions.exercise" placeholder="Any" empty-label="Any" />
+                  <GlassDropdown v-model="settings.exercise" :options="selectOptions.exercise" placeholder="Any" empty-label="Any" class="mobile-opaque-dropdown" />
                 </div>
                 <div class="space-y-1.5">
                   <label class="text-[0.85rem] font-semibold text-slate-700">Zodiac sign</label>
-                  <GlassDropdown v-model="settings.zodiacSign" :options="selectOptions.zodiacSign" placeholder="Any" empty-label="Any" />
+                  <GlassDropdown v-model="settings.zodiacSign" :options="selectOptions.zodiacSign" placeholder="Any" empty-label="Any" class="mobile-opaque-dropdown" />
                 </div>
               </div>
             </section>
@@ -351,15 +370,15 @@ const save = async () => {
               <div class="flex flex-col gap-4">
                 <div class="space-y-1.5">
                   <label class="text-[0.85rem] font-semibold text-slate-700">Body type</label>
-                  <GlassDropdown v-model="settings.bodyType" :options="selectOptions.bodyType" placeholder="Any" empty-label="Any" />
+                  <GlassDropdown v-model="settings.bodyType" :options="selectOptions.bodyType" placeholder="Any" empty-label="Any" class="mobile-opaque-dropdown" />
                 </div>
                 <div class="space-y-1.5">
                   <label class="text-[0.85rem] font-semibold text-slate-700">Eye color</label>
-                  <GlassDropdown v-model="settings.eyeColor" :options="selectOptions.eyeColor" placeholder="Any" empty-label="Any" />
+                  <GlassDropdown v-model="settings.eyeColor" :options="selectOptions.eyeColor" placeholder="Any" empty-label="Any" class="mobile-opaque-dropdown" />
                 </div>
                 <div class="space-y-1.5">
                   <label class="text-[0.85rem] font-semibold text-slate-700">Hair color</label>
-                  <GlassDropdown v-model="settings.hairColor" :options="selectOptions.hairColor" placeholder="Any" empty-label="Any" />
+                  <GlassDropdown v-model="settings.hairColor" :options="selectOptions.hairColor" placeholder="Any" empty-label="Any" class="mobile-opaque-dropdown" />
                 </div>
                 
                 <div 
@@ -523,3 +542,15 @@ const save = async () => {
     </div>
   </div>
 </template>
+
+<style scoped>
+@media (max-width: 640px) {
+  :deep(.mobile-opaque-dropdown .glass-dropdown-menu),
+  :deep(.mobile-opaque-dropdown [role="listbox"]) {
+    background-color: rgb(255, 255, 255) !important;
+    backdrop-filter: none !important;
+    --tw-bg-opacity: 1 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+</style>
