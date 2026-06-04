@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { likesApi } from '@/api/likes.js'
 import { matchesApi } from '@/api/matches.js'
@@ -46,6 +46,7 @@ const loadLikes = async () => {
   isLoadingLikes.value = true
   try {
     const { data } = await likesApi.getAll()
+
     likes.value = Array.isArray(data.likes) ? data.likes : []
     await hydratePhotos(likes.value)
   } catch {
@@ -66,11 +67,21 @@ const hydratePhotos = async (list) => {
         const { data } = await profilesApi.getById(profileId)
         if (data?.profile?.photos) item.photos = data.profile.photos
       } catch {
-        // ignore
+        
       }
     })
   )
 }
+
+
+watch(() => notificationsStore.lastLikeEvent, async (val) => {
+
+  await loadLikes()
+})
+
+watch(() => notificationsStore.lastMatchEvent, async () => {
+  await loadMatches()
+})
 
 const loadMatches = async () => {
   isLoadingMatches.value = true

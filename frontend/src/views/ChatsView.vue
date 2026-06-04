@@ -290,6 +290,7 @@ const loadChats = async () => {
   isLoading.value = true
   try {
     const { data } = await chatsApi.getAll()
+    console.log(data)
     const list = data.chats || []
     const activeChatId = Number(activeChat.value?.id ?? null)
     chats.value = list.map((chat) => (
@@ -548,26 +549,37 @@ const sendMessage = async () => {
   draft.value = ''
   scrollToBottomSmooth()
 
-
-  messagesApi.send(other.id, text).catch(() => {
-    toast.error('Message failed to send.')
-    messages.value = messages.value.filter((m) => m.id !== optimisticMsg.id)
-  })
-
   try {
+    const { data } = await messagesApi.send(other.id, text)
+
+    const realMsg = data?.message ?? data
+    if (realMsg) {
+      const idx = messages.value.findIndex((m) => m.id === optimisticMsg.id)
+      if (idx !== -1) {
+        messages.value[idx] = normalizeMessage({ ...realMsg, status: 'sent' })
+        messages.value = [...messages.value]
+      }
+    } else {
+
+      const idx = messages.value.findIndex((m) => m.id === optimisticMsg.id)
+      if (idx !== -1) {
+        messages.value[idx] = { ...messages.value[idx], status: 'sent' }
+        messages.value = [...messages.value]
+      }
+    }
+
     await loadChats()
     const refreshed = findChatByUserId(other.id)
     if (!refreshed) return
 
     activeChat.value = refreshed
     notificationsStore.setActiveChatId(refreshed.id)
-    const tempMessage = messages.value.find((m) => m.id === optimisticMsg.id)
-    if (tempMessage) {
-      tempMessage.chat_id = refreshed.id
-    }
+    const tempMessage = messages.value.find((m) => m.chat_id === null || m.chat_id === undefined)
+    if (tempMessage) tempMessage.chat_id = refreshed.id
     router.replace({ name: 'chats', query: { chat: refreshed.id } })
   } catch {
-    // Keep the optimistic message visible until the send promise settles.
+    toast.error('Message failed to send.')
+    messages.value = messages.value.filter((m) => m.id !== optimisticMsg.id)
   }
 }
 
@@ -596,7 +608,7 @@ onMounted(async () => {
     __prevBodyOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
   } catch (e) {
-    // ignore if running in non-browser environment
+    
   }
 
   if (!profileStore.myProfile) await profileStore.fetchMyProfile()
@@ -610,7 +622,7 @@ onUnmounted(() => {
     if (__prevBodyOverflow !== null) document.body.style.overflow = __prevBodyOverflow
     else document.body.style.overflow = ''
   } catch (e) {
-    // ignore
+    
   }
 })
 
@@ -626,7 +638,6 @@ watch(() => notificationsStore.lastRealtimeMessage, async (payload) => {
     const pendingIndex = messages.value.findIndex((m) => {
       return (
         messageStatus(m) === 'sending'
-        && Number(m.chat_id) === Number(msg.chat_id)
         && Number(messageSenderId(m)) === Number(messageSenderId(msg))
         && String(m.text || '') === String(msg.text || '')
       )
@@ -649,7 +660,6 @@ watch(() => notificationsStore.lastRealtimeMessage, async (payload) => {
       scrollToBottomIfNear()
     }
 
-    // Mark incoming real-time messages as read so sender gets double-check update
     const isIncoming = Number(messageSenderId(msg)) !== Number(currentUserId.value)
     if (isIncoming && activeChat.value?.id) {
       try {
@@ -663,7 +673,6 @@ watch(() => notificationsStore.lastRealtimeMessage, async (payload) => {
   await loadChats()
 })
 
-// Watch for read receipts from the realtime channel — update checkmarks in real-time
 watch(() => notificationsStore.lastReadReceipt, (payload) => {
   if (!payload?.chat_id || !payload?.read_at || !payload?.sender_id) return
 
@@ -735,8 +744,8 @@ watch(() => messages.value.length, () => {
             :class="activeChat?.id === chat.id ? 'bg-cyan-50/80 shadow-sm border border-cyan-100/50' : 'hover:bg-white border border-transparent'"
             @click="selectChat(chat)"
           >
-            <div class="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
-              <img v-if="chatAvatarUrl(chat)" :src="chatAvatarUrl(chat)" :alt="chatLabel(chat)" class="h-full w-full object-cover" />
+            <div class="relative flex h-12 w-12 shrink-0 items-center justify-center  rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
+              <img v-if="chatAvatarUrl(chat)" :src="chatAvatarUrl(chat)" :alt="chatLabel(chat)" class="h-full w-full object-cover overflow-hidden" />
               <span v-else class="text-lg font-bold">{{ chatLabel(chat).charAt(0) }}</span>
               <div v-if="chat.unread_count" class="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm">
                 {{ chat.unread_count }}

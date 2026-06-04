@@ -1,24 +1,16 @@
-/**
- * stores/auth.js — Authentication state (Pinia)
- *
- * State  : token, user, isLoading, error
- * Actions: login, register, logout, initFromStorage
- */
-
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth.js'
 
 export const useAuthStore = defineStore('auth', () => {
-  // ── State ──
-  const token    = ref(localStorage.getItem('auth_token') || null)
-  const isLoading = ref(false)
-  const error     = ref(null)
 
-  // ── Getters ──
+  const token = ref(localStorage.getItem('auth_token') || null)
+  const isLoading = ref(false)
+  const error = ref(null)
+
   const isAuthenticated = computed(() => !!token.value)
 
-  // ── Helpers ──
+
   function setToken(newToken) {
     token.value = newToken
     if (newToken) {
@@ -32,12 +24,6 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
   }
 
-  // ── Actions ──
-
-  /**
-   * Log in with email/password
-   * @param {{ email: string, password: string }} credentials
-   */
   async function login(credentials) {
     isLoading.value = true
     error.value = null
@@ -53,10 +39,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  /**
-   * Register a new account
-   * @param {{ email: string, password: string, password_confirmation: string }} payload
-   */
   async function register(payload) {
     isLoading.value = true
     error.value = null
@@ -67,7 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       const errors = err.response?.data?.errors
       if (errors) {
-        // Flatten Laravel validation errors to a single string
+
         error.value = Object.values(errors).flat().join(' ')
       } else {
         error.value = 'Registration failed. Please try again later.'

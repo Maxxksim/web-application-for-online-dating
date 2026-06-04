@@ -69,9 +69,7 @@ const submit = async () => {
   if (ok) {
     const redirectTo = route.query.redirect ? String(route.query.redirect) : null
     router.push(redirectTo || { name: 'discover' })
-  } else {
-    toast.error(authStore.error || 'Authentication failed.')
-  }
+  } 
 }
 
 const startGoogleAuth = () => {
@@ -122,7 +120,6 @@ const startGoogleAuth = () => {
             label="Confirm Password"
             placeholder="Repeat your password"
             autocomplete="new-password"
-            :error="localError"
             required
           />
 

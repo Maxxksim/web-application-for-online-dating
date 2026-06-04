@@ -49,7 +49,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="page items-center">
+  <div class="min-h-screen flex items-center justify-center px-4 py-8">
     <div class="glass-panel w-[min(520px,100%)] p-7 flex flex-col gap-4">
       <div class="flex justify-between items-center">
         <span class="chip">{{ plan }}</span>

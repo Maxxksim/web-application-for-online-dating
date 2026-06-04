@@ -1,20 +1,12 @@
-/**
- * stores/notifications.js — Notifications state (Pinia)
- *
- * Categorised counts for NavBar badges, popup queue for
- * top-right toast-style notifications, and realtime subscriptions
- * for likes, matches, and incoming chat messages.
- */
-
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { notificationsApi } from '@/api/notifications.js'
 import { initReverb, disconnectReverb } from '@/realtime/reverb.js'
 
 export const useNotificationsStore = defineStore('notifications', () => {
-  // ── State ──
+
   const notifications = ref([])
-  const isLoading     = ref(false)
+  const isLoading = ref(false)
 
   const realtimeState = ref({
     echo: null,
@@ -23,59 +15,57 @@ export const useNotificationsStore = defineStore('notifications', () => {
     chatChannelSubscribed: false,
   })
 
-  // Currently active chat (set by ChatsView) — suppress popups for it
-  const activeChatId = ref(null)
+  const pendingLikes = ref(0)
+  const pendingMatches = ref(0)
+  const pendingMessages = ref(0)
 
-  // Popup notification queue (top-right corner)
-  const popups = ref([])
-  let popupSeq = 0
-
-  // Reactive ref: last message received via realtime (watched by ChatsView)
+  const lastLikeEvent = ref(null)
+  const lastMatchEvent = ref(null)
   const lastRealtimeMessage = ref(null)
   const lastReadReceipt = ref(null)
 
-  // ── Getters ──
+  const activeChatId = ref(null)
+
+  const popups = ref([])
+  let popupSeq = 0
+
+  const messageCount = computed(() => {
+    const fromServer = notifications.value.filter((n) => {
+      if (!n.type?.includes('MessageNotification')) return false
+      if (!activeChatId.value) return true
+      return Number(n.data?.chat_id) !== Number(activeChatId.value)
+    }).length
+    return Math.max(fromServer, pendingMessages.value)
+  })
+
   const countByType = (typeName) =>
     notifications.value.filter(n => n.type?.includes(typeName)).length
 
-  const likeCount = computed(() =>
-    countByType('LikeNotification')
-  )
-  const matchCount = computed(() =>
-    countByType('MatchNotification')
-  )
-  const messageCount = computed(() =>
-    notifications.value.filter((notification) => {
-      if (!notification.type?.includes('MessageNotification')) return false
-      if (!activeChatId.value) return true
-      return Number(notification.data?.chat_id) !== Number(activeChatId.value)
-    }).length
-  )
+  const likeCount = computed(() => countByType('LikeNotification') + pendingLikes.value)
+  const matchCount = computed(() => countByType('MatchNotification') + pendingMatches.value)
   const activityCount = computed(() => likeCount.value + matchCount.value)
-  const unreadCount   = computed(() => notifications.value.length)
-  const hasUnread     = computed(() => unreadCount.value > 0)
+  const unreadCount = computed(() => notifications.value.length)
+  const hasUnread = computed(() => unreadCount.value > 0)
 
   const notifiableId = computed(() => {
     const first = notifications.value[0]
     return first?.notifiable_id || first?.notifiableId || null
   })
 
-  // ── Popups ──
   function addPopup({ label, message, type }) {
     const id = ++popupSeq
     popups.value.push({ id, label, message, type, timestamp: Date.now() })
     setTimeout(() => removePopup(id), 5000)
   }
+
   function removePopup(id) {
     popups.value = popups.value.filter(p => p.id !== id)
   }
 
-  // ── Active chat ──
   function setActiveChatId(id) {
     activeChatId.value = id ? Number(id) : null
   }
 
-  // ── Actions ──
   async function fetchAll() {
     isLoading.value = true
     try {
@@ -106,67 +96,37 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   function findUnreadProfileNotification(typeName, profileId) {
     if (!profileId) return null
-    return notifications.value.find((notification) => (
-      notification.type?.includes(typeName)
-      && Number(notification.data?.profile_id) === Number(profileId)
+    return notifications.value.find((n) => (
+      n.type?.includes(typeName) &&
+      Number(n.data?.profile_id) === Number(profileId)
     )) || null
   }
 
   async function markProfileNotificationAsRead(typeName, profileId) {
     const notification = findUnreadProfileNotification(typeName, profileId)
     if (!notification) return false
-
     await markAsRead(notification.id)
     return true
   }
 
-  // ── Realtime event handlers ──
-  function handleLikeEvent() {
-    addPopup({ label: 'Like', message: 'Someone liked you!', type: 'like' })
-    fetchAll()
-  }
-
-  function handleLikeRetractedEvent() {
-    // Optionally remove notification if it was retracted, fetchAll will refresh the list.
-    fetchAll()
-  }
-
-  function handleMatchEvent() {
-    addPopup({ label: 'Match', message: 'You have a new match!', type: 'match' })
-    fetchAll()
-  }
-
   function handleMessageEvent(payload) {
-    const chatId = payload?.chat_id ? Number(payload.chat_id) : null
-    const senderId = payload?.sender_id ? Number(payload.sender_id) : null
-    const myId = realtimeState.value.userId ? Number(realtimeState.value.userId) : null
-
     lastRealtimeMessage.value = { ...payload, _ts: Date.now() }
-
-    if (chatId && activeChatId.value === chatId) return
-    if (senderId && myId && senderId === myId) return
-
-    addPopup({ label: 'Message', message: 'New message received', type: 'message' })
-    fetchAll()
   }
 
   function handleMessageReadEvent(payload) {
-    console.debug('[notifications] message.read event', payload)
     lastReadReceipt.value = { ...payload, _ts: Date.now() }
   }
 
-  /** Private channel chats.{userId} — only the authenticated user may listen. */
   function subscribeToChatChannel(echo, userId) {
-    const channelName = `chats.${userId}`
     if (realtimeState.value.chatChannelSubscribed) return
 
-    echo.private(channelName)
+    echo.private(`chats.${userId}`)
       .listen('.message.sent', handleMessageEvent)
       .listen('.message.read', handleMessageReadEvent)
+
     realtimeState.value.chatChannelSubscribed = true
   }
 
-  // ── Realtime lifecycle ──
   function startRealtime({ userId, token } = {}) {
     if (!userId || !token) return false
 
@@ -189,23 +149,63 @@ export const useNotificationsStore = defineStore('notifications', () => {
       chatChannelSubscribed: false,
     }
 
-    echo.private(`likes.${normalizedUserId}`)
-      .listen('.like.processed', handleLikeEvent)
-      .listen('.like.retracted', handleLikeRetractedEvent)
+    echo.private(`notifications.${normalizedUserId}`)
+      .subscribed(() => {
+        console.log('subscribed to notifications channel')
+      })
+      .listenToAll((event, data) => {
+        console.log('raw event:', event, data)
+      })
+      .notification(async (notification) => {
+        console.log('notification received:', notification)
+        const type = notification.type || ''
 
-    echo.private(`matches.${normalizedUserId}`)
-      .listen('.match.created', handleMatchEvent)
+        if (type.includes('LikeNotification')) {
+          pendingLikes.value++
+          addPopup({ label: 'Like', message: 'Someone liked you!', type: 'like' })
+          await fetchAll()
+          pendingLikes.value = 0
+          lastLikeEvent.value = Date.now()
+        }
+
+        if (type.includes('MatchNotification')) {
+          pendingMatches.value++
+          addPopup({ label: 'Match', message: 'You have a new match!', type: 'match' })
+          await fetchAll()
+          pendingMatches.value = 0
+          lastMatchEvent.value = Date.now()
+        }
+
+        if (type.includes('MessageNotification')) {
+          const chatId = notification.chat_id ? Number(notification.chat_id) : null
+          if (chatId && activeChatId.value === chatId) return
+
+          pendingMessages.value++
+          addPopup({ label: 'Message', message: 'New message received', type: 'message' })
+          await fetchAll()
+          pendingMessages.value = 0
+        }
+      })
+
+    echo.private(`likesRetracted.${normalizedUserId}`)
+      .listen('.like.retracted', async () => {
+        popups.value = popups.value.filter(p => p.type !== 'like')
+        await fetchAll()
+        lastLikeEvent.value = Date.now()
+      })
 
     subscribeToChatChannel(echo, normalizedUserId)
 
     return true
   }
 
+
+
   function stopRealtime() {
     const state = realtimeState.value
     if (state.echo && state.userId) {
+      state.echo.leave(`notifications.${state.userId}`)
       state.echo.leave(`likes.${state.userId}`)
-      state.echo.leave(`matches.${state.userId}`)
       state.echo.leave(`chats.${state.userId}`)
     }
     disconnectReverb()
@@ -228,5 +228,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
     fetchAll, markAsRead, markAllAsRead,
     findUnreadProfileNotification, markProfileNotificationAsRead,
     startRealtime, stopRealtime,
+    lastLikeEvent, lastMatchEvent,
+    pendingLikes, pendingMatches,
+    pendingMessages,
   }
 })
