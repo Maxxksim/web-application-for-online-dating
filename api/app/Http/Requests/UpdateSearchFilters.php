@@ -18,7 +18,7 @@ class UpdateSearchFilters extends FormRequest
     public function rules(): array
     {
         return [
-            'min_age' => ['sometimes', 'integer', 'min:16', 'lt:max_age'],
+            'min_age' => ['sometimes', 'integer', 'min:18', 'lt:max_age'],
             'max_age' => ['sometimes', 'integer', 'max:120', 'gt:min_age'],
             'gender' => ['sometimes', 'string', 'in:man,woman,both'],
             'distance' => ['sometimes', 'integer', 'min:1'],
@@ -33,10 +33,20 @@ class UpdateSearchFilters extends FormRequest
             'children' => ['sometimes', Rule::enum(ChildrenStatus::class)],
             'zodiac_sign' => ['sometimes', Rule::enum(ZodiacSign::class)],
             'exercise' => ['sometimes', Rule::enum(Habit::class)],
-            'min_height' => ['sometimes', 'numeric', 'lt:max_height'],
-            'max_height' => ['sometimes', 'numeric', 'gt:min_height'],
-            'min_weight' => ['sometimes', 'numeric', 'lt:max_weight'],
-            'max_weight' => ['sometimes', 'numeric', 'gt:min_weight'],
+            'min_height' => ['sometimes', 'numeric', 'min:70', 'max:250'],
+            'max_height' => ['sometimes', 'numeric', 'min:70', 'max:250',
+                function ($value, $fail) {
+                    if ($value && request('min_height') && $value < request('min_height')) {
+                        $fail('Max height must be greater than min height.');
+                    }
+                }],
+            'min_weight' => ['sometimes', 'numeric', 'min:20', 'max:200'],
+            'max_weight' => ['sometimes', 'numeric', 'min:20', 'max:200',
+                function ($attribute, $value, $fail) {
+                    if ($value && request('min_weight') && $value < request('min_weight')) {
+                        $fail('Max weight must be greater than min weight.');
+                    }
+                }],
             'use_advanced_filters' => ['sometimes', 'boolean'],
         ];
     }

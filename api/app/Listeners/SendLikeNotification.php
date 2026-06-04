@@ -7,7 +7,7 @@ use App\Notifications\LikeNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\Attributes\Queue;
 
-#[Queue('likes')]
+#[Queue('notifications')]
 class SendLikeNotification implements ShouldQueue
 {
     public function handle(LikeSent $event): void

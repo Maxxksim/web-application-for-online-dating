@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\MessageRequest;
+use App\Http\Resources\MessageResource;
 use App\Models\Chat;
 use App\Models\User;
 use App\Services\MessageService;
@@ -27,9 +28,9 @@ class MessageController extends Controller
     public function sendMessage(MessageRequest $request, User $recipient): JsonResponse
     {
 
-        $this->messageService->sendMessage($request->user(), $recipient, $request->validated('text'));
+        $message = $this->messageService->sendMessage($request->user(), $recipient, $request->validated('text'));
 
-        return response()->json(['message' => 'Message has been sent.'], Response::HTTP_CREATED);
+        return response()->json(['message' => new MessageResource($message)], Response::HTTP_CREATED);
     }
 
     public function markAsRead(Request $request, Chat $chat): Response

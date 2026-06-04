@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Message;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class MessageNotification extends Notification
@@ -12,12 +13,11 @@ class MessageNotification extends Notification
 
     public function __construct(private readonly Message $message)
     {
-
     }
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toDatabase(object $notifiable): array
@@ -27,5 +27,14 @@ class MessageNotification extends Notification
             'chat_id' => $this->message->chat_id,
             'sender_id' => $this->message->user_id,
         ];
+    }
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'message_id' => $this->message->id,
+            'chat_id' => $this->message->chat_id,
+            'sender_id' => $this->message->user_id,
+        ]);
     }
 }

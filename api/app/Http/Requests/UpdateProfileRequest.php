@@ -18,7 +18,7 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'string', 'max:255'],
-            'date_of_birth' => ['sometimes', 'date'],
+            'date_of_birth' => ['sometimes', 'date', 'before_or_equal:' . now()->subYears(18)->toDateString()],
             'gender' => ['sometimes', 'in:man,woman'],
             'description' => ['sometimes', 'string', 'max:1200'],
             'dating_purpose' => ['sometimes', 'string', Rule::enum(DatingPurpose::class)],
@@ -32,6 +32,13 @@ class UpdateProfileRequest extends FormRequest
             'children' => ['sometimes', Rule::enum(ChildrenStatus::class)],
             'zodiac_sign' => ['sometimes', Rule::enum(ZodiacSign::class)],
             'exercise' => ['sometimes', Rule::enum(Habit::class)],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'date_of_birth.before_or_equal' => 'You must be at least 18 years old.',
         ];
     }
 }

@@ -24,6 +24,11 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens, Billable;
 
+    public function receivesBroadcastNotificationsOn(): string
+    {
+        return 'notifications.' . $this->id;
+    }
+
     protected function casts(): array
     {
         return [
