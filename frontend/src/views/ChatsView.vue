@@ -113,7 +113,13 @@ const chatLabel = (chat) => {
 
 const chatAvatarUrl = (chat) => {
   const other = otherParticipant(chat)
-  return other?.profile?.photos?.[0]?.url || other?.profile?.photo_url || other?.photo_url || null
+  const photo = other?.profile?.photos?.[0]
+  if (photo?.url) return photo.url
+  if (photo?.path) {
+    const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/api$/, '')
+    return `${base}/storage/${photo.path}`
+  }
+  return other?.profile?.photo_url || other?.photo_url || null
 }
 
 const findChatByUserId = (userId) =>
@@ -744,9 +750,11 @@ watch(() => messages.value.length, () => {
             :class="activeChat?.id === chat.id ? 'bg-cyan-50/80 shadow-sm border border-cyan-100/50' : 'hover:bg-white border border-transparent'"
             @click="selectChat(chat)"
           >
-            <div class="relative flex h-12 w-12 shrink-0 items-center justify-center  rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
-              <img v-if="chatAvatarUrl(chat)" :src="chatAvatarUrl(chat)" :alt="chatLabel(chat)" class="h-full w-full object-cover overflow-hidden" />
-              <span v-else class="text-lg font-bold">{{ chatLabel(chat).charAt(0) }}</span>
+            <div class="relative shrink-0 h-12 w-12">
+              <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
+                <img v-if="chatAvatarUrl(chat)" :src="chatAvatarUrl(chat)" :alt="chatLabel(chat)" class="h-full w-full object-cover" />
+                <span v-else class="text-lg font-bold">{{ chatLabel(chat).charAt(0) }}</span>
+              </div>
               <div v-if="chat.unread_count" class="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm">
                 {{ chat.unread_count }}
               </div>
@@ -801,8 +809,9 @@ watch(() => messages.value.length, () => {
       <section class="hidden md:flex flex-1 flex-col bg-slate-50/50 min-h-0 relative">
         <div class="flex h-16 shrink-0 items-center justify-between border-b border-slate-200/50 bg-white/60 px-4 backdrop-blur-md sm:px-6">
           <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
-              <span class="text-base font-bold">{{ activeChat ? chatLabel(activeChat).charAt(0) : 'M' }}</span>
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
+              <img v-if="activeChat && chatAvatarUrl(activeChat)" :src="chatAvatarUrl(activeChat)" :alt="chatLabel(activeChat)" class="h-full w-full object-cover" />
+              <span v-else class="text-base font-bold">{{ activeChat ? chatLabel(activeChat).charAt(0) : 'M' }}</span>
             </div>
             <div>
               <h2 class="text-base font-bold text-slate-900">{{ activeChat ? chatLabel(activeChat) : 'Messages' }}</h2>
@@ -890,7 +899,10 @@ watch(() => messages.value.length, () => {
               <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
             </button>
             <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner"><span class="text-base font-bold">{{ chatLabel(activeChat).charAt(0) }}</span></div>
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
+                <img v-if="chatAvatarUrl(activeChat)" :src="chatAvatarUrl(activeChat)" :alt="chatLabel(activeChat)" class="h-full w-full object-cover" />
+                <span v-else class="text-base font-bold">{{ chatLabel(activeChat).charAt(0) }}</span>
+              </div>
               <div>
                 <h2 class="text-base font-bold text-slate-900">{{ chatLabel(activeChat) }}</h2>
               </div>
