@@ -35,7 +35,6 @@ const isRestoringScrollPosition = ref(false)
 const showJumpToLatest = ref(false)
 const newMessagesCount = ref(0)
 
-// Profile preview state
 const profilePreview = ref(null)
 const profilePreviewLoading = ref(false)
 const profilePreviewPhotoIndex = ref(0)
@@ -60,7 +59,6 @@ const onMessagesScroll = (e) => {
   }
 }
 
-// Group messages with date separators (Telegram-style)
 const groupedMessages = computed(() => {
   if (!messages.value.length) return []
 
@@ -102,7 +100,6 @@ const currentUserId = computed(() => {
   return p.user_id ?? p.userId ?? p.id ?? null
 })
 
-// Profile preview computed
 const profilePreviewPhotos = computed(() =>
   profilePreview.value?.photos?.filter((photo) => photo?.url) || []
 )
@@ -152,8 +149,6 @@ const openProfilePreview = async (chat) => {
       profile_id: profileId,
       user_id: fullProfile.user_id || other?.id,
     }
-  } catch {
-    // keep minimal data
   } finally {
     profilePreviewLoading.value = false
   }
@@ -393,7 +388,7 @@ const loadChats = async () => {
   isLoading.value = true
   try {
     const { data } = await chatsApi.getAll()
-    console.log(data)
+
     const list = data.chats || []
     const activeChatId = Number(activeChat.value?.id ?? null)
     chats.value = list.map((chat) => (
@@ -447,11 +442,11 @@ const loadMessages = async (chatId) => {
       ? messagesPage.value < messagesLastPage.value
       : list.length > 0
     scrollToBottomInstant()
-    // Ensure messages are marked as read on load (helps when selectChat path didn't call markAsRead)
+
     try {
       await messagesApi.markAsRead(chatId)
     } catch (err) {
-      // non-fatal
+
     }
   } catch {
     toast.error('Unable to load messages.')
@@ -541,7 +536,7 @@ const loadOlderMessages = async (sourceEl = null) => {
       hasMoreOlderMessages.value = false
     }
 
-    // If still near top after prepend, continue loading seamlessly.
+
     if (container && container.scrollTop <= 120 && hasMoreOlderMessages.value) {
       setTimeout(() => {
         loadOlderMessages(container)
@@ -595,7 +590,6 @@ const selectChat = async (chat, { updateRoute = true } = {}) => {
     try {
       await messagesApi.markAsRead(chat.id)
     } catch (err) {
-      console.error('Failed to mark chat messages as read', err)
       toast.error('Unable to mark messages as read.')
     }
 
@@ -628,9 +622,7 @@ const openChatWithUser = async (userId, profileId = null) => {
       if (data?.profile) {
         otherUser = { id: userId, profile: data.profile }
       }
-    } catch {
-      // keep minimal placeholder
-    }
+    } finally {}
   }
 
   activeChat.value = { id: null, users: [otherUser] }
@@ -770,8 +762,7 @@ watch(() => notificationsStore.lastRealtimeMessage, async (payload) => {
       try {
         await messagesApi.markAsRead(activeChat.value.id)
         await markChatNotificationsRead(activeChat.value.id)
-      } catch {
-        // non-fatal
+      } catch (err) {
       }
     }
   }
@@ -785,7 +776,7 @@ watch(() => notificationsStore.lastReadReceipt, (payload) => {
   const chatId = Number(payload.chat_id)
   const senderId = Number(payload.sender_id)
 
-  // Update sidebar chat list — mark last_message as read
+
   chats.value = chats.value.map((chat) => {
     if (Number(chat.id) !== chatId) return chat
     const lastMsg = chat.last_message
@@ -794,7 +785,7 @@ watch(() => notificationsStore.lastReadReceipt, (payload) => {
   })
   chats.value = [...chats.value]
 
-  // If this chat is active, update in-chat message checkmarks
+
   if (activeChat.value?.id && Number(activeChat.value.id) === chatId) {
     messages.value = messages.value.map((m) => {
       if (
@@ -832,7 +823,7 @@ watch(() => messages.value.length, () => {
       class="mx-auto flex flex-1 min-h-0 w-full max-w-7xl overflow-hidden rounded-3xl border border-white/60 bg-white/40 shadow-[0_8px_32px_rgba(15,23,42,0.08)] backdrop-blur-xl"
       :class="{ 'max-md:flex-col': true }"
     >
-      <!-- Desktop Sidebar (visible on md+) -->
+
       <aside class="hidden md:flex md:flex-col md:w-80 lg:w-96 md:shrink-0 w-full border-r border-slate-200/50 bg-white/60">
         <div class="flex h-16 shrink-0 items-center px-6 border-b border-slate-200/50">
           <h2 class="text-xl font-bold tracking-tight text-slate-900">Messages</h2>
@@ -877,7 +868,7 @@ watch(() => messages.value.length, () => {
         </ul>
       </aside>
 
-      <!-- Mobile Sidebar (visible on small screens when no chat selected) -->
+
       <aside v-if="!activeChat" class="flex md:hidden w-full flex-col shrink-0 border-r border-slate-200/50 bg-white/60">
         <div class="flex h-16 shrink-0 items-center px-6 border-b border-slate-200/50">
           <h2 class="text-xl font-bold tracking-tight text-slate-900">Messages</h2>
@@ -910,7 +901,7 @@ watch(() => messages.value.length, () => {
         </ul>
       </aside>
 
-      <!-- Chat Thread (Desktop) -->
+
       <section class="hidden md:flex flex-1 flex-col bg-slate-50/50 min-h-0 relative">
         <div class="flex h-16 shrink-0 items-center justify-between border-b border-slate-200/50 bg-white/60 px-4 backdrop-blur-md sm:px-6">
           <div class="flex items-center gap-3">
@@ -1002,7 +993,7 @@ watch(() => messages.value.length, () => {
         </div>
       </section>
 
-      <!-- Chat Thread (Mobile) -->
+
       <section v-if="activeChat" class="flex md:hidden flex-1 flex-col bg-slate-50/50 min-h-0 relative">
         <div class="flex h-16 shrink-0 items-center justify-between border-b border-slate-200/50 bg-white/60 px-4 backdrop-blur-md sm:px-6">
           <div class="flex items-center gap-3">
@@ -1091,12 +1082,12 @@ watch(() => messages.value.length, () => {
     </div>
     <div class="shrink-0 h-24"></div>
 
-    <!-- Profile Preview Modal -->
+
     <Teleport to="body">
       <transition name="profile-pop">
         <div v-if="profilePreview" class="fixed inset-0 z-[9999] flex md:items-center md:justify-center bg-slate-950 md:bg-black/35 md:backdrop-blur-[6px] md:px-4 md:py-6 overflow-y-auto thin-scroll md:overflow-hidden" @click.self="closeProfilePreview">
           <div class="profile-preview-shell relative flex flex-col md:flex-row min-h-full md:min-h-0 w-full md:h-[min(82svh,680px)] md:max-w-[880px] md:gap-5 md:overflow-visible">
-            <!-- Close button (desktop) -->
+
             <button class="hidden md:flex absolute right-4 top-4 z-30 h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur-md transition hover:bg-black/65" type="button" aria-label="Close profile preview" @click="closeProfilePreview">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
@@ -1106,9 +1097,9 @@ watch(() => messages.value.length, () => {
             <div v-if="profilePreviewLoading" class="min-h-[240px] flex items-center justify-center text-slate-500 w-full">Loading profile...</div>
 
             <template v-else>
-              <!-- Desktop layout (md+) -->
+
               <div class="hidden h-full w-full grid-cols-[1fr_1fr] gap-5 md:grid">
-                <!-- Photo panel -->
+
                 <div class="relative overflow-hidden rounded-[30px] border border-white/45 bg-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.28)] cursor-pointer" @click="handleProfilePhotoClick">
                   <img v-if="currentProfilePreviewPhoto" :src="currentProfilePreviewPhoto" :alt="profilePreview.name || 'Profile'" class="h-full w-full object-cover object-top select-none" style="-webkit-user-drag: none;" />
                   <div v-else class="flex h-full w-full items-center justify-center bg-cyan-50 text-[3rem] font-bold text-cyan-500">
@@ -1127,7 +1118,7 @@ watch(() => messages.value.length, () => {
                   </template>
                 </div>
 
-                <!-- Info panel -->
+
                 <div class="relative flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/30 bg-[linear-gradient(145deg,#1e293b_0%,#0891b2_48%,#db2777_100%)] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.28)]">
                   <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.25),transparent_28%),radial-gradient(circle_at_85%_90%,rgba(255,255,255,0.15),transparent_28%)]"></div>
                   <div class="relative z-10 flex min-h-0 flex-1 flex-col">
@@ -1165,7 +1156,7 @@ watch(() => messages.value.length, () => {
                 </div>
               </div>
 
-              <!-- Mobile layout -->
+
               <div class="flex flex-col w-full md:hidden">
                 <div class="relative w-full h-[65svh] shrink-0">
                   <img v-if="currentProfilePreviewPhoto" :src="currentProfilePreviewPhoto" :alt="profilePreview.name || 'Profile'" class="w-full h-full object-cover object-top select-none" style="-webkit-user-drag: none;" />

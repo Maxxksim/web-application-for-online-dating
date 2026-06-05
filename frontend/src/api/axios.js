@@ -1,7 +1,3 @@
-/**
- * axios.js — Configured Axios instance for MatchFlow API
- * Handles base URL, auth headers, and global error interceptors.
- */
 
 import axios from 'axios'
 
@@ -13,7 +9,7 @@ const apiClient = axios.create({
   },
 })
 
-// ── Request Interceptor: Attach Bearer token ──
+
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('auth_token')
@@ -25,7 +21,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// ── Response Interceptor: Handle 401 globally ──
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {

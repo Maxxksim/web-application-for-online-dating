@@ -101,7 +101,7 @@ defineExpose({ triggerSwipe })
     :style="cardStyle"
     v-on="swipeHandlers"
   >
-    <!-- Левая колонка для десктопа: Фото профиля -->
+
     <div class="hidden min-h-0 overflow-hidden rounded-[28px] border border-white/50 bg-slate-950 shadow-xl md:block">
       <div class="relative h-full w-full cursor-pointer" @click="handlePhotoClick">
         <img
@@ -141,14 +141,14 @@ defineExpose({ triggerSwipe })
       </div>
     </div>
 
-    <!-- Правая колонка для десктопа: Информация -->
+
     <div class="hidden min-h-0 overflow-hidden rounded-[28px] border border-white/50 bg-[linear-gradient(145deg,#1e293b_0%,#0891b2_48%,#db2777_100%)] p-6 text-white shadow-xl md:flex md:flex-col relative">
       <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.25),transparent_28%),radial-gradient(circle_at_85%_90%,rgba(255,255,255,0.15),transparent_28%)]"></div>
       
       <div class="relative z-10 flex min-h-0 flex-1 flex-col">
         <div class="mb-4">
           <div class="flex items-end gap-2">
-            <!-- Исправлено на leading-tight -->
+
             <h2 class="m-0 text-[2.2rem] font-extrabold leading-tight pb-0.5">{{ profile.name }}</h2>
             <span v-if="profile.age" class="text-[1.5rem] font-medium leading-none text-white/88 pb-1.5">{{ profile.age }}</span>
           </div>
@@ -194,7 +194,7 @@ defineExpose({ triggerSwipe })
       </div>
     </div>
 
-    <!-- Мобильная версия (карточка в поиске) -->
+
     <div class="relative h-full w-full overflow-hidden rounded-[28px] border border-slate-200/50 bg-slate-100 shadow-xl md:hidden">
       <div class="absolute inset-0 cursor-pointer z-0" @click="handlePhotoClick">
         <img
@@ -234,9 +234,9 @@ defineExpose({ triggerSwipe })
       <div class="absolute bottom-0 left-0 right-0 z-20 flex flex-col px-4 pb-4 pt-20 text-white pointer-events-none bg-gradient-to-t from-black/90 via-black/40 to-transparent rounded-b-[28px]">
         <div class="pointer-events-auto flex items-end justify-between gap-3">
           <div class="flex-1 min-w-0 flex flex-col gap-1.5 drop-shadow-md">
-            <!-- Заменено items-end на items-baseline для идеального выравнивания по тексту базовой линии -->
+
             <div class="flex items-baseline gap-2.5">
-              <!-- Исправлено: заменено leading-none на leading-tight + добавлен нижний паддинг pb-0.5 -->
+
               <h2 class="text-[2.2rem] font-extrabold m-0 leading-tight pb-0.5 truncate flex-1 min-w-0">{{ profile.name }}</h2>
               <span v-if="profile.age" class="text-[1.5rem] font-medium opacity-90 shrink-0">{{ profile.age }}</span>
             </div>
@@ -261,7 +261,7 @@ defineExpose({ triggerSwipe })
     </div>
   </div>
 
-  <!-- Мобильное раскрывающееся оверлей-меню -->
+
   <Teleport to="body">
   <transition name="slide-up">
     <div v-if="isExpanded" class="fixed inset-0 z-[9999] bg-slate-950 overflow-y-auto thin-scroll md:hidden">
@@ -289,7 +289,7 @@ defineExpose({ triggerSwipe })
       <div class="px-5 pt-3 pb-28 text-white relative z-20">
         <div class="flex justify-between items-start mb-6">
           <div class="flex-1 min-w-0">
-            <!-- Тут тоже исправлено на items-baseline и добавлен leading-tight с pb-0.5 -->
+
             <div class="flex items-baseline gap-3 mb-1">
               <h2 class="text-[2.2rem] font-extrabold leading-tight pb-0.5 truncate flex-1 min-w-0">{{ profile.name }}</h2>
               <span v-if="profile.age" class="text-[1.5rem] font-medium text-white/90 shrink-0">{{ profile.age }}</span>

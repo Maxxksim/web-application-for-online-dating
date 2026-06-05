@@ -60,30 +60,19 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  /**
-   * Log out current user
-   */
   async function logout() {
     try {
       await authApi.logout()
     } catch {
-      // Token might already be invalid — still clear locally
     } finally {
       setToken(null)
     }
   }
 
-  /**
-   * Handle Google OAuth callback token (called from popup postMessage)
-   * @param {string} googleToken
-   */
   function loginWithGoogleToken(googleToken) {
     setToken(googleToken)
   }
 
-  /**
-   * Open Google OAuth popup
-   */
   function openGoogleAuth() {
     const url = authApi.getGoogleRedirectUrl()
     const popup = window.open(url, 'google-auth', 'width=500,height=600')

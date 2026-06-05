@@ -1,13 +1,7 @@
-/**
- * router/index.js — Vue Router 4 configuration
- *
- * Route guard: unauthenticated users are redirected to /auth.
- */
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 
-// ── Lazy-loaded views ──
 const HomeView          = () => import('@/views/HomeView.vue')
 const AuthView          = () => import('@/views/AuthView.vue')
 const SwipeView         = () => import('@/views/SwipeView.vue')
@@ -74,7 +68,6 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 })
 
-// ── Navigation Guard ──
 router.beforeEach((to) => {
   const authStore = useAuthStore()
 

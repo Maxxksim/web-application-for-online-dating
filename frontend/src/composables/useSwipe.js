@@ -1,26 +1,16 @@
-/**
- * composables/useSwipe.js
- *
- * Handles mouse & touch drag gestures for swipe cards.
- * Returns reactive position + rotation data and event handlers.
- *
- * Usage:
- *   const { x, rotation, direction, handlers, reset } = useSwipe(onSwipe)
- *   where onSwipe(isLiked: boolean) is called when swipe threshold is reached.
- */
 
 import { ref, computed } from 'vue'
 
-const SWIPE_THRESHOLD  = 80   // px to trigger a swipe decision
-const ROTATE_FACTOR    = 0.08 // degrees per pixel of horizontal drag
-const VELOCITY_BOOST   = 1.4  // multiplier applied to fast swipes
+const SWIPE_THRESHOLD  = 80
+const ROTATE_FACTOR    = 0.08
+const VELOCITY_BOOST   = 1.4
 
 export function useSwipe(onSwipe) {
   const x         = ref(0)
   const y         = ref(0)
   const isDragging = ref(false)
 
-  // Absolute direction: 'left' | 'right' | null
+
   const direction = computed(() => {
     if (Math.abs(x.value) < 10) return null
     return x.value > 0 ? 'right' : 'left'
@@ -28,11 +18,11 @@ export function useSwipe(onSwipe) {
 
   const rotation = computed(() => x.value * ROTATE_FACTOR)
 
-  // Hint opacity: 0 → 1 as card moves toward threshold
+
   const likeOpacity    = computed(() => Math.min(1, Math.max(0,  x.value / SWIPE_THRESHOLD)))
   const dislikeOpacity = computed(() => Math.min(1, Math.max(0, -x.value / SWIPE_THRESHOLD)))
 
-  // ── Internal drag tracking ──
+
   let startX   = 0
   let startY   = 0
   let startTime = 0
@@ -45,7 +35,6 @@ export function useSwipe(onSwipe) {
     startX = point.clientX - x.value
     startY = point.clientY - y.value
 
-    // Disable transition during active drag
     event.currentTarget?.style.setProperty('transition', 'none')
   }
 
@@ -70,7 +59,6 @@ export function useSwipe(onSwipe) {
 
     if (Math.abs(boosted) >= SWIPE_THRESHOLD) {
       const isLiked = boosted > 0
-      // Animate card off screen, then callback
       x.value = isLiked ? window.innerWidth : -window.innerWidth
       y.value = y.value * 1.5
       setTimeout(() => {
@@ -78,7 +66,7 @@ export function useSwipe(onSwipe) {
         onSwipe?.(isLiked)
       }, 350)
     } else {
-      // Snap back
+
       reset()
     }
   }
@@ -88,10 +76,6 @@ export function useSwipe(onSwipe) {
     y.value = 0
   }
 
-  /**
-   * Programmatically trigger a swipe (e.g. from action buttons)
-   * @param {boolean} isLiked
-   */
   function triggerSwipe(isLiked) {
     x.value = isLiked ? window.innerWidth * 0.6 : -window.innerWidth * 0.6
     setTimeout(() => {

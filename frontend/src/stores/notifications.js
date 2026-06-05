@@ -159,10 +159,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
         
       })
       .listenToAll((event, data) => {
-        console.log('raw event:', event, data)
       })
       .notification(async (notification) => {
-        console.log('notification received:', notification)
         const type = notification.type || ''
 
         if (type.includes('LikeNotification')) {
