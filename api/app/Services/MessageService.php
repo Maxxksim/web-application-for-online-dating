@@ -5,11 +5,9 @@ namespace App\Services;
 use App\Events\MessageRead;
 use App\Events\MessageSent;
 use App\Models\Chat;
-use App\Models\Message;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class MessageService
 {
@@ -43,7 +41,7 @@ class MessageService
             });
     }
 
-    public function sendMessage(User $sender, User $recipient, $text): void
+    public function sendMessage(User $sender, User $recipient, $text): Model
     {
         $chat = $this->chatService->firstOrCreate($sender, $recipient);
 
@@ -56,6 +54,8 @@ class MessageService
         $chat->update(['last_message_at' => now()]);
 
         MessageSent::dispatch($message);
+
+        return $message;
     }
 
     public function getMessages(Chat $chat, int $perPage = 30): LengthAwarePaginator

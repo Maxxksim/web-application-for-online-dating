@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\LikeRetracted;
 use App\Events\LikeSent;
 use App\Events\MatchCreated;
 use App\Models\MutualLike;
@@ -52,6 +53,7 @@ class SwipeService
             'second_user_id' => $swipedId,
         ]);
 
+        $this->markLikeNotificationAsRead($swipedId, $swiperId);
         MatchCreated::dispatch($match);
     }
 
@@ -69,18 +71,27 @@ class SwipeService
             }
 
             $this->retractLikeNotification($swiperId, $swipedId);
-
+            LikeRetracted::dispatch($swipe);
         });
     }
 
 
-    private function retractLikeNotification(int $swiperId, int $swipedId): void
+    private function retractLikeNotification(int $fromUserId, int $toUserId): void
     {
-        $swipedUser = User::find($swipedId);
+        $this->likeNotificationQuery($fromUserId, $toUserId)->delete();
+    }
 
-        $swipedUser->notifications()
+    private function markLikeNotificationAsRead(int $fromUserId, int $toUserId): void
+    {
+        $this->likeNotificationQuery($fromUserId, $toUserId)
+            ->update(['read_at' => now()]);
+    }
+
+    private function likeNotificationQuery(int $fromUserId, int $toUserId)
+    {
+        return User::find($toUserId)
+            ->notifications()
             ->where('type', LikeNotification::class)
-            ->whereRaw("(data::jsonb->>'user_id')::integer = ?", [$swiperId])
-            ->delete();
+            ->whereRaw("(data::jsonb->>'user_id')::integer = ?", [$fromUserId]);
     }
 }

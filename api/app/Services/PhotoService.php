@@ -15,6 +15,8 @@ use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 class PhotoService
 {
     private const int IMAGE_QUALITY = 60;
+    private const int MAX_WIDTH = 720;
+    private const int MAX_HEIGHT = 960;
 
     public function __construct(private readonly ImageManager $imageManager)
     {
@@ -48,7 +50,10 @@ class PhotoService
 
     public function compressImage($photo): string
     {
-        return (string)$this->imageManager->decodeSplFileInfo($photo)->encode(new WebpEncoder(self::IMAGE_QUALITY));
+        return (string)$this->imageManager
+            ->decodeSplFileInfo($photo)
+            ->scaleDown(self::MAX_WIDTH, self::MAX_HEIGHT)
+            ->encode(new WebpEncoder(self::IMAGE_QUALITY));
     }
 
 }

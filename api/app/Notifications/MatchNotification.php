@@ -2,14 +2,13 @@
 
 namespace App\Notifications;
 
-use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class MatchNotification extends Notification
+class MatchNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -22,7 +21,7 @@ class MatchNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'broadcast'];
     }
 
     public function toDatabase(object $notifiable): array
@@ -30,5 +29,13 @@ class MatchNotification extends Notification
         return [
             'profile_id' => $this->matchedWithUser->profile->id,
         ];
+    }
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'profile_id' => $this->matchedWithUser->profile->id,
+            'name' => $this->matchedWithUser->profile->name,
+        ]);
     }
 }

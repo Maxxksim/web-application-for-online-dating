@@ -9,7 +9,7 @@ class ProfilePhotoRequest extends FormRequest
 {
     public function rules(): array
     {
-        $existing = $this->user()->photos()->count();
+        $existing = $this->user()->profile->photos()->count();
 
         return [
             'photos' => ['required', 'array', 'min:1', 'max:' . max(0, 3 - $existing)],
