@@ -7,6 +7,7 @@ import { profilesApi } from '@/api/profiles.js'
 import { useToast } from '@/composables/useToast.js'
 import { useProfileStore } from '@/stores/profile.js'
 import { useNotificationsStore } from '@/stores/notifications.js'
+import { formatLabel } from '@/constants/profileOptions.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,6 +34,11 @@ const isUserScrollingUp = ref(false)
 const isRestoringScrollPosition = ref(false)
 const showJumpToLatest = ref(false)
 const newMessagesCount = ref(0)
+
+// Profile preview state
+const profilePreview = ref(null)
+const profilePreviewLoading = ref(false)
+const profilePreviewPhotoIndex = ref(0)
 
 const onMessagesScroll = (e) => {
   if (isRestoringScrollPosition.value) return
@@ -95,6 +101,97 @@ const currentUserId = computed(() => {
   const p = profileStore.myProfile || {}
   return p.user_id ?? p.userId ?? p.id ?? null
 })
+
+// Profile preview computed
+const profilePreviewPhotos = computed(() =>
+  profilePreview.value?.photos?.filter((photo) => photo?.url) || []
+)
+
+const currentProfilePreviewPhoto = computed(() =>
+  profilePreviewPhotos.value[profilePreviewPhotoIndex.value]?.url
+  || profilePreview.value?.photo_url
+  || null
+)
+
+const profilePreviewInterests = computed(() => {
+  const interests = profilePreview.value?.interests
+  return Array.isArray(interests) ? interests : []
+})
+
+const profilePreviewDetails = computed(() => {
+  const profile = profilePreview.value || {}
+  return [
+    profile.height ? { label: 'Height', value: `${profile.height} cm` } : null,
+    profile.weight ? { label: 'Weight', value: `${profile.weight} kg` } : null,
+    profile.body_type ? { label: 'Body', value: formatLabel(profile.body_type) } : null,
+    profile.eye_color ? { label: 'Eyes', value: formatLabel(profile.eye_color) } : null,
+    profile.hair_color ? { label: 'Hair', value: formatLabel(profile.hair_color) } : null,
+    profile.zodiac_sign ? { label: 'Zodiac', value: formatLabel(profile.zodiac_sign) } : null,
+    profile.children ? { label: 'Children', value: formatLabel(profile.children) } : null,
+    profile.smoking ? { label: 'Smoking', value: formatLabel(profile.smoking) } : null,
+    profile.drinking ? { label: 'Drinking', value: formatLabel(profile.drinking) } : null,
+    profile.exercise ? { label: 'Exercise', value: formatLabel(profile.exercise) } : null,
+    profile.dating_purpose ? { label: 'Looking for', value: formatLabel(profile.dating_purpose) } : null,
+  ].filter(Boolean)
+})
+
+const openProfilePreview = async (chat) => {
+  const other = otherParticipant(chat)
+  const profileId = other?.profile?.id || other?.profile?.profile_id || null
+  if (!profileId) return
+
+  profilePreviewPhotoIndex.value = 0
+  profilePreviewLoading.value = true
+  profilePreview.value = { name: other?.profile?.name || other?.name, profile_id: profileId }
+
+  try {
+    const { data } = await profilesApi.getById(profileId)
+    const fullProfile = data?.profile || {}
+    profilePreview.value = {
+      ...fullProfile,
+      profile_id: profileId,
+      user_id: fullProfile.user_id || other?.id,
+    }
+  } catch {
+    // keep minimal data
+  } finally {
+    profilePreviewLoading.value = false
+  }
+}
+
+const closeProfilePreview = () => {
+  profilePreview.value = null
+}
+
+const nextProfilePhoto = () => {
+  if (profilePreviewPhotos.value.length > 1) {
+    profilePreviewPhotoIndex.value = (profilePreviewPhotoIndex.value + 1) % profilePreviewPhotos.value.length
+  }
+}
+
+const prevProfilePhoto = () => {
+  if (profilePreviewPhotos.value.length > 1) {
+    profilePreviewPhotoIndex.value = (profilePreviewPhotoIndex.value - 1 + profilePreviewPhotos.value.length) % profilePreviewPhotos.value.length
+  }
+}
+
+const handleProfilePhotoClick = (event) => {
+  if (profilePreviewPhotos.value.length <= 1) return
+  const rect = event.currentTarget.getBoundingClientRect()
+  const clickX = event.clientX - rect.left
+  if (clickX < rect.width * 0.33) {
+    prevProfilePhoto()
+  } else {
+    nextProfilePhoto()
+  }
+}
+
+const deselectChat = () => {
+  activeChat.value = null
+  notificationsStore.setActiveChatId(null)
+  messages.value = []
+  router.replace({ name: 'chats' })
+}
 
 const otherParticipant = (chat) => {
   if (!chat) return null
@@ -457,12 +554,14 @@ const loadOlderMessages = async (sourceEl = null) => {
   }
 }
 
-const markChatNotificationsRead = (chatId) => {
+const markChatNotificationsRead = async (chatId) => {
   if (!chatId) return
   const chatNotifs = notificationsStore.notifications.filter(
     (n) => n.type?.includes('MessageNotification') && Number(n.data?.chat_id) === Number(chatId)
   )
-  chatNotifs.forEach((n) => notificationsStore.markAsRead(n.id))
+  if (chatNotifs.length) {
+    await Promise.all(chatNotifs.map((n) => notificationsStore.markAsRead(n.id)))
+  }
 }
 
 const routeMatchesCurrentSelection = () => {
@@ -500,7 +599,7 @@ const selectChat = async (chat, { updateRoute = true } = {}) => {
       toast.error('Unable to mark messages as read.')
     }
 
-    markChatNotificationsRead(chat.id)
+    await markChatNotificationsRead(chat.id)
     clearChatUnreadCount(chat.id)
     try { await notificationsStore.fetchAll() } catch (_) {}
     if (updateRoute) {
@@ -670,6 +769,7 @@ watch(() => notificationsStore.lastRealtimeMessage, async (payload) => {
     if (isIncoming && activeChat.value?.id) {
       try {
         await messagesApi.markAsRead(activeChat.value.id)
+        await markChatNotificationsRead(activeChat.value.id)
       } catch {
         // non-fatal
       }
@@ -787,9 +887,14 @@ watch(() => messages.value.length, () => {
         </div>
         <ul v-else class="flex-1 overflow-y-auto p-3 space-y-1 thin-scroll">
           <li v-for="chat in chats" :key="chat.id" class="group relative flex cursor-pointer items-center gap-3 rounded-2xl p-3 transition-all duration-200" :class="activeChat?.id === chat.id ? 'bg-cyan-50/80 shadow-sm border border-cyan-100/50' : 'hover:bg-white border border-transparent'" @click="selectChat(chat)">
-            <div class="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
-              <img v-if="chatAvatarUrl(chat)" :src="chatAvatarUrl(chat)" :alt="chatLabel(chat)" class="h-full w-full object-cover" />
-              <span v-else class="text-lg font-bold">{{ chatLabel(chat).charAt(0) }}</span>
+            <div class="relative shrink-0 h-12 w-12">
+              <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
+                <img v-if="chatAvatarUrl(chat)" :src="chatAvatarUrl(chat)" :alt="chatLabel(chat)" class="h-full w-full object-cover" />
+                <span v-else class="text-lg font-bold">{{ chatLabel(chat).charAt(0) }}</span>
+              </div>
+              <div v-if="chat.unread_count" class="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm">
+                {{ chat.unread_count }}
+              </div>
             </div>
             <div class="flex min-w-0 flex-1 flex-col">
               <p class="truncate text-sm font-bold text-slate-900">{{ chatLabel(chat) }}</p>
@@ -809,12 +914,18 @@ watch(() => messages.value.length, () => {
       <section class="hidden md:flex flex-1 flex-col bg-slate-50/50 min-h-0 relative">
         <div class="flex h-16 shrink-0 items-center justify-between border-b border-slate-200/50 bg-white/60 px-4 backdrop-blur-md sm:px-6">
           <div class="flex items-center gap-3">
+            <button v-if="activeChat" class="px-3 py-1.5 text-sm font-medium rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors mr-1" @click="deselectChat">
+              Leave chat
+            </button>
             <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
               <img v-if="activeChat && chatAvatarUrl(activeChat)" :src="chatAvatarUrl(activeChat)" :alt="chatLabel(activeChat)" class="h-full w-full object-cover" />
               <span v-else class="text-base font-bold">{{ activeChat ? chatLabel(activeChat).charAt(0) : 'M' }}</span>
             </div>
-            <div>
-              <h2 class="text-base font-bold text-slate-900">{{ activeChat ? chatLabel(activeChat) : 'Messages' }}</h2>
+            <div class="flex flex-col justify-center">
+              <h2 class="text-base font-bold text-slate-900 leading-tight">{{ activeChat ? chatLabel(activeChat) : 'Messages' }}</h2>
+              <span role="button" v-if="activeChat" class="text-[0.8rem] font-medium text-cyan-600 hover:text-slate-900 text-left w-fit cursor-pointer transition-colors" @click="openProfilePreview(activeChat)">
+                View profile
+              </span>
               <p v-if="!activeChat" class="text-xs text-slate-500">Select a conversation</p>
             </div>
           </div>
@@ -895,16 +1006,19 @@ watch(() => messages.value.length, () => {
       <section v-if="activeChat" class="flex md:hidden flex-1 flex-col bg-slate-50/50 min-h-0 relative">
         <div class="flex h-16 shrink-0 items-center justify-between border-b border-slate-200/50 bg-white/60 px-4 backdrop-blur-md sm:px-6">
           <div class="flex items-center gap-3">
-            <button class="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100" @click="activeChat = null">
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+            <button class="px-3 py-1.5 text-sm font-medium rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors mr-1" @click="deselectChat">
+              Leave chat
             </button>
             <div class="flex items-center gap-3">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-100 to-cyan-50 text-cyan-700 shadow-inner">
                 <img v-if="chatAvatarUrl(activeChat)" :src="chatAvatarUrl(activeChat)" :alt="chatLabel(activeChat)" class="h-full w-full object-cover" />
                 <span v-else class="text-base font-bold">{{ chatLabel(activeChat).charAt(0) }}</span>
               </div>
-              <div>
-                <h2 class="text-base font-bold text-slate-900">{{ chatLabel(activeChat) }}</h2>
+              <div class="flex flex-col justify-center">
+                <h2 class="text-base font-bold text-slate-900 leading-tight">{{ chatLabel(activeChat) }}</h2>
+                <span role="button" class="text-[0.8rem] font-medium text-cyan-600 hover:text-slate-900 text-left w-fit cursor-pointer transition-colors" @click="openProfilePreview(activeChat)">
+                  View profile
+                </span>
               </div>
             </div>
           </div>
@@ -976,5 +1090,167 @@ watch(() => messages.value.length, () => {
       </section>
     </div>
     <div class="shrink-0 h-24"></div>
+
+    <!-- Profile Preview Modal -->
+    <Teleport to="body">
+      <transition name="profile-pop">
+        <div v-if="profilePreview" class="fixed inset-0 z-[9999] flex md:items-center md:justify-center bg-slate-950 md:bg-black/35 md:backdrop-blur-[6px] md:px-4 md:py-6 overflow-y-auto thin-scroll md:overflow-hidden" @click.self="closeProfilePreview">
+          <div class="profile-preview-shell relative flex flex-col md:flex-row min-h-full md:min-h-0 w-full md:h-[min(82svh,680px)] md:max-w-[880px] md:gap-5 md:overflow-visible">
+            <!-- Close button (desktop) -->
+            <button class="hidden md:flex absolute right-4 top-4 z-30 h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white shadow-lg backdrop-blur-md transition hover:bg-black/65" type="button" aria-label="Close profile preview" @click="closeProfilePreview">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+
+            <div v-if="profilePreviewLoading" class="min-h-[240px] flex items-center justify-center text-slate-500 w-full">Loading profile...</div>
+
+            <template v-else>
+              <!-- Desktop layout (md+) -->
+              <div class="hidden h-full w-full grid-cols-[1fr_1fr] gap-5 md:grid">
+                <!-- Photo panel -->
+                <div class="relative overflow-hidden rounded-[30px] border border-white/45 bg-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.28)] cursor-pointer" @click="handleProfilePhotoClick">
+                  <img v-if="currentProfilePreviewPhoto" :src="currentProfilePreviewPhoto" :alt="profilePreview.name || 'Profile'" class="h-full w-full object-cover object-top select-none" style="-webkit-user-drag: none;" />
+                  <div v-else class="flex h-full w-full items-center justify-center bg-cyan-50 text-[3rem] font-bold text-cyan-500">
+                    {{ profilePreview.name?.[0] || 'M' }}
+                  </div>
+                  <div v-if="profilePreviewPhotos.length > 1" class="absolute left-4 right-4 top-4 z-20 flex gap-1.5 pointer-events-none">
+                    <div v-for="(_, i) in profilePreviewPhotos" :key="i" class="h-1 flex-1 rounded-full transition-all duration-300" :class="i === profilePreviewPhotoIndex ? 'bg-white shadow-[0_0_4px_rgba(255,255,255,0.5)]' : 'bg-white/35'" />
+                  </div>
+                  <template v-if="profilePreviewPhotos.length > 1">
+                    <button type="button" class="absolute left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-colors hover:bg-black/50" aria-label="Previous photo" @click.stop="prevProfilePhoto">
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6" /></svg>
+                    </button>
+                    <button type="button" class="absolute right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition-colors hover:bg-black/50" aria-label="Next photo" @click.stop="nextProfilePhoto">
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" /></svg>
+                    </button>
+                  </template>
+                </div>
+
+                <!-- Info panel -->
+                <div class="relative flex min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/30 bg-[linear-gradient(145deg,#1e293b_0%,#0891b2_48%,#db2777_100%)] p-6 text-white shadow-[0_24px_70px_rgba(15,23,42,0.28)]">
+                  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.25),transparent_28%),radial-gradient(circle_at_85%_90%,rgba(255,255,255,0.15),transparent_28%)]"></div>
+                  <div class="relative z-10 flex min-h-0 flex-1 flex-col">
+                    <div class="mb-4 pr-10">
+                      <div class="flex items-end gap-2">
+                        <h2 class="m-0 text-[2.25rem] font-extrabold leading-none">{{ profilePreview.name || 'Someone' }}</h2>
+                        <span v-if="profilePreview.age" class="text-[1.55rem] font-medium leading-none text-white/90">{{ profilePreview.age }}</span>
+                      </div>
+                      <div class="mt-3 flex flex-wrap items-center gap-2 text-[0.85rem] font-semibold text-white/90">
+                        <span>{{ profilePreview.city || 'Nearby' }}</span>
+                      </div>
+                    </div>
+
+                    <div class="thin-scroll min-h-0 flex-1 overflow-y-auto pr-1">
+                      <div class="rounded-[22px] border border-white/15 bg-white/10 p-4 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+                        <p class="m-0 text-[0.95rem] leading-relaxed text-white">
+                          {{ profilePreview.description || profilePreview.bio || 'No bio provided.' }}
+                        </p>
+                      </div>
+
+                      <div v-if="profilePreviewDetails.length" class="mt-4 grid grid-cols-2 gap-2">
+                        <div v-for="detail in profilePreviewDetails" :key="detail.label" class="rounded-2xl border border-white/15 bg-white/10 px-3 py-2.5 backdrop-blur-md">
+                          <p class="m-0 text-[0.66rem] font-semibold uppercase text-white/70">{{ detail.label }}</p>
+                          <p class="m-0 mt-0.5 text-[0.86rem] font-semibold text-white">{{ detail.value }}</p>
+                        </div>
+                      </div>
+
+                      <div v-if="profilePreviewInterests.length" class="mt-4 flex flex-wrap gap-2">
+                        <span v-for="interest in profilePreviewInterests" :key="interest.id || interest.interest || interest" class="rounded-full border border-white/15 bg-white/14 px-3 py-1.5 text-[0.75rem] font-semibold text-white backdrop-blur-md">
+                          {{ formatLabel(interest.interest || interest) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mobile layout -->
+              <div class="flex flex-col w-full md:hidden">
+                <div class="relative w-full h-[65svh] shrink-0">
+                  <img v-if="currentProfilePreviewPhoto" :src="currentProfilePreviewPhoto" :alt="profilePreview.name || 'Profile'" class="w-full h-full object-cover object-top select-none" style="-webkit-user-drag: none;" />
+                  <div v-else class="w-full h-full flex items-center justify-center text-[2.5rem] font-bold text-cyan-500 bg-cyan-50">
+                    {{ profilePreview.name?.[0] || 'M' }}
+                  </div>
+                  <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent pointer-events-none"></div>
+                  
+                  <button class="absolute top-5 right-5 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white shadow-md backdrop-blur-md transition-transform hover:scale-105 active:scale-95" @click.stop="closeProfilePreview">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+
+                  <div v-if="profilePreviewPhotos.length > 1" class="absolute inset-0 z-10 flex">
+                    <div class="w-1/3 h-full cursor-pointer" @click.stop="prevProfilePhoto"></div>
+                    <div class="flex-1 h-full"></div>
+                    <div class="w-1/3 h-full cursor-pointer" @click.stop="nextProfilePhoto"></div>
+                  </div>
+
+                  <div v-if="profilePreviewPhotos.length > 1" class="absolute top-4 left-4 right-20 flex gap-1.5 z-20 pointer-events-none">
+                    <div v-for="(_, i) in profilePreviewPhotos" :key="i" class="h-[3px] flex-1 rounded-full transition-all duration-300" :class="i === profilePreviewPhotoIndex ? 'bg-white shadow-[0_0_4px_rgba(255,255,255,0.5)]' : 'bg-white/35'" />
+                  </div>
+                </div>
+
+                <div class="px-5 pt-3 pb-28 text-white relative z-20">
+                  <div class="flex justify-between items-start mb-6">
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-baseline gap-3 mb-1">
+                        <h2 class="text-[2.2rem] font-extrabold leading-tight pb-0.5 truncate flex-1 min-w-0">{{ profilePreview.name || 'Someone' }}</h2>
+                        <span v-if="profilePreview.age" class="text-[1.5rem] font-medium text-white/90 shrink-0">{{ profilePreview.age }}</span>
+                      </div>
+                      <div class="flex flex-wrap items-center gap-2 text-[0.85rem] font-medium text-white/85">
+                        <span v-if="profilePreview.city" class="rounded-full bg-white/10 px-2.5 py-0.5">{{ profilePreview.city }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-if="profilePreview.description || profilePreview.bio" class="mb-6">
+                    <h3 class="text-[0.7rem] font-bold uppercase tracking-widest text-white/50 mb-2.5">About</h3>
+                    <p class="text-[0.95rem] leading-[1.6] text-white/95 m-0 whitespace-pre-line">{{ profilePreview.description || profilePreview.bio }}</p>
+                  </div>
+
+                  <div v-if="profilePreviewDetails.length" class="mb-6">
+                    <h3 class="text-[0.7rem] font-bold uppercase tracking-widest text-white/50 mb-2.5">Details</h3>
+                    <div class="flex flex-wrap gap-2">
+                      <span v-for="detail in profilePreviewDetails" :key="detail.label" class="rounded-[14px] border border-white/10 bg-white/5 px-3 py-2 text-[0.8rem] text-white/90 font-medium backdrop-blur-sm">
+                        {{ detail.icon }} {{ detail.value }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div v-if="profilePreviewInterests.length" class="mb-6">
+                    <h3 class="text-[0.7rem] font-bold uppercase tracking-widest text-white/50 mb-2.5">Interests</h3>
+                    <div class="flex flex-wrap gap-2">
+                      <span v-for="interest in profilePreviewInterests" :key="interest.id || interest.interest || interest" class="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-[0.8rem] text-white/90 font-medium backdrop-blur-sm">
+                        {{ formatLabel(interest.interest || interest) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* ── profile preview popup ── */
+.profile-pop-enter-active,
+.profile-pop-leave-active {
+  transition: opacity 220ms ease;
+}
+.profile-pop-enter-from,
+.profile-pop-leave-to {
+  opacity: 0;
+}
+.profile-pop-enter-active .profile-preview-shell {
+  animation: profile-in 320ms cubic-bezier(0.18, 0.9, 0.2, 1.12) both;
+}
+@keyframes profile-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(14px);
+  }
+}
+</style>

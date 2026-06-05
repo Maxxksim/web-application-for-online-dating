@@ -111,6 +111,11 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   function handleMessageEvent(payload) {
     lastRealtimeMessage.value = { ...payload, _ts: Date.now() }
+    
+    const chatId = payload.chat_id ? Number(payload.chat_id) : null
+    if (chatId && activeChatId.value === chatId) return
+
+    fetchAll()
   }
 
   function handleMessageReadEvent(payload) {
