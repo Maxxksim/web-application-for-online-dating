@@ -34,6 +34,11 @@ class MessageService
             ->whereIn('id', $unreadMessages->pluck('id'))
             ->update(['read_at' => $readAt]);
 
+        User::find($userId)->unreadNotifications()
+            ->where('type', 'App\Notifications\MessageNotification')
+            ->where('data->chat_id', $chat->id)
+            ->update(['read_at' => $readAt]);
+
         $unreadMessages->pluck('sender_id')
             ->unique()
             ->each(function (int $senderId) use ($chat, $userId, $readAt) {
