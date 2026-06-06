@@ -176,17 +176,19 @@ export const useNotificationsStore = defineStore('notifications', () => {
         if (type.includes('LikeNotification')) {
           pendingLikes.value++
           addPopup({ label: 'Like', message: 'Someone liked you!', type: 'like' })
-          await fetchAll()
-          pendingLikes.value = 0
-          lastLikeEvent.value = Date.now()
+          fetchAll().then(() => {
+            pendingLikes.value = 0
+            lastLikeEvent.value = Date.now()
+          })
         }
 
         if (type.includes('MatchNotification')) {
           pendingMatches.value++
           addPopup({ label: 'Match', message: 'You have a new match!', type: 'match' })
-          await fetchAll()
-          pendingMatches.value = 0
-          lastMatchEvent.value = Date.now()
+          fetchAll().then(() => {
+            pendingMatches.value = 0
+            lastMatchEvent.value = Date.now()
+          })
         }
 
         if (type.includes('MessageNotification')) {
@@ -195,8 +197,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
           pendingMessages.value++
           addPopup({ label: 'Message', message: 'New message received', type: 'message' })
-          await fetchAll()
-          pendingMessages.value = 0
+          // fetchAll runs in background — badge already updated via pendingMessages
+          fetchAll().then(() => { pendingMessages.value = 0 })
         }
       })
 

@@ -716,7 +716,12 @@ onMounted(async () => {
   }
 
   if (!profileStore.myProfile) await profileStore.fetchMyProfile()
-  await loadChats()
+  // Pre-sync from notifications so badge is correct while chats load
+  const preCount = notificationsStore.notifications.filter(
+    n => n.type?.includes('MessageNotification')
+  ).length
+  notificationsStore.setExternalMessageCount(preCount)
+  await loadChats() // will call syncMessageCount() with real unread_count after load
   await selectFromQuery()
 })
 
