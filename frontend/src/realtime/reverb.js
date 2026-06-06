@@ -47,12 +47,12 @@ export const initReverb = ({ token } = {}) => {
     forceTLS: scheme === 'https',
     enabledTransports: ['ws', 'wss'],
     authEndpoint: resolveAuthEndpoint(),
-    auth: authToken ? {
+    auth: {
       headers: {
-        Authorization: `Bearer ${authToken}`,
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         Accept: 'application/json',
       },
-    } : undefined,
+    },
     namespace: 'App\\Events',
   })
 
