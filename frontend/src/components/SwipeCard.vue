@@ -160,7 +160,7 @@ defineExpose({ triggerSwipe })
               </svg>
               <span>{{ distanceText }}</span>
             </div>
-            <span v-if="profile.city" class="rounded-full bg-white/17 px-2.5 py-1 backdrop-blur">{{ profile.city }}</span>
+            <span v-if="profile.city || profile.country" class="rounded-full bg-white/17 px-2.5 py-1 backdrop-blur">{{ [profile.city, profile.country].filter(Boolean).join(', ') }}</span>
             <span v-if="profile.dating_purpose" class="rounded-full bg-white/17 px-2.5 py-1 backdrop-blur">
               {{ formatLabel(profile.dating_purpose) }}
             </span>
@@ -248,7 +248,7 @@ defineExpose({ triggerSwipe })
                 </svg>
                 <span>{{ distanceText }}</span>
               </div>
-              <span v-if="profile.city" class="rounded-full bg-white/20 px-2.5 py-0.5 backdrop-blur-sm truncate">{{ profile.city }}</span>
+              <span v-if="profile.city || profile.country" class="rounded-full bg-white/20 px-2.5 py-0.5 backdrop-blur-sm truncate">{{ [profile.city, profile.country].filter(Boolean).join(', ') }}</span>
             </div>
           </div>
           <button @click.stop="isExpanded = true" class="w-10 h-10 shrink-0 bg-white text-rose-500 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-transform hover:scale-105 active:scale-95" aria-label="Open profile">
@@ -302,7 +302,7 @@ defineExpose({ triggerSwipe })
                 </svg>
                 <span>{{ distanceText }}</span>
               </div>
-              <span v-if="profile.city" class="rounded-full bg-white/10 px-2.5 py-0.5">{{ profile.city }}</span>
+              <span v-if="profile.city || profile.country" class="rounded-full bg-white/10 px-2.5 py-0.5">{{ [profile.city, profile.country].filter(Boolean).join(', ') }}</span>
               <span v-if="profile.dating_purpose" class="rounded-full bg-white/10 px-2.5 py-0.5">{{ formatLabel(profile.dating_purpose) }}</span>
             </div>
           </div>

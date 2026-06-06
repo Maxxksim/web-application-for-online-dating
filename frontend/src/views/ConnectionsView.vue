@@ -298,7 +298,7 @@ onMounted(async () => {
               {{ like.name || 'Someone' }}
               <span v-if="like.age" class="ml-1 font-normal text-slate-500">{{ like.age }}</span>
             </p>
-            <p class="text-[0.78rem] text-slate-500 m-0 truncate">{{ like.city || 'Nearby' }}</p>
+            <p class="text-[0.78rem] text-slate-500 m-0 truncate">{{ [like.city, like.country].filter(Boolean).join(', ') || 'Nearby' }}</p>
           </div>
         </button>
       </div>
@@ -325,7 +325,7 @@ onMounted(async () => {
                 {{ match.name || 'New match' }}
                 <span v-if="match.age" class="ml-1 font-normal text-slate-500">{{ match.age }}</span>
               </p>
-              <p class="text-[0.78rem] text-slate-500 m-0 truncate">{{ match.city || 'Nearby' }}</p>
+              <p class="text-[0.78rem] text-slate-500 m-0 truncate">{{ [match.city, match.country].filter(Boolean).join(', ') || 'Nearby' }}</p>
             </div>
           </div>
           <div class="flex items-center gap-2.5 px-4 pb-4">
@@ -392,7 +392,7 @@ onMounted(async () => {
                         <span v-if="previewProfile.age" class="text-[1.55rem] font-medium leading-none text-white/90">{{ previewProfile.age }}</span>
                       </div>
                       <div class="mt-3 flex flex-wrap items-center gap-2 text-[0.85rem] font-semibold text-white/90">
-                        <span>{{ previewProfile.city || 'Nearby' }}</span>
+                        <span>{{ [previewProfile.city, previewProfile.country].filter(Boolean).join(', ') || 'Nearby' }}</span>
                         <span v-if="previewProfile.distance !== undefined && previewProfile.distance !== null" class="rounded-full bg-white/20 px-2.5 py-1 backdrop-blur shadow-sm">
                           {{ Math.round(previewProfile.distance) }} km away
                         </span>
@@ -470,7 +470,7 @@ onMounted(async () => {
                         <span v-if="previewProfile.age" class="text-[1.5rem] font-medium opacity-90 shrink-0">{{ previewProfile.age }}</span>
                       </div>
                       <div class="flex items-center gap-2 text-[0.85rem] opacity-90 font-medium truncate">
-                        <span class="truncate">{{ previewProfile.city || 'Nearby' }}</span>
+                        <span class="truncate">{{ [previewProfile.city, previewProfile.country].filter(Boolean).join(', ') || 'Nearby' }}</span>
                         <span v-if="previewProfile.distance !== undefined && previewProfile.distance !== null" class="rounded-full bg-white/20 px-2.5 py-0.5 backdrop-blur-sm shrink-0">
                           {{ Math.round(previewProfile.distance) }} km away
                         </span>
@@ -517,7 +517,7 @@ onMounted(async () => {
                             <span v-if="previewProfile.age" class="text-[1.5rem] font-medium text-white/90 shrink-0">{{ previewProfile.age }}</span>
                           </div>
                           <div class="flex flex-wrap items-center gap-2 text-[0.85rem] font-medium text-white/85">
-                            <span class="truncate">{{ previewProfile.city || 'Nearby' }}</span>
+                            <span class="truncate">{{ [previewProfile.city, previewProfile.country].filter(Boolean).join(', ') || 'Nearby' }}</span>
                             <span v-if="previewProfile.distance !== undefined && previewProfile.distance !== null" class="rounded-full bg-white/10 px-2.5 py-0.5">
                               {{ Math.round(previewProfile.distance) }} km away
                             </span>

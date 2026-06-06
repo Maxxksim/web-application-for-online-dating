@@ -1141,7 +1141,7 @@ watch(() => messages.value.length, () => {
                         <span v-if="profilePreview.age" class="text-[1.55rem] font-medium leading-none text-white/90">{{ profilePreview.age }}</span>
                       </div>
                       <div class="mt-3 flex flex-wrap items-center gap-2 text-[0.85rem] font-semibold text-white/90">
-                        <span>{{ profilePreview.city || 'Nearby' }}</span>
+                        <span>{{ [profilePreview.city, profilePreview.country].filter(Boolean).join(', ') || 'Nearby' }}</span>
                       </div>
                     </div>
 
@@ -1201,7 +1201,7 @@ watch(() => messages.value.length, () => {
                         <span v-if="profilePreview.age" class="text-[1.5rem] font-medium text-white/90 shrink-0">{{ profilePreview.age }}</span>
                       </div>
                       <div class="flex flex-wrap items-center gap-2 text-[0.85rem] font-medium text-white/85">
-                        <span v-if="profilePreview.city" class="rounded-full bg-white/10 px-2.5 py-0.5">{{ profilePreview.city }}</span>
+                        <span v-if="profilePreview.city || profilePreview.country" class="rounded-full bg-white/10 px-2.5 py-0.5">{{ [profilePreview.city, profilePreview.country].filter(Boolean).join(', ') }}</span>
                       </div>
                     </div>
                   </div>
