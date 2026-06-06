@@ -44,15 +44,21 @@ class ProfileService
 
     public function getMissingRequiredFields(Profile $profile): array
     {
-        return collect($profile->only(self::REQUIRED_FIELDS))
+        $missingFields = collect($profile->only(self::REQUIRED_FIELDS))
             ->filter(fn($value) => $value === null)
             ->keys()
             ->all();
+
+        if (!$profile->photos()->exists()) {
+            $missingFields[] = 'photos';
+        }
+
+        return $missingFields;
     }
 
     public function isProfileReadyForSearching(Profile $profile): bool
     {
-        return empty($this->getMissingRequiredFields($profile)) && $profile->photos()->exists();
+        return empty($this->getMissingRequiredFields($profile));
     }
 
     public function enableIfReady(Profile $profile): bool

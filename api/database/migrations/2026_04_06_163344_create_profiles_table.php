@@ -26,6 +26,7 @@ return new class extends Migration {
             $table->string('description')->nullable();
             $table->integer('relevance_score')->default(3);
             $table->boolean('is_enabled')->default(false);
+            $table->boolean('manually_disabled')->default(false);
             $table->integer('completion_percentage')->default(0);
             $table->date('relevance_score_updated_on')->default(now()->format('Y-m-d'));
             $table->enum('dating_purpose', DatingPurpose::toArray())->nullable();
