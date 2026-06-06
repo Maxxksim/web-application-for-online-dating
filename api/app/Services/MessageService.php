@@ -36,7 +36,7 @@ class MessageService
 
         User::find($userId)->unreadNotifications()
             ->where('type', 'App\Notifications\MessageNotification')
-            ->where('data->chat_id', $chat->id)
+            ->whereRaw("(data::jsonb->>'chat_id')::integer = ?", [$chat->id])
             ->update(['read_at' => $readAt]);
 
         $unreadMessages->pluck('sender_id')
