@@ -27,7 +27,9 @@ class LocationService
     private function getLocation(array $coordinates): array
     {
         try {
-            $response = Http::withHeaders(['User-Agent' => config('app.name')])
+            $response = Http::withHeaders([
+                'User-Agent' => config('app.name'),
+                'Accept-Language' => 'en'])
                 ->get(config('services.reverse_geocoding.url'), [
                     'lat' => $coordinates['latitude'],
                     'lon' => $coordinates['longitude'],
