@@ -382,9 +382,10 @@ const toggleVisibility = async () => {
   enableError.value = ''
   missingFields.value = []
 
-  const result = await profileStore.toggleProfileVisibility(!isEnabled.value)
+  const wasEnabled = isEnabled.value
+  const result = await profileStore.toggleProfileVisibility(!wasEnabled)
   if (result.success) {
-    toast.success(isEnabled.value ? 'Profile disabled.' : 'Profile enabled.')
+    toast.success(wasEnabled ? 'Profile disabled.' : 'Profile enabled.')
   } else {
     enableError.value = result.message || 'Unable to update visibility.'
     const missing = result.missingFields || []
