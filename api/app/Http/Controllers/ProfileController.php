@@ -19,8 +19,12 @@ class ProfileController extends Controller
 
     public function updateProfile(UpdateProfileRequest $request): JsonResponse
     {
-        $request->user()->profile->update($request->validated());
-        $this->profileService->enableIfReady($request->user()->profile);
+        $profile = $request->user()->profile;
+        $profile->update($request->validated());
+
+        if ($profile->is_enabled || !$profile->manually_disabled) {
+            $this->profileService->enableIfReady($profile);
+        }
 
         return response()->json(['message' => 'Profile updated successfully.'], Response::HTTP_OK);
     }
@@ -39,27 +43,29 @@ class ProfileController extends Controller
 
     public function enableProfile(Request $request): JsonResponse
     {
-        if ($request->user()->profile->is_enabled) {
+        $profile = $request->user()->profile;
 
+        if ($profile->is_enabled) {
             return response()->json(['message' => 'Profile is already enabled.'], Response::HTTP_OK);
         }
 
-        if ($this->profileService->enableIfReady($request->user()->profile)) {
-
+        if ($this->profileService->enableIfReady($profile)) {
+            $profile->update(['manually_disabled' => false]);
             return response()->json(['message' => 'Profile enabled successfully.'], Response::HTTP_OK);
         }
 
         return response()->json([
             'message' => 'Please fill in all missing required fields and add at least one photo to enable profile.',
-            'missing_fields' => $this->profileService->getMissingRequiredFields($request->user()->profile),
+            'missing_fields' => $this->profileService->getMissingRequiredFields($profile),
         ], Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     public function disableProfile(Request $request): JsonResponse
     {
-        if ($request->user()->profile->is_enabled) {
-            $request->user()->profile->update(['is_enabled' => false]);
+        $profile = $request->user()->profile;
 
+        if ($profile->is_enabled) {
+            $profile->update(['is_enabled' => false, 'manually_disabled' => true]);
             return response()->json(['message' => 'Profile disabled successfully.'], Response::HTTP_OK);
         }
 
