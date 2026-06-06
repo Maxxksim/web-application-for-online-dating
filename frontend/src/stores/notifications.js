@@ -18,6 +18,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const pendingLikes = ref(0)
   const pendingMatches = ref(0)
   const pendingMessages = ref(0)
+  const externalMessageCount = ref(null) // set by ChatsView from chat.unread_count sum
 
   const lastLikeEvent = ref(null)
   const lastMatchEvent = ref(null)
@@ -30,6 +31,11 @@ export const useNotificationsStore = defineStore('notifications', () => {
   let popupSeq = 0
 
   const messageCount = computed(() => {
+    // If ChatsView provided the real sum of chat.unread_count — use it as source of truth
+    if (externalMessageCount.value !== null) {
+      return externalMessageCount.value
+    }
+    // Fallback: count from notifications table (used before ChatsView loads)
     const fromServer = notifications.value.filter((n) => {
       if (!n.type?.includes('MessageNotification')) return false
       if (!activeChatId.value) return true
@@ -37,6 +43,10 @@ export const useNotificationsStore = defineStore('notifications', () => {
     }).length
     return Math.max(fromServer, pendingMessages.value)
   })
+
+  function setExternalMessageCount(count) {
+    externalMessageCount.value = count !== null ? Number(count) : null
+  }
 
   const countByType = (typeName) =>
     notifications.value.filter(n => n.type?.includes(typeName)).length
@@ -234,5 +244,6 @@ export const useNotificationsStore = defineStore('notifications', () => {
     lastLikeEvent, lastMatchEvent,
     pendingLikes, pendingMatches,
     pendingMessages,
+    setExternalMessageCount,
   }
 })

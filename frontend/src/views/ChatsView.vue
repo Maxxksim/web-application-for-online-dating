@@ -401,7 +401,13 @@ const loadChats = async () => {
   } finally {
     isLoading.value = false
     hasLoadedChats.value = true
+    syncMessageCount()
   }
+}
+
+const syncMessageCount = () => {
+  const total = chats.value.reduce((sum, c) => sum + (Number(c.unread_count) || 0), 0)
+  notificationsStore.setExternalMessageCount(total)
 }
 
 const clearChatUnreadCount = (chatId) => {
@@ -411,6 +417,7 @@ const clearChatUnreadCount = (chatId) => {
       ? { ...chat, unread_count: 0 }
       : chat
   ))
+  syncMessageCount()
 }
 
 const loadMessages = async (chatId) => {
@@ -715,6 +722,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   notificationsStore.setActiveChatId(null)
+  notificationsStore.setExternalMessageCount(null) // reset so notifications fallback works
   try {
     if (__prevBodyOverflow !== null) document.body.style.overflow = __prevBodyOverflow
     else document.body.style.overflow = ''
