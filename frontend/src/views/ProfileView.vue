@@ -389,9 +389,7 @@ const toggleVisibility = async () => {
   } else {
     enableError.value = result.message || 'Unable to update visibility.'
     const missing = result.missingFields || []
-    if (!photos.value.length && !missing.includes('photos')) {
-      missing.push('photos')
-    }
+
     missingFields.value = missing
   }
 }
