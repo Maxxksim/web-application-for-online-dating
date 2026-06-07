@@ -1,26 +1,222 @@
 services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: dating_db
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - match-flow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: dating_redis
+    restart: unless-stopped
+    networks:
+      - match-flow
+
+  api:
+    build:
+      context: ./api
+      dockerfile: ../docker/api.Dockerfile
+    container_name: dating_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      APP_DEBUG: false
+      APP_URL: ${APP_URL}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      BROADCAST_CONNECTION: reverb
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      REVERB_APP_ID: ${REVERB_APP_ID}
+      REVERB_APP_KEY: ${REVERB_APP_KEY}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET}
+      REVERB_HOST: ${REVERB_HOST}
+      REVERB_PORT: ${REVERB_PORT:-443}
+      REVERB_SCHEME: ${REVERB_SCHEME}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URL: ${APP_URL}/api/auth/google/callback
+      STRIPE_KEY: ${STRIPE_KEY}
+      STRIPE_SECRET: ${STRIPE_SECRET}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      PHOTO_VALIDATOR_URL: http://photo-validator:9000
+      FRONTEND_URL: ${FRONTEND_URL}
+      REVERSE_GEOCODING_URL: ${REVERSE_GEOCODING_URL}
+      FACE_VALIDATOR_URL: ${FACE_VALIDATOR_URL}
+      STRIPE_PREMIUM_PRICE_ID: ${STRIPE_PREMIUM_PRICE_ID}
+    volumes:
+      - api_storage:/var/www/html/storage/app
+      - api_logs:/var/www/html/storage/logs
+    networks:
+      - match-flow
+
+  reverb:
+    build:
+      context: ./api
+      dockerfile: ../docker/api.Dockerfile
+    container_name: dating_reverb
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080 --no-interaction
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REVERB_SERVER_HOST: 0.0.0.0
+      REVERB_SERVER_PORT: 8080
+      REVERB_APP_ID: ${REVERB_APP_ID}
+      REVERB_APP_KEY: ${REVERB_APP_KEY}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET}
+    networks:
+      - match-flow
+
+  queue-default:
+    build:
+      context: ./api
+      dockerfile: ../docker/api.Dockerfile
+    container_name: dating_queue_default
+    restart: unless-stopped
+    command: php artisan queue:work --queue=default --sleep=0 --tries=3 --timeout=120
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment: &queue_env
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      FACE_VALIDATOR_URL: ${FACE_VALIDATOR_URL}
+      BROADCAST_CONNECTION: ${BROADCAST_CONNECTION}
+      REVERB_APP_ID: ${REVERB_APP_ID}
+      REVERB_APP_KEY: ${REVERB_APP_KEY}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET}
+      REVERB_HOST: ${REVERB_HOST}
+      REVERB_PORT: ${REVERB_PORT}
+      REVERB_SCHEME: ${REVERB_SCHEME}
+    volumes:
+      - api_storage:/var/www/html/storage/app
+    networks:
+      - match-flow
+
+  queue-notifications:
+    build:
+      context: ./api
+      dockerfile: ../docker/api.Dockerfile
+    container_name: dating_queue_notifications
+    restart: unless-stopped
+    command: php artisan queue:work --queue=notifications --sleep=0 --tries=3 --timeout=30
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment: *queue_env
+    networks:
+      - match-flow
+
   photo-validator:
     build:
       context: ./photo-validator
       dockerfile: Dockerfile
-    container_name: photo-validator
+    container_name: dating_photo_validator
+    restart: unless-stopped
     volumes:
       - ./photo-validator/models:/app/models
+    networks:
+      - match-flow
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+      args:
+        VITE_API_BASE_URL: ${APP_URL}/api
+        VITE_REVERB_APP_KEY: ${REVERB_APP_KEY}
+        VITE_REVERB_HOST: ${VITE_REVERB_HOST}
+        VITE_REVERB_PORT: ${VITE_REVERB_PORT}
+        VITE_REVERB_SCHEME: ${VITE_REVERB_SCHEME}
+        VITE_REVERB_AUTH_ENDPOINT: /api/broadcasting/auth
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+    container_name: dating_frontend
     restart: unless-stopped
     networks:
       - match-flow
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: dating_nginx
+    restart: unless-stopped
     ports:
-      - "9000:9000"
-  db:
-    image: postgis/postgis
-    restart: always
-    shm_size: 128mb
-    environment:
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - certbot_www:/var/www/certbot:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - api_storage:/var/www/html/storage/app/public:ro
+    depends_on:
+      - api
+      - frontend
+      - reverb
+    networks:
+      - match-flow
+  certbot:
+    image: certbot/certbot:latest
+    container_name: dating_certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    entrypoint: >
+      sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
 
 networks:
   match-flow:
     driver: bridge
 
+volumes:
+  db_data:
+  api_storage:
+  api_logs:
+  certbot_www:
+  certbot_conf:
