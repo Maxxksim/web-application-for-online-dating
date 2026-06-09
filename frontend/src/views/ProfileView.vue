@@ -240,16 +240,16 @@ watch(myProfile, (profile) => {
 
   form.gender = profile.gender || ''
   form.description = profile.description || ''
-  form.datingPurpose = profile.datingPurpose || ''
   form.height = profile.height === 0 ? '' : (profile.height ?? '')
   form.weight = profile.weight === 0 ? '' : (profile.weight ?? '')
-  form.bodyType = profile.bodyType || ''
-  form.eyeColor = profile.eyeColor || ''
-  form.hairColor = profile.hairColor || ''
+  form.datingPurpose = profile.dating_purpose || ''
+  form.bodyType = profile.body_type || ''
+  form.eyeColor = profile.eye_color || ''
+  form.hairColor = profile.hair_color || ''
+  form.zodiacSign = profile.zodiac_sign || ''
   form.smoking = profile.smoking || ''
   form.drinking = profile.drinking || ''
   form.children = profile.children || ''
-  form.zodiacSign = profile.zodiacSign || ''
   form.exercise = profile.exercise || ''
 
   setTimeout(() => { isReady.value = true }, 0)
